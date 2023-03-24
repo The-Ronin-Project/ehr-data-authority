@@ -1,0 +1,36 @@
+codecov:
+  require_ci_to_pass: true
+
+coverage:
+  status:
+    project:
+      ehr-data-authority-server:
+        target: auto
+        threshold: 1%
+        flags:
+          - ehr-data-authority-server
+      default:
+        mock-ehr:
+          target: 80
+          threshold: 1%
+          base: auto
+    patch:
+      default:
+        target: 80
+        threshold: 1%
+        base: auto
+
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+  branches: []
+  show_carryforward_flags: false
+
+flags:
+  ehr-data-authority-server:
+    paths:
+      - ehr-data-authority-server/
+    carryforward: true
