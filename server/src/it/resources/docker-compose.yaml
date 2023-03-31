@@ -1,9 +1,6 @@
 services:
   ehr-data-authority:
     restart: on-failure
-    build:
-      context: ./server
-      dockerfile: Dockerfile
     image: ehr-data-authority:local
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://springuser:ThePassword@ehr-data-authority-db:3306/dataauthority-db

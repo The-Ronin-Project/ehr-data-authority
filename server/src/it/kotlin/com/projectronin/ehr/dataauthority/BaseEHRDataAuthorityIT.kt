@@ -8,7 +8,7 @@ import java.io.File
 abstract class BaseEHRDataAuthorityIT {
     companion object {
         val docker =
-            DockerComposeContainer(File(BaseEHRDataAuthorityIT::class.java.getResource("docker-compose.yaml")!!.file))
+            DockerComposeContainer(File(BaseEHRDataAuthorityIT::class.java.getResource("/docker-compose.yaml")!!.file))
                 .waitingFor("ehr-data-authority", Wait.forLogMessage(".*Started EHRDataAuthorityServerKt.*", 1))
                 .start()
     }

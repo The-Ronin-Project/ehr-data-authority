@@ -1,0 +1,58 @@
+databaseChangeLog:
+  - changeSet:
+      id: resource-hashes-create
+      author: Sam Felt
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            - tableExists:
+                tableName: resource_hashes
+      changes:
+        - createTable:
+            tableName: resource_hashes
+            columns:
+              - column:
+                  name: hash_id
+                  # This is stored as a BINARY as an optimization for storing UUIDs.
+                  type: BINARY(16)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_resource_hash
+              - column:
+                  name: resource_id
+                  type: VARCHAR(100) #Add some extra spacing for long ids
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_resource_hash
+              - column:
+                  name: resource_type
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: VARCHAR(8)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hash
+                  type: INT(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: update_dt_tm
+                  type: DATETIME(6)
+                  constraints:
+                    nullable: true
+        - addUniqueConstraint:
+            tableName: resource_hashes
+            columnNames: resource_id, tenant_id
+            constraintName: uk_resource_hashes_tenant_resource
+        - createIndex:
+            tableName: resource_hashes
+            columns:
+              - column:
+                  name: resource_id
+            indexName:  idx_resource_hashes_resource_id

@@ -1,6 +1,0 @@
-services:
-  ehr-data-authority:
-    restart: on-failure
-    image: ehr-data-authority:local
-    ports:
-      - "8080:8080"
