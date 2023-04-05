@@ -11,7 +11,7 @@ import javax.sql.DataSource
  * Main Spring Boot application for the EHR Data Authority server.
  */
 @ComponentScan(
-    basePackages = ["com.projectronin.ehr"]
+    basePackages = ["com.projectronin.ehr", "com.projectronin.interop.aidbox"]
 )
 @SpringBootApplication
 class EHRDataAuthorityServer {

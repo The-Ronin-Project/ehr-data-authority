@@ -31,6 +31,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Gradlew IT
+        env:
+          AIDBOX_LICENSE_ID: ${{ secrets.ORG_AIDBOX_LICENSE_ID }}
+          AIDBOX_LICENSE_KEY: ${{ secrets.ORG_AIDBOX_LICENSE_KEY }}
         run: ./gradlew :server:it
 
       - name: Upload report to DataDog

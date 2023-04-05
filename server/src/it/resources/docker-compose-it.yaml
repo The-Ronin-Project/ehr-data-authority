@@ -1,0 +1,85 @@
+services:
+  ehr-data-authority:
+    restart: on-failure
+    build:
+      context: ../../..
+      dockerfile: Dockerfile
+    image: ehr-data-authority:local
+    ports:
+      - "8080:8080"
+    environment:
+      AIDBOX_URL: "http://devbox:8888"
+      AIDBOX_CLIENT_ID: "client"
+      AIDBOX_CLIENT_SECRET: "secret"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://springuser:ThePassword@ehr-data-authority-db:3306/dataauthority-db"
+    depends_on:
+      devbox:
+        condition: service_healthy
+      ehr-data-authority-db:
+        condition: service_healthy
+
+  ehr-data-authority-db:
+    restart: always
+    image: mysql/mysql-server:latest
+    environment:
+      - MYSQL_DATABASE=dataauthority-db
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_USER=springuser
+      - MYSQL_PASSWORD=ThePassword
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "springuser", "-pThePassword" ]
+      timeout: 5s
+      retries: 3
+
+  devbox:
+    image: healthsamurai/devbox:2206-lts
+    container_name: devbox
+    depends_on:
+      - "devbox-db"
+    links:
+      - "devbox-db:database"
+    ports:
+      - "8888:8888"
+    environment:
+      - AIDBOX_LICENSE_ID
+      - AIDBOX_LICENSE_KEY
+      - AIDBOX_PORT
+      - AIDBOX_CLIENT_ID
+      - AIDBOX_ADMIN_ID
+      - AIDBOX_ADMIN_PASSWORD
+      - AIDBOX_CLIENT_SECRET
+      - PGPORT
+      - PGHOSTPORT
+      - AIDBOX_FHIR_VERSION
+      - PGHOST
+      - PGUSER
+      - PGPASSWORD
+      - PGDATABASE
+      - box_features_validation_skip_reference
+    volumes:
+      - ./config:/var/config
+      - ./data:/data # Avoid collision with "data" folder used by devbox-db and mirth-db
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f -s -S -I -X GET http://localhost:8888/fhir/metadata || exit 1" ]
+      timeout: 5s
+      retries: 10
+
+  devbox-db:
+    image: healthsamurai/aidboxdb:13.2
+    platform: linux/amd64
+    container_name: devbox-db
+    ports:
+      - "5437:5432"
+    environment:
+      - PGPORT
+      - PGHOSTPORT
+      - PGHOST
+      - PGUSER
+      - PGPASSWORD
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - PGDATABASE
+      - box_features_validation_skip_reference
+    volumes:
+      - ./data-dbpg:/data # Avoid collision with "data" folder used by devbox and mirth-db
