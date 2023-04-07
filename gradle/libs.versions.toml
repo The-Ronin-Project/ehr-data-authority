@@ -1,12 +1,19 @@
 [libraries]
-interop-common-jackson = "com.projectronin.interop:interop-common-jackson:3.4.0"
-interop-common-http = "com.projectronin.interop:interop-common-http:3.4.0"
-interop-aidbox = "com.projectronin.interop.publish:interop-aidbox:7.4.5"
-
+interop-common = "com.projectronin.interop:interop-common:3.4.0"
+interop-commonJackson = "com.projectronin.interop:interop-common-jackson:3.4.0"
+interop-commonHttp = "com.projectronin.interop:interop-common-http:3.4.0"
+interop-commonTestDb = "com.projectronin.interop:interop-common-test-db:3.4.0"
 interop-fhir = "com.projectronin.interop.fhir:interop-fhir:7.6.0"
 interop-fhir-generators = "com.projectronin.interop.fhir:interop-fhir-generators:7.6.0"
+interop-aidbox = "com.projectronin.interop.publish:interop-aidbox:7.4.5"
+
+jackson-dataformat-xml = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.2"
+jackson-dataformat-yaml = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.2"
+jackson-datatype-jsr310 = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.2"
+jackson-module-kotlin = "com.fasterxml.jackson.module:jackson-module-kotlin:2.14.2"
 
 mockk = "io.mockk:mockk:1.13.4"
+mockwebserver = "com.squareup.okhttp3:mockwebserver:4.10.0"
 spring-boot-parent = "org.springframework.boot:spring-boot-parent:2.7.8"
 spring-bom = "org.springframework.boot:spring-boot-parent:2.7.8"
 
@@ -15,6 +22,7 @@ ktor-client-cio = "io.ktor:ktor-client-cio:2.2.4"
 ktor-client-content-negotiation = "io.ktor:ktor-client-content-negotiation:2.2.4"
 ktor-client-core = "io.ktor:ktor-client-core:2.2.4"
 ktor-client-logging = "io.ktor:ktor-client-logging:2.2.4"
+ktor-client-mock = "io.ktor:ktor-client-mock:2.2.4"
 ktor-serialization-jackson = "io.ktor:ktor-serialization-jackson:2.2.4"
 ronin-test-data-generator = "com.projectronin.test:ronin-test-data-generator:0.0.2"
 
@@ -26,5 +34,6 @@ mysql-connector-java = "mysql:mysql-connector-java:8.0.32"
 testcontainers-bom = "org.testcontainers:testcontainers-bom:1.17.6"
 
 [bundles]
+jackson = ["jackson-dataformat-xml", "jackson-dataformat-yaml", "jackson-datatype-jsr310", "jackson-module-kotlin"]
 ktor = ["ktor-client-auth", "ktor-client-cio", "ktor-client-content-negotiation", "ktor-client-core", "ktor-client-logging", "ktor-serialization-jackson"]
 data-generators = ["interop-fhir-generators", "ronin-test-data-generator"]
