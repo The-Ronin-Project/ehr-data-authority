@@ -3,6 +3,7 @@ package com.projectronin.ehr.dataauthority.controllers
 import com.projectronin.interop.aidbox.AidboxPublishService
 import com.projectronin.interop.fhir.r4.resource.Resource
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 class ResourcesController(private val aidboxPublishService: AidboxPublishService) {
 
     @PostMapping("/resources")
+    @PreAuthorize("hasAuthority('SCOPE_write:resources')")
     fun addNewResources(@RequestBody resources: List<Resource<*>>): ResponseEntity<BatchResourceResponse> {
         val failed = mutableListOf<FailedResource>()
         val succeeded = mutableListOf<SucceededResource>()
@@ -33,6 +35,7 @@ class ResourcesController(private val aidboxPublishService: AidboxPublishService
                     resource.id!!.value!!,
                     ModificationType.CREATED
                 )
+
             false ->
                 FailedResource(
                     resource.resourceType,

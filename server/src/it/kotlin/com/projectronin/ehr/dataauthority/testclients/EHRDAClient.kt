@@ -1,5 +1,6 @@
 package com.projectronin.ehr.dataauthority.testclients
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.projectronin.ehr.dataauthority.controllers.BatchResourceResponse
 import com.projectronin.interop.common.jackson.JacksonManager
 import com.projectronin.interop.fhir.r4.resource.Resource
@@ -10,9 +11,13 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.accept
+import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.Parameters
 import io.ktor.http.contentType
 import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.runBlocking
@@ -37,12 +42,29 @@ object EHRDAClient {
 
     private const val BASE_URL = "http://localhost:8080"
     private const val RESOURCES_URL = "$BASE_URL/resources"
+    private const val AUTH_URL = "http://localhost:8081/ehr/token"
 
-    fun addResource(resource: Resource<*>): BatchResourceResponse = runBlocking {
+    fun addResources(resources: List<Resource<*>>): BatchResourceResponse = runBlocking {
+        val authentication = getAuthentication()
         httpClient.post(RESOURCES_URL) {
-            setBody(listOf(resource))
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $authentication")
+            }
+            setBody(resources)
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
         }.body()
+    }
+
+    private fun getAuthentication(): String = runBlocking {
+        val json: JsonNode = httpClient.submitForm(
+            url = AUTH_URL,
+            formParameters = Parameters.build {
+                append("grant_type", "client_credentials")
+                append("client_id", "id")
+                append("client_secret", "secret")
+            }
+        ).body()
+        json.get("access_token").asText()
     }
 }
