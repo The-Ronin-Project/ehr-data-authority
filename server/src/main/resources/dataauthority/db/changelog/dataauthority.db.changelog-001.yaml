@@ -1,3 +1,5 @@
 databaseChangeLog:
   - include:
       file: dataauthority/db/changelog/resourcehashes/resourcehashes-01.yaml
+  - include:
+      file: dataauthority/db/changelog/databasechangelog/databasechangelog-01.yaml

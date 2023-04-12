@@ -14,7 +14,13 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.runBlocking
 
@@ -50,6 +56,22 @@ object AidboxClient {
     fun getAuthorizationHeader(): String {
         val authentication = authenticationBroker.getAuthentication()
         return "${authentication.tokenType} ${authentication.accessToken}"
+    }
+
+    fun addResource(resource: Resource<*>): Resource<*> = runBlocking {
+        val url = RESOURCES_FORMAT.format(resource.resourceType)
+        val response = httpClient.post(url) {
+            headers {
+                append(HttpHeaders.Authorization, getAuthorizationHeader())
+            }
+            contentType(ContentType.Application.Json)
+            setBody(resource)
+        }
+        if (!response.status.isSuccess()) {
+            throw IllegalStateException("None success returned from adding resource: ${response.bodyAsText()}")
+        }
+
+        getResource(resource.resourceType, resource.id!!.value!!)
     }
 
     fun getResource(resourceType: String, id: String): Resource<*> = runBlocking {

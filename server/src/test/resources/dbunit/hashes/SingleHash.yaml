@@ -1,0 +1,8 @@
+resource_hashes:
+  - hash_id: "tOjoCil6Sxm9WUuActucxA=="
+    # UUID: b4e8e80a-297a-4b19-bd59-4b8072db9cc4
+    resource_id: "12345"
+    resource_type: "Patient"
+    tenant_id: "tenant1"
+    hash: 13579
+    update_dt_tm: "2022-08-01 11:18:00 +0000"

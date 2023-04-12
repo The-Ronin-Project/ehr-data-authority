@@ -1,7 +1,7 @@
 package com.projectronin.ehr.dataauthority.testclients
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.projectronin.ehr.dataauthority.controllers.BatchResourceResponse
+import com.projectronin.ehr.dataauthority.model.BatchResourceResponse
 import com.projectronin.interop.common.jackson.JacksonManager
 import com.projectronin.interop.fhir.r4.resource.Resource
 import io.ktor.client.HttpClient
@@ -41,12 +41,12 @@ object EHRDAClient {
     }
 
     private const val BASE_URL = "http://localhost:8080"
-    private const val RESOURCES_URL = "$BASE_URL/resources"
+    private const val RESOURCES_URL_FMT = "$BASE_URL/tenants/%s/resources"
     private const val AUTH_URL = "http://localhost:8081/ehr/token"
 
-    fun addResources(resources: List<Resource<*>>): BatchResourceResponse = runBlocking {
+    fun addResources(tenantId: String, resources: List<Resource<*>>): BatchResourceResponse = runBlocking {
         val authentication = getAuthentication()
-        httpClient.post(RESOURCES_URL) {
+        httpClient.post(RESOURCES_URL_FMT.format(tenantId)) {
             headers {
                 append(HttpHeaders.Authorization, "Bearer $authentication")
             }

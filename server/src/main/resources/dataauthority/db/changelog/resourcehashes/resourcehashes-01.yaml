@@ -18,14 +18,14 @@ databaseChangeLog:
                   constraints:
                     nullable: false
                     primaryKey: true
-                    primaryKeyName: pk_resource_hash
+                    primaryKeyName: pk_resource_hashes
               - column:
                   name: resource_id
-                  type: VARCHAR(100) #Add some extra spacing for long ids
+                  type: VARCHAR(256) #Add some extra spacing for long ids
                   constraints:
                     nullable: false
                     primaryKey: true
-                    primaryKeyName: pk_resource_hash
+                    primaryKeyName: pk_resource_hashes
               - column:
                   name: resource_type
                   type: VARCHAR(64)
@@ -45,7 +45,7 @@ databaseChangeLog:
                   name: update_dt_tm
                   type: DATETIME(6)
                   constraints:
-                    nullable: true
+                    nullable: false
         - addUniqueConstraint:
             tableName: resource_hashes
             columnNames: resource_id, tenant_id
@@ -55,4 +55,4 @@ databaseChangeLog:
             columns:
               - column:
                   name: resource_id
-            indexName:  idx_resource_hashes_resource_id
+            indexName: idx_resource_hashes_resource_id

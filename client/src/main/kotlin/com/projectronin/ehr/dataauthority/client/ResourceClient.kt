@@ -33,8 +33,8 @@ class ResourceClient(
      * then sends to [addResourcesByBatch] to post the resources
      * returns list of [BatchResourceResponse]
      */
-    suspend fun addResources(resources: List<Resource<*>>): BatchResourceResponse {
-        val batchResources = resources.chunked(25).map { addResourcesByBatch(it) }
+    suspend fun addResources(tenantId: String, resources: List<Resource<*>>): BatchResourceResponse {
+        val batchResources = resources.chunked(25).map { addResourcesByBatch(tenantId, it) }
         val succeeded = batchResources.flatMap { it.succeeded }
         val failed = batchResources.flatMap { it.failed }
         return BatchResourceResponse(succeeded, failed)
@@ -43,8 +43,8 @@ class ResourceClient(
     /**
      * Posts a batch/chunk of resources.
      */
-    private suspend fun addResourcesByBatch(resources: List<Resource<*>>): BatchResourceResponse {
-        val resourceUrl = "$hostUrl/resources"
+    private suspend fun addResourcesByBatch(tenantId: String, resources: List<Resource<*>>): BatchResourceResponse {
+        val resourceUrl = "$hostUrl/tenants/$tenantId/resources"
         val authentication = authenticationService.getAuthentication()
         val response: HttpResponse = client.request("DataAuthority", resourceUrl) { url ->
             post(url) {

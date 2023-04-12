@@ -1,0 +1,8 @@
+resource_hashes:
+  - hash_id: "GpPBE51TQGW1WiVXs0hNkg=="
+    # UUID: 1a93c113-9d53-4065-b55a-2557b3484d92
+    resource_id: "67890"
+    resource_type: "Location"
+    tenant_id: "tenant2"
+    hash: 1470258
+    update_dt_tm: "2023-04-10 15:23:00 +0000"

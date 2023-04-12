@@ -1,5 +1,6 @@
 plugins {
     id("com.projectronin.interop.gradle.junit")
+    id("com.projectronin.interop.gradle.spring")
     kotlin("plugin.serialization") version "1.8.10"
 }
 

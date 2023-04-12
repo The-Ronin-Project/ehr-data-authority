@@ -69,14 +69,14 @@ class ResourceClientTest {
         val url = mockWebServer.url("/test")
         val response = runBlocking {
             val resourceToReturn = ResourceClient(url.toString(), client, authenticationService)
-                .addResources(resource)
+                .addResources("tenant", resource)
             resourceToReturn
         }
         assertEquals(resource[0].id?.value, response.succeeded[0].resourceId)
         assertEquals(resource[0].resourceType, response.succeeded[0].resourceType)
         assertEquals(response.succeeded[0].modificationType, ModificationType.CREATED)
         val request = mockWebServer.takeRequest()
-        assertEquals(true, request.path?.endsWith("/resources"))
+        assertEquals(true, request.path?.endsWith("/tenants/tenant/resources"))
         assertEquals("Bearer $authenticationToken", request.getHeader("Authorization"))
     }
 
@@ -95,10 +95,26 @@ class ResourceClientTest {
         val listOfResources = listOf<Resource<*>>(resource1, resource2, resource3, resource4)
         val returnedResources = BatchResourceResponse(
             succeeded = listOf(
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4", modificationType = ModificationType.CREATED)
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                    modificationType = ModificationType.CREATED
+                )
             )
         )
 
@@ -111,7 +127,8 @@ class ResourceClientTest {
         )
         val url = mockWebServer.url("/test")
         val response = runBlocking {
-            val resourceToReturn = ResourceClient(url.toString(), client, authenticationService).addResources(listOfResources)
+            val resourceToReturn =
+                ResourceClient(url.toString(), client, authenticationService).addResources("tenant", listOfResources)
             resourceToReturn
         }
 
@@ -119,7 +136,7 @@ class ResourceClientTest {
         val responseIds = mutableListOf<String>()
         response.succeeded.forEach { responseIds.add(it.resourceId) }
         assertTrue(responseIds == listOfResourceIds)
-        assertEquals(true, request.path?.endsWith("/resources"))
+        assertEquals(true, request.path?.endsWith("/tenants/tenant/resources"))
         assertEquals(response.succeeded.size, 4)
         assertEquals("Bearer $authenticationToken", request.getHeader("Authorization"))
     }
@@ -172,7 +189,7 @@ class ResourceClientTest {
         val url = mockWebServer.url("/test")
         val response = runBlocking {
             val resourceToReturn =
-                ResourceClient(url.toString(), client, authenticationService).addResources(listOfResources)
+                ResourceClient(url.toString(), client, authenticationService).addResources("tenant", listOfResources)
             resourceToReturn
         }
 
@@ -185,9 +202,12 @@ class ResourceClientTest {
             failedResponseIds == listOf("FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3", "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4")
         )
         assertTrue(
-            succeededResponseIds == listOf("FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1", "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2")
+            succeededResponseIds == listOf(
+                "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2"
+            )
         )
-        assertEquals(true, request.path?.endsWith("/resources"))
+        assertEquals(true, request.path?.endsWith("/tenants/tenant/resources"))
         assertEquals(response.succeeded.size, 2)
         assertEquals(response.failed.size, 2)
         assertEquals("Bearer $authenticationToken", request.getHeader("Authorization"))
@@ -217,44 +237,164 @@ class ResourceClientTest {
 
         val resourcesReturned1 = BatchResourceResponse(
             succeeded = listOf(
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5", modificationType = ModificationType.CREATED)
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                    modificationType = ModificationType.CREATED
+                )
             ),
             failed = listOf(
-                FailedResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1", error = "Error publishing to data store"),
-                FailedResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2", error = "Error publishing to data store"),
-                FailedResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3", error = "Error publishing to data store"),
-                FailedResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4", error = "Error publishing to data store"),
-                FailedResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5", error = "Error publishing to data store")
+                FailedResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                    error = "Error publishing to data store"
+                ),
+                FailedResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                    error = "Error publishing to data store"
+                ),
+                FailedResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                    error = "Error publishing to data store"
+                ),
+                FailedResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                    error = "Error publishing to data store"
+                ),
+                FailedResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                    error = "Error publishing to data store"
+                )
             )
         )
         val resourcesReturned2 = BatchResourceResponse(
             succeeded = listOf(
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1", modificationType = ModificationType.CREATED),
-                SucceededResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2", modificationType = ModificationType.CREATED)
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                    modificationType = ModificationType.CREATED
+                )
             ),
             failed = listOf(
-                FailedResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4", error = "Error publishing to data store"),
-                FailedResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5", error = "Error publishing to data store"),
-                FailedResource(resourceType = "Patient", resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3", error = "Error publishing to data store")
+                FailedResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                    error = "Error publishing to data store"
+                ),
+                FailedResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                    error = "Error publishing to data store"
+                ),
+                FailedResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                    error = "Error publishing to data store"
+                )
             )
         )
         val mockWebServer = MockWebServer()
@@ -273,12 +413,13 @@ class ResourceClientTest {
 
         val url = mockWebServer.url("/test")
         val response = runBlocking {
-            val resourcesToReturn = ResourceClient(url.toString(), client, authenticationService).addResources(listOfResources)
+            val resourcesToReturn =
+                ResourceClient(url.toString(), client, authenticationService).addResources("tenant", listOfResources)
             resourcesToReturn
         }
 
         val request = mockWebServer.takeRequest()
-        assertEquals(true, request.path?.endsWith("/resources"))
+        assertEquals(true, request.path?.endsWith("/tenants/tenant/resources"))
         assertEquals(response.failed.size, 8)
         assertEquals(response.succeeded.size, 22)
         assertTrue(response.failed.all { it.error == "Error publishing to data store" })
@@ -301,7 +442,7 @@ class ResourceClientTest {
         val url = mockWebServer.url("/test")
         val exception = assertThrows<ClientFailureException> {
             runBlocking {
-                ResourceClient(url.toString(), client, authenticationService).addResources(listOfResources)
+                ResourceClient(url.toString(), client, authenticationService).addResources("tenant", listOfResources)
             }
         }
 
@@ -309,7 +450,7 @@ class ResourceClientTest {
         exception.message?.let { assertTrue(it.contains("400")) }
 
         val request = mockWebServer.takeRequest()
-        assertEquals(true, request.path?.endsWith("/resources"))
+        assertEquals(true, request.path?.endsWith("/tenants/tenant/resources"))
         assertEquals("Bearer $authenticationToken", request.getHeader("Authorization"))
     }
 }
