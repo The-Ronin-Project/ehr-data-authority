@@ -3,12 +3,19 @@ package com.projectronin.ehr.dataauthority.client
 import com.projectronin.ehr.dataauthority.client.auth.DataAuthorityAuthenticationService
 import com.projectronin.ehr.dataauthority.client.models.BatchResourceResponse
 import com.projectronin.ehr.dataauthority.client.models.FailedResource
+import com.projectronin.ehr.dataauthority.client.models.FoundResource
+import com.projectronin.ehr.dataauthority.client.models.Identifier
+import com.projectronin.ehr.dataauthority.client.models.IdentifierSearchResponse
+import com.projectronin.ehr.dataauthority.client.models.IdentifierSearchableResourceTypes
 import com.projectronin.ehr.dataauthority.client.models.ModificationType
 import com.projectronin.ehr.dataauthority.client.models.SucceededResource
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.common.http.ktor.ContentLengthSupplier
 import com.projectronin.interop.common.jackson.JacksonManager
+import com.projectronin.interop.common.resource.ResourceType
+import com.projectronin.interop.fhir.r4.datatype.HumanName
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
+import com.projectronin.interop.fhir.r4.datatype.primitive.asFHIR
 import com.projectronin.interop.fhir.r4.resource.Patient
 import com.projectronin.interop.fhir.r4.resource.Resource
 import io.ktor.client.HttpClient
@@ -452,5 +459,95 @@ class ResourceClientTest {
         val request = mockWebServer.takeRequest()
         assertEquals(true, request.path?.endsWith("/tenants/tenant/resources"))
         assertEquals("Bearer $authenticationToken", request.getHeader("Authorization"))
+    }
+
+    @Test
+    fun `getResource works`() {
+        val resourceId = "123"
+        val resource: Resource<*> = Patient(
+            id = Id(value = resourceId),
+            name = listOf(HumanName(family = "Test".asFHIR()))
+        )
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.OK.value)
+                .setBody(JacksonManager.objectMapper.writeValueAsString(resource))
+                .setHeader("Content-Type", "application/json")
+        )
+        val url = mockWebServer.url("/test")
+        val response = runBlocking {
+            ResourceClient(url.toString(), client, authenticationService)
+                .getResource("tenant", ResourceType.PATIENT, "123")
+        }
+        val returnedResource = response as Patient
+        val request = mockWebServer.takeRequest()
+
+        assertEquals("Test", returnedResource.name.first().family?.value)
+        assertEquals("/test/tenants/tenant/resources/Patient/123", request.path)
+    }
+
+    @Test
+    fun `getResource can return 404`() {
+        val resourceId = "123"
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.NotFound.value)
+                .setBody("{\"errorMessage\": \"No resources ever\"}")
+                .setHeader("Content-Type", "application/json")
+        )
+        val url = mockWebServer.url("/test")
+
+        assertThrows<ClientFailureException> {
+            runBlocking {
+                ResourceClient(url.toString(), client, authenticationService).getResource("tenant", ResourceType.PRACTITIONER, resourceId)
+            }
+        }
+    }
+
+    @Test
+    fun `getResourceIdentifiers works`() {
+        val ident1 = Identifier("system1", "value1")
+        val ident2 = Identifier("system2", "value2")
+
+        val searchResult = listOf(
+            IdentifierSearchResponse(
+                searchedIdentifier = ident1,
+                foundResources = listOf(
+                    FoundResource("udpId1", listOf(ident1, Identifier("notSearched", "notSearched"))),
+                    FoundResource("udpId2", listOf(ident1, Identifier("notSearched2", "notSearched2")))
+                )
+            ),
+            IdentifierSearchResponse(
+                searchedIdentifier = ident2,
+                foundResources = listOf(
+                    FoundResource("udpId3", listOf(ident2))
+                )
+            )
+        )
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.OK.value)
+                .setBody(JacksonManager.objectMapper.writeValueAsString(searchResult))
+                .setHeader("Content-Type", "application/json")
+        )
+        val url = mockWebServer.url("/test")
+        val identifers = listOf(
+            ident1,
+            ident2
+        )
+        val response = runBlocking {
+            ResourceClient(url.toString(), client, authenticationService)
+                .getResourceIdentifiers("tenant", IdentifierSearchableResourceTypes.Location, identifers)
+        }
+        val request = mockWebServer.takeRequest()
+
+        assertEquals(2, response.size)
+        assertEquals(2, response[0].foundResources.size)
+        assertEquals(ident1, response[0].searchedIdentifier)
+        assertEquals(1, response[1].foundResources.size)
+        assertEquals("/test/tenants/tenant/resources/Location/identifiers/system1%7Cvalue1,system2%7Cvalue2", request.path)
     }
 }
