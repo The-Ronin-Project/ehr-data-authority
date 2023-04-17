@@ -1,12 +1,14 @@
 [libraries]
 interop-aidbox = "com.projectronin.interop.publish:interop-aidbox:7.4.7"
+
 interop-common = "com.projectronin.interop:interop-common:3.6.0"
 interop-commonHttp = "com.projectronin.interop:interop-common-http:3.6.0"
 interop-commonJackson = "com.projectronin.interop:interop-common-jackson:3.6.0"
 interop-commonKtorm = "com.projectronin.interop:interop-common-ktorm:3.6.0"
 interop-commonTestDb = "com.projectronin.interop:interop-common-test-db:3.6.0"
-interop-fhir = "com.projectronin.interop.fhir:interop-fhir:7.6.0"
-interop-fhirGenerators = "com.projectronin.interop.fhir:interop-fhir-generators:7.6.0"
+
+interop-fhir = "com.projectronin.interop.fhir:interop-fhir:7.7.0"
+interop-fhirGenerators = "com.projectronin.interop.fhir:interop-fhir-generators:7.7.0"
 
 jackson-dataformat-xml = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.2"
 jackson-dataformat-yaml = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.2"
