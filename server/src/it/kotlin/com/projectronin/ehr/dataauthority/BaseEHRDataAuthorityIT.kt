@@ -1,9 +1,15 @@
 package com.projectronin.ehr.dataauthority
 
+import com.projectronin.ehr.dataauthority.testclients.DBClient
+import com.projectronin.ehr.dataauthority.testclients.KafkaClient
+import com.projectronin.fhir.r4.Resource
 import com.projectronin.interop.common.http.spring.HttpSpringConfig
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.testcontainers.containers.DockerComposeContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.File
+import kotlin.reflect.KClass
 
 abstract class BaseEHRDataAuthorityIT {
     companion object {
@@ -38,4 +44,19 @@ abstract class BaseEHRDataAuthorityIT {
 
     protected val serverUrl = "http://localhost:8080"
     protected val httpClient = HttpSpringConfig().getHttpClient()
+
+    open val resources = mapOf<String, KClass<out Resource>>()
+
+    @BeforeEach
+    fun setup() {
+        resources.forEach { (topic, resource) ->
+            KafkaClient.monitorResource(topic, resource)
+        }
+    }
+
+    @AfterEach
+    fun cleanup() {
+        DBClient.purgeHashes()
+        KafkaClient.reset()
+    }
 }

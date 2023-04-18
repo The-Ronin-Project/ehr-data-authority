@@ -5,20 +5,26 @@ import com.projectronin.ehr.dataauthority.model.ModificationType
 import com.projectronin.ehr.dataauthority.testclients.AidboxClient
 import com.projectronin.ehr.dataauthority.testclients.DBClient
 import com.projectronin.ehr.dataauthority.testclients.EHRDAClient
+import com.projectronin.ehr.dataauthority.testclients.KafkaClient
+import com.projectronin.fhir.r4.Patient
 import com.projectronin.interop.fhir.generators.resources.patient
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.valueset.AdministrativeGender
 import com.projectronin.interop.fhir.util.asCode
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class ResourcesControllerIT : BaseEHRDataAuthorityIT() {
+    override val resources = mapOf("patient" to Patient::class)
+
     @Test
     fun `adds resource when new`() {
         val patient = patient {
             id of Id(value = "12345")
         }
+
         val response = EHRDAClient.addResources("tenant", listOf(patient))
         assertEquals(1, response.succeeded.size)
         assertEquals(0, response.failed.size)
@@ -34,7 +40,10 @@ class ResourcesControllerIT : BaseEHRDataAuthorityIT() {
 
         val hashP = DBClient.getStoredHashValue("tenant", "Patient", "12345")
         assertEquals(patient.hashCode(), hashP)
-        DBClient.purgeHashes()
+
+        val kafkaEvents = KafkaClient.readEvents("patient")
+        assertEquals(1, kafkaEvents.size)
+        assertTrue(kafkaEvents[0].type.endsWith("patient.create"))
     }
 
     @Test
@@ -64,7 +73,10 @@ class ResourcesControllerIT : BaseEHRDataAuthorityIT() {
 
         val hashP = DBClient.getStoredHashValue("tenant", "Patient", "12345")
         assertEquals(updatedPatient.hashCode(), hashP)
-        DBClient.purgeHashes()
+
+        val kafkaEvents = KafkaClient.readEvents("patient")
+        assertEquals(1, kafkaEvents.size)
+        assertTrue(kafkaEvents[0].type.endsWith("patient.update"))
     }
 
     @Test
@@ -96,7 +108,10 @@ class ResourcesControllerIT : BaseEHRDataAuthorityIT() {
 
         val hashP = DBClient.getStoredHashValue("tenant", "Patient", "12345")
         assertEquals(updatedPatient.hashCode(), hashP)
-        DBClient.purgeHashes()
+
+        val kafkaEvents = KafkaClient.readEvents("patient")
+        assertEquals(1, kafkaEvents.size)
+        assertTrue(kafkaEvents[0].type.endsWith("patient.update"))
     }
 
     @Test
@@ -124,7 +139,9 @@ class ResourcesControllerIT : BaseEHRDataAuthorityIT() {
 
         val hashP = DBClient.getStoredHashValue("tenant", "Patient", "12345")
         assertEquals(originalPatient.hashCode(), hashP)
-        DBClient.purgeHashes()
+
+        val kafkaEvents = KafkaClient.readEvents("patient")
+        assertEquals(0, kafkaEvents.size)
     }
 
     @Test
@@ -160,6 +177,10 @@ class ResourcesControllerIT : BaseEHRDataAuthorityIT() {
         assertEquals(patient1.hashCode(), hashP1)
         val hashP2 = DBClient.getStoredHashValue("tenant", "Patient", "67890")
         assertEquals(patient2.hashCode(), hashP2)
-        DBClient.purgeHashes()
+
+        val kafkaEvents = KafkaClient.readEvents("patient")
+        assertEquals(2, kafkaEvents.size)
+        assertTrue(kafkaEvents[0].type.endsWith("patient.create"))
+        assertTrue(kafkaEvents[1].type.endsWith("patient.create"))
     }
 }

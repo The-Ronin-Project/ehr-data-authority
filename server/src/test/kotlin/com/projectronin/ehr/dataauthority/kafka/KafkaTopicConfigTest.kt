@@ -1,0 +1,105 @@
+package com.projectronin.ehr.dataauthority.kafka
+
+import com.projectronin.interop.kafka.spring.KafkaConfig
+import io.mockk.every
+import io.mockk.mockk
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+
+class KafkaTopicConfigTest {
+    private val vendor = "oci"
+    private val region = "us-phoenix-1"
+    private val system = "ehr-data-authority"
+
+    private val kafkaConfig = mockk<KafkaConfig> {
+        every { cloud.vendor } returns vendor
+        every { cloud.region } returns region
+        every { retrieve.serviceId } returns system
+    }
+
+    private val kafkaTopicConfig = KafkaTopicConfig(kafkaConfig)
+
+    @Test
+    fun `creates appointment topic`() {
+        val topic = kafkaTopicConfig.appointmentTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.appointment.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Appointment-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.Appointment::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.Appointment::class, topic.eventClass)
+    }
+
+    @Test
+    fun `creates condition topic`() {
+        val topic = kafkaTopicConfig.conditionTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.condition.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Condition-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.Condition::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.Condition::class, topic.eventClass)
+    }
+
+    @Test
+    fun `creates location topic`() {
+        val topic = kafkaTopicConfig.locationTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.location.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Location-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.Location::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.Location::class, topic.eventClass)
+    }
+
+    @Test
+    fun `creates patient topic`() {
+        val topic = kafkaTopicConfig.patientTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.patient.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Patient-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.Patient::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.Patient::class, topic.eventClass)
+    }
+
+    @Test
+    fun `creates practitioner topic`() {
+        val topic = kafkaTopicConfig.practitionerTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.practitioner.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Practitioner-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.Practitioner::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.Practitioner::class, topic.eventClass)
+    }
+
+    @Test
+    fun `creates practitioner role topic`() {
+        val topic = kafkaTopicConfig.practitionerRoleTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.practitioner-role.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/PractitionerRole-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.PractitionerRole::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.PractitionerRole::class, topic.eventClass)
+    }
+}

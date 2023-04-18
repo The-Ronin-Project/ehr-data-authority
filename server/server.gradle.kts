@@ -12,11 +12,15 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
 
+    implementation(libs.common.fhir.r4.models)
     implementation(libs.interop.aidbox)
     implementation(libs.interop.common)
+    implementation(libs.interop.commonJackson)
     implementation(libs.interop.commonKtorm)
     implementation(libs.interop.fhir)
+    implementation(libs.interop.kafka)
 
+    implementation(libs.guava)
     implementation(libs.bundles.ktor)
     implementation(libs.ktorm.core)
     implementation(libs.ktorm.support.mysql)
@@ -28,6 +32,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.interop.commonTestDb)
     testImplementation(libs.rider.core)
+    testImplementation(libs.bundles.data.generators)
 
     testRuntimeOnly("org.testcontainers:mysql")
 
@@ -37,8 +42,14 @@ dependencies {
     itImplementation(libs.bundles.ktor)
     itImplementation(libs.interop.fhir)
     itImplementation(libs.interop.aidbox)
+    itImplementation(libs.common.fhir.r4.models)
+    itImplementation(libs.interop.kafka)
+    itImplementation(libs.kafka.clients)
+    itImplementation(libs.ronin.kafka)
     itImplementation(libs.bundles.data.generators)
     itImplementation(libs.interop.commonJackson)
     itImplementation(libs.interop.commonHttp)
     itImplementation(libs.ktorm.core)
+    itImplementation(libs.kotlinx.coroutines.core)
+    itImplementation(libs.kotlin.logging)
 }

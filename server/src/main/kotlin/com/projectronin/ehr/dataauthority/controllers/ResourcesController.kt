@@ -5,6 +5,7 @@ import com.projectronin.ehr.dataauthority.change.data.ResourceHashesDAO
 import com.projectronin.ehr.dataauthority.change.data.model.ResourceHashesDO
 import com.projectronin.ehr.dataauthority.change.model.ChangeStatus
 import com.projectronin.ehr.dataauthority.change.model.ChangeType
+import com.projectronin.ehr.dataauthority.kafka.KafkaPublisher
 import com.projectronin.ehr.dataauthority.model.BatchResourceResponse
 import com.projectronin.ehr.dataauthority.model.FailedResource
 import com.projectronin.ehr.dataauthority.model.ModificationType
@@ -25,7 +26,8 @@ import java.time.ZoneOffset
 class ResourcesController(
     private val aidboxPublishService: AidboxPublishService,
     private val changeDetectionService: ChangeDetectionService,
-    private val resourceHashesDAO: ResourceHashesDAO
+    private val resourceHashesDAO: ResourceHashesDAO,
+    private val kafkaPublisher: KafkaPublisher
 ) {
     @PostMapping("/tenants/{tenantId}/resources")
     @PreAuthorize("hasAuthority('SCOPE_write:resources')")
@@ -62,6 +64,14 @@ class ResourcesController(
         val published = aidboxPublishService.publish(listOf(resource))
         if (!published) {
             return FailedResource(resource.resourceType, resource.id!!.value!!, "Error publishing to data store.")
+        }
+
+        runCatching { kafkaPublisher.publishResource(resource, changeStatus.type) }.exceptionOrNull()?.let {
+            return FailedResource(
+                resource.resourceType,
+                resource.id!!.value!!,
+                "Failed to publish to Kafka: ${it.localizedMessage}"
+            )
         }
 
         val modificationType = when (changeStatus.type) {

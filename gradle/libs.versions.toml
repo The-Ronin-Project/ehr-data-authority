@@ -1,5 +1,9 @@
 [libraries]
-interop-aidbox = "com.projectronin.interop.publish:interop-aidbox:7.4.7"
+common-fhir-r4-models = "com.projectronin.fhir:common-fhir-r4-models:1.0.1"
+
+guava = "com.google.guava:guava:31.1-jre"
+
+interop-aidbox = "com.projectronin.interop.publish:interop-aidbox:7.5.0"
 
 interop-common = "com.projectronin.interop:interop-common:3.6.0"
 interop-commonHttp = "com.projectronin.interop:interop-common-http:3.6.0"
@@ -10,10 +14,17 @@ interop-commonTestDb = "com.projectronin.interop:interop-common-test-db:3.6.0"
 interop-fhir = "com.projectronin.interop.fhir:interop-fhir:7.7.0"
 interop-fhirGenerators = "com.projectronin.interop.fhir:interop-fhir-generators:7.7.0"
 
+interop-kafka = "com.projectronin.interop.publish:interop-kafka:7.5.0"
+
 jackson-dataformat-xml = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.2"
 jackson-dataformat-yaml = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.2"
 jackson-datatype-jsr310 = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.2"
 jackson-module-kotlin = "com.fasterxml.jackson.module:jackson-module-kotlin:2.14.2"
+
+kafka-clients = "org.apache.kafka:kafka-clients:3.4.0"
+
+kotlin-logging = "io.github.microutils:kotlin-logging:3.0.5"
+kotlinx-coroutines-core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4"
 
 ktor-client-auth = "io.ktor:ktor-client-auth:2.2.4"
 ktor-client-cio = "io.ktor:ktor-client-cio:2.2.4"
@@ -30,6 +41,7 @@ mockk = "io.mockk:mockk:1.13.4"
 mockwebserver = "com.squareup.okhttp3:mockwebserver:4.10.0"
 mysql-connector-java = "mysql:mysql-connector-java:8.0.32"
 rider-core = "com.github.database-rider:rider-core:1.36.0"
+ronin-kafka = "com.projectronin:ronin-kafka:0.3.0"
 ronin-test-data-generator = "com.projectronin.test:ronin-test-data-generator:0.0.2"
 
 spring-boot-parent = "org.springframework.boot:spring-boot-parent:2.7.8"
