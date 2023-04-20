@@ -23,7 +23,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 @RestController
-class ResourcesController(
+class ResourcesWriteController(
     private val aidboxPublishService: AidboxPublishService,
     private val changeDetectionService: ChangeDetectionService,
     private val resourceHashesDAO: ResourceHashesDAO,

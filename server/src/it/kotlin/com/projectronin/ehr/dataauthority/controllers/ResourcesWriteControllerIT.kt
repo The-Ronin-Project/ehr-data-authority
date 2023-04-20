@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class ResourcesControllerIT : BaseEHRDataAuthorityIT() {
+class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
     override val resources = mapOf("patient" to Patient::class)
 
     @Test

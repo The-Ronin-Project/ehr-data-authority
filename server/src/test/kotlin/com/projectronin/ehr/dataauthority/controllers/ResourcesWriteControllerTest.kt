@@ -22,14 +22,14 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import java.util.UUID
 
-class ResourcesControllerTest {
+class ResourcesWriteControllerTest {
     private val aidboxPublishService = mockk<AidboxPublishService>()
     private val changeDetectionService = mockk<ChangeDetectionService>()
     private val resourceHashesDAO = mockk<ResourceHashesDAO>()
     private val kafkaPublisher = mockk<KafkaPublisher>()
 
-    private val resourcesController =
-        ResourcesController(aidboxPublishService, changeDetectionService, resourceHashesDAO, kafkaPublisher)
+    private val resourcesWriteController =
+        ResourcesWriteController(aidboxPublishService, changeDetectionService, resourceHashesDAO, kafkaPublisher)
 
     private val mockPatient = mockk<Patient> {
         every { resourceType } returns "Patient"
@@ -51,7 +51,7 @@ class ResourcesControllerTest {
             )
         } returns mapOf("Patient:1" to changeStatus1)
 
-        val response = resourcesController.addNewResources("tenant", listOf(mockPatient))
+        val response = resourcesWriteController.addNewResources("tenant", listOf(mockPatient))
         assertEquals(HttpStatus.OK, response.statusCode)
 
         val resourceResponse = response.body!!
@@ -79,7 +79,7 @@ class ResourcesControllerTest {
 
         every { aidboxPublishService.publish(listOf(mockPatient)) } returns false
 
-        val response = resourcesController.addNewResources("tenant", listOf(mockPatient))
+        val response = resourcesWriteController.addNewResources("tenant", listOf(mockPatient))
         assertEquals(HttpStatus.OK, response.statusCode)
 
         val resourceResponse = response.body!!
@@ -114,7 +114,7 @@ class ResourcesControllerTest {
             )
         } throws IllegalStateException("FAILURE")
 
-        val response = resourcesController.addNewResources("tenant", listOf(mockPatient))
+        val response = resourcesWriteController.addNewResources("tenant", listOf(mockPatient))
         assertEquals(HttpStatus.OK, response.statusCode)
 
         val resourceResponse = response.body!!
@@ -147,7 +147,7 @@ class ResourcesControllerTest {
         val hashSlot = slot<ResourceHashesDO>()
         every { resourceHashesDAO.insertHash(capture(hashSlot)) } returns mockk()
 
-        val response = resourcesController.addNewResources("tenant", listOf(mockPatient))
+        val response = resourcesWriteController.addNewResources("tenant", listOf(mockPatient))
         assertEquals(HttpStatus.OK, response.statusCode)
 
         val resourceResponse = response.body!!
@@ -186,7 +186,7 @@ class ResourcesControllerTest {
 
         every { resourceHashesDAO.updateHash(hashUuid, 1234) } returns mockk()
 
-        val response = resourcesController.addNewResources("tenant", listOf(mockPatient))
+        val response = resourcesWriteController.addNewResources("tenant", listOf(mockPatient))
         assertEquals(HttpStatus.OK, response.statusCode)
 
         val resourceResponse = response.body!!
@@ -218,7 +218,7 @@ class ResourcesControllerTest {
         every { kafkaPublisher.publishResource(any(), any()) } just Runs
         every { resourceHashesDAO.updateHash(any(), any()) } returns mockk()
 
-        val response = resourcesController.addNewResources("tenant", listOf(mockPatient, mockObservation))
+        val response = resourcesWriteController.addNewResources("tenant", listOf(mockPatient, mockObservation))
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
         assertEquals(2, body.succeeded.size)
@@ -252,7 +252,7 @@ class ResourcesControllerTest {
 
         every { resourceHashesDAO.updateHash(any(), any()) } returns mockk()
 
-        val response = resourcesController.addNewResources("tenant", listOf(mockPatient, mockObservation))
+        val response = resourcesWriteController.addNewResources("tenant", listOf(mockPatient, mockObservation))
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
         assertEquals(1, body.succeeded.size)

@@ -50,7 +50,6 @@ services:
 
   devbox:
     image: healthsamurai/devbox:2206-lts
-    container_name: devbox
     depends_on:
       devbox-db:
         condition: service_healthy
@@ -85,7 +84,6 @@ services:
   devbox-db:
     image: healthsamurai/aidboxdb:13.2
     platform: linux/amd64
-    container_name: devbox-db
     ports:
       - "5437:5432"
     environment:
@@ -146,7 +144,6 @@ services:
   # available at http://localhost:8090. Can view topics and messages
   kafka-ui:
     image: provectuslabs/kafka-ui
-    container_name: kafka-ui
     ports:
       - "8090:8080"
     restart: always
