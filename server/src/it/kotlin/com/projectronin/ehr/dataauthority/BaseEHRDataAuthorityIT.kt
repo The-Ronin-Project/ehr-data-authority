@@ -2,6 +2,7 @@ package com.projectronin.ehr.dataauthority
 
 import com.projectronin.ehr.dataauthority.testclients.DBClient
 import com.projectronin.ehr.dataauthority.testclients.KafkaClient
+import com.projectronin.ehr.dataauthority.testclients.ValidationClient
 import com.projectronin.fhir.r4.Resource
 import com.projectronin.interop.common.http.spring.HttpSpringConfig
 import org.junit.jupiter.api.AfterEach
@@ -58,5 +59,6 @@ abstract class BaseEHRDataAuthorityIT {
     fun cleanup() {
         DBClient.purgeHashes()
         KafkaClient.reset()
+        ValidationClient.clearAllResources()
     }
 }

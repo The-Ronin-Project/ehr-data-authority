@@ -13,7 +13,14 @@ import javax.sql.DataSource
  * Main Spring Boot application for the EHR Data Authority server.
  */
 @ComponentScan(
-    basePackages = ["com.projectronin.ehr", "com.projectronin.interop.aidbox"]
+    basePackages = [
+        "com.projectronin.ehr",
+        "com.projectronin.interop.aidbox",
+        "com.projectronin.interop.fhir.ronin",
+        "com.projectronin.interop.validation",
+        "com.projectronin.interop.datalake",
+        "com.projectronin.interop.ehr"
+    ]
 )
 @Import(KafkaSpringConfig::class)
 @SpringBootApplication

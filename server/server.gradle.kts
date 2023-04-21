@@ -17,6 +17,8 @@ dependencies {
     implementation(libs.interop.commonJackson)
     implementation(libs.interop.commonKtorm)
     implementation(libs.interop.fhir)
+    implementation(libs.interop.ehr.api)
+    implementation(libs.interop.ehr.fhir.ronin)
     implementation(libs.interop.publishers.aidbox)
     implementation(libs.interop.publishers.kafka)
 
@@ -27,6 +29,8 @@ dependencies {
 
     runtimeOnly(libs.liquibase.core)
     runtimeOnly(libs.mysql.connector.java)
+    runtimeOnly(libs.interop.publishers.datalake)
+    runtimeOnly(libs.interop.validation.client)
 
     testImplementation(platform(libs.testcontainers.bom))
     testImplementation(libs.mockk)
@@ -42,6 +46,7 @@ dependencies {
     itImplementation(libs.bundles.ktor)
     itImplementation(libs.interop.fhir)
     itImplementation(libs.common.fhir.r4.models)
+    itImplementation(libs.interop.validation.client)
     itImplementation(libs.interop.publishers.aidbox)
     itImplementation(libs.interop.publishers.kafka)
     itImplementation(libs.kafka.clients)

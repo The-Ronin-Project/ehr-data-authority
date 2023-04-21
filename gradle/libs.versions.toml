@@ -9,11 +9,17 @@ interop-commonJackson = "com.projectronin.interop:interop-common-jackson:3.6.0"
 interop-commonKtorm = "com.projectronin.interop:interop-common-ktorm:3.6.0"
 interop-commonTestDb = "com.projectronin.interop:interop-common-test-db:3.6.0"
 
-interop-fhir = "com.projectronin.interop.fhir:interop-fhir:7.7.0"
-interop-fhirGenerators = "com.projectronin.interop.fhir:interop-fhir-generators:7.7.0"
+interop-fhir = "com.projectronin.interop.fhir:interop-fhir:7.8.0"
+interop-fhirGenerators = "com.projectronin.interop.fhir:interop-fhir-generators:7.8.0"
+
+interop-ehr-api = "com.projectronin.interop.ehr:interop-ehr:9.7.1"
+interop-ehr-fhir-ronin = "com.projectronin.interop.ehr:interop-fhir-ronin:9.7.1"
 
 interop-publishers-aidbox = "com.projectronin.interop.publish:interop-aidbox:7.6.0"
+interop-publishers-datalake = "com.projectronin.interop.publish:interop-datalake:7.6.0"
 interop-publishers-kafka = "com.projectronin.interop.publish:interop-kafka:7.6.0"
+
+interop-validation-client = "com.projectronin.interop.validation:interop-validation-client:2.0.0"
 
 jackson-dataformat-xml = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.2"
 jackson-dataformat-yaml = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.2"
@@ -24,6 +30,7 @@ kafka-clients = "org.apache.kafka:kafka-clients:3.4.0"
 
 kotlin-logging = "io.github.microutils:kotlin-logging:3.0.5"
 kotlinx-coroutines-core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4"
+kotlinx-serialization-json = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0"
 
 ktor-client-auth = "io.ktor:ktor-client-auth:2.2.4"
 ktor-client-cio = "io.ktor:ktor-client-cio:2.2.4"

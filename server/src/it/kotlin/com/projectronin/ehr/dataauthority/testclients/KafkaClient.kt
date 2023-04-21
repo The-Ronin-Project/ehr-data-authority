@@ -28,7 +28,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import mu.KotlinLogging
 import org.apache.kafka.common.ConsumerGroupState
+import java.util.Timer
 import java.util.UUID
+import kotlin.concurrent.schedule
 import kotlin.reflect.KClass
 
 /**
@@ -198,13 +200,25 @@ object KafkaClient {
      * Reads the currently processed events for [resourceName] since the last call to [reset] or [readEvents]. By calling
      * this method, you will reset the current queue of processed events.
      */
-    fun readEvents(resourceName: String): List<RoninEvent<*>> {
-        return runBlocking {
-            mutex.withLock {
-                val events = eventsByResource[resourceName] ?: mutableListOf()
-                eventsByResource[resourceName] = mutableListOf()
-                events.toList()
+    fun readEvents(resourceName: String, maxWait: Long = 500): List<RoninEvent<*>> {
+        var waiting = true
+        Timer().schedule(maxWait) {
+            waiting = false
+        }
+
+        while (waiting) {
+            val events = runBlocking {
+                mutex.withLock {
+                    val events = eventsByResource[resourceName] ?: mutableListOf()
+                    eventsByResource[resourceName] = mutableListOf()
+                    events.toList()
+                }
+            }
+            if (events.isNotEmpty()) {
+                return events
             }
         }
+
+        return emptyList()
     }
 }

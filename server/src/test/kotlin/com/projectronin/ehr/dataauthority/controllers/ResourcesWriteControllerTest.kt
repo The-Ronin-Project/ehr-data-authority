@@ -7,6 +7,9 @@ import com.projectronin.ehr.dataauthority.change.model.ChangeStatus
 import com.projectronin.ehr.dataauthority.change.model.ChangeType
 import com.projectronin.ehr.dataauthority.kafka.KafkaPublisher
 import com.projectronin.ehr.dataauthority.model.ModificationType
+import com.projectronin.ehr.dataauthority.validation.FailedValidation
+import com.projectronin.ehr.dataauthority.validation.PassedValidation
+import com.projectronin.ehr.dataauthority.validation.ValidationManager
 import com.projectronin.interop.aidbox.AidboxPublishService
 import com.projectronin.interop.fhir.r4.resource.Observation
 import com.projectronin.interop.fhir.r4.resource.Patient
@@ -27,9 +30,16 @@ class ResourcesWriteControllerTest {
     private val changeDetectionService = mockk<ChangeDetectionService>()
     private val resourceHashesDAO = mockk<ResourceHashesDAO>()
     private val kafkaPublisher = mockk<KafkaPublisher>()
+    private val validationManager = mockk<ValidationManager>()
 
     private val resourcesWriteController =
-        ResourcesWriteController(aidboxPublishService, changeDetectionService, resourceHashesDAO, kafkaPublisher)
+        ResourcesWriteController(
+            aidboxPublishService,
+            changeDetectionService,
+            resourceHashesDAO,
+            kafkaPublisher,
+            validationManager
+        )
 
     private val mockPatient = mockk<Patient> {
         every { resourceType } returns "Patient"
@@ -67,6 +77,40 @@ class ResourcesWriteControllerTest {
     }
 
     @Test
+    fun `failed validation returns as failure`() {
+        val changeStatus1 = ChangeStatus("Patient", "1", ChangeType.CHANGED, UUID.randomUUID(), 1234)
+
+        every {
+            changeDetectionService.determineChangeStatuses(
+                "tenant",
+                mapOf("Patient:1" to mockPatient)
+            )
+        } returns mapOf("Patient:1" to changeStatus1)
+
+        every {
+            validationManager.validateResource(
+                mockPatient,
+                "tenant"
+            )
+        } returns FailedValidation("Failed validation!")
+
+        val response = resourcesWriteController.addNewResources("tenant", listOf(mockPatient))
+        assertEquals(HttpStatus.OK, response.statusCode)
+
+        val resourceResponse = response.body!!
+        assertEquals(0, resourceResponse.succeeded.size)
+        assertEquals(1, resourceResponse.failed.size)
+
+        val failure1 = resourceResponse.failed[0]
+        assertEquals("Patient", failure1.resourceType)
+        assertEquals("1", failure1.resourceId)
+        assertEquals("Failed validation!", failure1.error)
+
+        verify { aidboxPublishService wasNot Called }
+        verify { kafkaPublisher wasNot Called }
+    }
+
+    @Test
     fun `failed aidbox publication returns as failure`() {
         val changeStatus1 = ChangeStatus("Patient", "1", ChangeType.CHANGED, UUID.randomUUID(), 1234)
 
@@ -76,6 +120,8 @@ class ResourcesWriteControllerTest {
                 mapOf("Patient:1" to mockPatient)
             )
         } returns mapOf("Patient:1" to changeStatus1)
+
+        every { validationManager.validateResource(mockPatient, "tenant") } returns PassedValidation
 
         every { aidboxPublishService.publish(listOf(mockPatient)) } returns false
 
@@ -104,6 +150,8 @@ class ResourcesWriteControllerTest {
                 mapOf("Patient:1" to mockPatient)
             )
         } returns mapOf("Patient:1" to changeStatus1)
+
+        every { validationManager.validateResource(mockPatient, "tenant") } returns PassedValidation
 
         every { aidboxPublishService.publish(listOf(mockPatient)) } returns true
 
@@ -139,6 +187,8 @@ class ResourcesWriteControllerTest {
                 mapOf("Patient:1" to mockPatient)
             )
         } returns mapOf("Patient:1" to changeStatus1)
+
+        every { validationManager.validateResource(mockPatient, "tenant") } returns PassedValidation
 
         every { aidboxPublishService.publish(listOf(mockPatient)) } returns true
 
@@ -180,6 +230,8 @@ class ResourcesWriteControllerTest {
             )
         } returns mapOf("Patient:1" to changeStatus1)
 
+        every { validationManager.validateResource(mockPatient, "tenant") } returns PassedValidation
+
         every { aidboxPublishService.publish(listOf(mockPatient)) } returns true
 
         every { kafkaPublisher.publishResource(mockPatient, ChangeType.CHANGED) } just Runs
@@ -214,6 +266,9 @@ class ResourcesWriteControllerTest {
             )
         } returns mapOf("Patient:1" to changeStatus1, "Observation:2" to changeStatus2)
 
+        every { validationManager.validateResource(mockPatient, "tenant") } returns PassedValidation
+        every { validationManager.validateResource(mockObservation, "tenant") } returns PassedValidation
+
         every { aidboxPublishService.publish(any()) } returns true
         every { kafkaPublisher.publishResource(any(), any()) } just Runs
         every { resourceHashesDAO.updateHash(any(), any()) } returns mockk()
@@ -245,6 +300,9 @@ class ResourcesWriteControllerTest {
                 mapOf("Patient:1" to mockPatient, "Observation:2" to mockObservation)
             )
         } returns mapOf("Patient:1" to changeStatus1, "Observation:2" to changeStatus2)
+
+        every { validationManager.validateResource(mockPatient, "tenant") } returns PassedValidation
+        every { validationManager.validateResource(mockObservation, "tenant") } returns PassedValidation
 
         every { aidboxPublishService.publish(any()) } returnsMany listOf(true, false)
 

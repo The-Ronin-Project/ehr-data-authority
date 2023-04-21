@@ -14,7 +14,7 @@ dependencies {
     implementation(libs.interop.commonHttp)
     implementation(libs.interop.commonJackson)
     implementation(libs.interop.fhir)
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.mockk)
     testImplementation(libs.ktor.client.mock)

@@ -11,6 +11,9 @@ import com.projectronin.ehr.dataauthority.model.FailedResource
 import com.projectronin.ehr.dataauthority.model.ModificationType
 import com.projectronin.ehr.dataauthority.model.ResourceResponse
 import com.projectronin.ehr.dataauthority.model.SucceededResource
+import com.projectronin.ehr.dataauthority.validation.FailedValidation
+import com.projectronin.ehr.dataauthority.validation.PassedValidation
+import com.projectronin.ehr.dataauthority.validation.ValidationManager
 import com.projectronin.interop.aidbox.AidboxPublishService
 import com.projectronin.interop.fhir.r4.resource.Resource
 import org.springframework.http.ResponseEntity
@@ -27,7 +30,8 @@ class ResourcesWriteController(
     private val aidboxPublishService: AidboxPublishService,
     private val changeDetectionService: ChangeDetectionService,
     private val resourceHashesDAO: ResourceHashesDAO,
-    private val kafkaPublisher: KafkaPublisher
+    private val kafkaPublisher: KafkaPublisher,
+    private val validationManager: ValidationManager
 ) {
     @PostMapping("/tenants/{tenantId}/resources")
     @PreAuthorize("hasAuthority('SCOPE_write:resources')")
@@ -47,7 +51,17 @@ class ResourcesWriteController(
                     ModificationType.UNMODIFIED
                 )
 
-                else -> publishResource(resource, tenantId, changeStatus)
+                else -> {
+                    val validation = validationManager.validateResource(resource, tenantId)
+                    when (validation) {
+                        is PassedValidation -> publishResource(resource, tenantId, changeStatus)
+                        is FailedValidation -> FailedResource(
+                            resource.resourceType,
+                            resource.id!!.value!!,
+                            validation.failureMessage
+                        )
+                    }
+                }
             }
         }
 

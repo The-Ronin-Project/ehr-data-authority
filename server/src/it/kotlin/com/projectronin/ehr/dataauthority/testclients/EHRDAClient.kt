@@ -67,7 +67,7 @@ object EHRDAClient {
             url = AUTH_URL,
             formParameters = Parameters.build {
                 append("grant_type", "client_credentials")
-                append("client_id", "id")
+                append("client_id", "ehr-client")
                 append("client_secret", "secret")
             }
         ).body()
