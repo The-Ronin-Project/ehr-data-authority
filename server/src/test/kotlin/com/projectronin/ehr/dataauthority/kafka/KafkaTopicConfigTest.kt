@@ -102,4 +102,74 @@ class KafkaTopicConfigTest {
         assertEquals(com.projectronin.interop.fhir.r4.resource.PractitionerRole::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.PractitionerRole::class, topic.eventClass)
     }
+
+    @Test
+    fun `creates encounter topic`() {
+        val topic = kafkaTopicConfig.encounterTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.encounter.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Encounter-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.Encounter::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.Encounter::class, topic.eventClass)
+    }
+
+    @Test
+    fun `creates medication topic`() {
+        val topic = kafkaTopicConfig.medicationTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.medication.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Medication-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.Medication::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.Medication::class, topic.eventClass)
+    }
+
+    @Test
+    fun `creates medication request topic`() {
+        val topic = kafkaTopicConfig.medicationRequestTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.medication-request.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/MedicationRequest-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.MedicationRequest::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.MedicationRequest::class, topic.eventClass)
+    }
+
+    @Test
+    fun `creates medication statement topic`() {
+        val topic = kafkaTopicConfig.medicationStatementTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.medication-statement.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/MedicationStatement-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.MedicationStatement::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.MedicationStatement::class, topic.eventClass)
+    }
+
+    @Test
+    fun `creates observation topic`() {
+        val topic = kafkaTopicConfig.observationTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.observation.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Observation-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.Observation::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.Observation::class, topic.eventClass)
+    }
 }

@@ -27,9 +27,39 @@ class KafkaTopicConfig(kafkaConfig: KafkaConfig) {
     )
 
     @Bean
+    fun encounterTopic() = createTopic(
+        com.projectronin.interop.fhir.r4.resource.Encounter::class,
+        com.projectronin.fhir.r4.Encounter::class
+    )
+
+    @Bean
     fun locationTopic() = createTopic(
         com.projectronin.interop.fhir.r4.resource.Location::class,
         com.projectronin.fhir.r4.Location::class
+    )
+
+    @Bean
+    fun medicationTopic() = createTopic(
+        com.projectronin.interop.fhir.r4.resource.Medication::class,
+        com.projectronin.fhir.r4.Medication::class
+    )
+
+    @Bean
+    fun medicationRequestTopic() = createTopic(
+        com.projectronin.interop.fhir.r4.resource.MedicationRequest::class,
+        com.projectronin.fhir.r4.MedicationRequest::class
+    )
+
+    @Bean
+    fun medicationStatementTopic() = createTopic(
+        com.projectronin.interop.fhir.r4.resource.MedicationStatement::class,
+        com.projectronin.fhir.r4.MedicationStatement::class
+    )
+
+    @Bean
+    fun observationTopic() = createTopic(
+        com.projectronin.interop.fhir.r4.resource.Observation::class,
+        com.projectronin.fhir.r4.Observation::class
     )
 
     @Bean
