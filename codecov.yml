@@ -4,16 +4,16 @@ codecov:
 coverage:
   status:
     project:
-      ehr-data-authority-server:
+      server:
         target: auto
         threshold: 1%
         flags:
-          - ehr-data-authority-server
-      default:
-        mock-ehr:
-          target: 80
-          threshold: 1%
-          base: auto
+          - server
+      client:
+        target: auto
+        threshold: 1%
+        flags:
+          - client
     patch:
       default:
         target: 80
@@ -26,11 +26,15 @@ comment:
   require_changes: false
   require_base: false
   require_head: true
-  branches: []
+  branches: [ ]
   show_carryforward_flags: false
 
 flags:
-  ehr-data-authority-server:
+  server:
     paths:
-      - ehr-data-authority-server/
+      - server/
+    carryforward: true
+  client:
+    paths:
+      - client/
     carryforward: true

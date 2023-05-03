@@ -42,5 +42,5 @@ jobs:
           DD_ENV: ci
           DATADOG_SITE: datadoghq.com
           DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
-        run: datadog-ci junit upload --service ehr-data-authority-it ./ehr-data-authority/build/test-results/it
+        run: datadog-ci junit upload --service ehr-data-authority-server-it ./server/build/test-results/it
 
