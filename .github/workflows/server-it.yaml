@@ -34,7 +34,7 @@ jobs:
         env:
           AIDBOX_LICENSE_ID: ${{ secrets.ORG_AIDBOX_LICENSE_ID }}
           AIDBOX_LICENSE_KEY: ${{ secrets.ORG_AIDBOX_LICENSE_KEY }}
-        run: ./gradlew :server:it
+        run: ./gradlew :ehr-data-authority-server:it
 
       - name: Upload report to DataDog
         if: always() && !cancelled()
@@ -42,5 +42,5 @@ jobs:
           DD_ENV: ci
           DATADOG_SITE: datadoghq.com
           DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
-        run: datadog-ci junit upload --service ehr-data-authority-server-it ./server/build/test-results/it
+        run: datadog-ci junit upload --service ehr-data-authority-server-it ./ehr-data-authority-server/build/test-results/it
 

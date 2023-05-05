@@ -23,13 +23,13 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Gradlew Test
-        run: ./gradlew :server:test
+        run: ./gradlew :ehr-data-authority-server:test
       - name: Upload Coverage
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
-          file: ./server/codecov/test/jacocoTestReport.xml
+          file: ./ehr-data-authority-server/codecov/test/jacocoTestReport.xml
           flags: server
 
       - name: Upload report to DataDog
@@ -38,4 +38,4 @@ jobs:
           DD_ENV: ci
           DATADOG_SITE: datadoghq.com
           DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
-        run: datadog-ci junit upload --service ehr-data-authority-server ./server/build/test-results/test
+        run: datadog-ci junit upload --service ehr-data-authority-server ./ehr-data-authority-server/build/test-results/test

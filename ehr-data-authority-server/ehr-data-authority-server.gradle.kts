@@ -1,6 +1,5 @@
 plugins {
     id("com.projectronin.interop.gradle.spring-boot")
-    id("com.projectronin.interop.gradle.integration")
     id("com.projectronin.interop.gradle.docker-integration")
 }
 

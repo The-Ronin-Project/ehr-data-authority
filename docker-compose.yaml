@@ -2,7 +2,7 @@ services:
   ehr-data-authority:
     restart: on-failure
     build:
-      context: ./server
+      context: ./ehr-data-authority-server
       dockerfile: Dockerfile
     image: ehr-data-authority:local
     environment:

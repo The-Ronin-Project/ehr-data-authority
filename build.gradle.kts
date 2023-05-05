@@ -1,5 +1,5 @@
 plugins {
-    id("com.projectronin.interop.gradle.base")
+    id("com.projectronin.interop.gradle.version")
 }
 
 subprojects {
