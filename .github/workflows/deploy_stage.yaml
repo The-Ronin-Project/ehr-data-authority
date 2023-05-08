@@ -1,0 +1,25 @@
+name: STAGE - Deploy to ArgoCD
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: tag of the image to deploy
+        required: true
+        type: string
+
+jobs:
+  argocd_stage:
+    uses: projectronin/github/.github/workflows/argocd_deploy.yml@argocd_deploy/v1
+    with:
+      environment: stage
+      image-tag: ${{ inputs.image_tag }}
+    secrets:
+      argocd-svc-automation: ${{ secrets.ARGOCD_SVC_AUTOMATION }}
+
+  tag_stage_deploy:
+    uses: projectronin/github/.github/workflows/tag_commit_w_stamp.yml@tag_commit_w_stamp/v1
+    needs: [argocd_stage]
+    with:
+      deploy-env: stage
+      commit-sha: ${{ inputs.image_tag }}

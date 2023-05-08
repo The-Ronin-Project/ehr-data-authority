@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Check Libs for Snapshots
         run: |
           if grep -- -SNAPSHOT ./gradle/libs.versions.toml
