@@ -45,6 +45,8 @@ ktorm-support-mysql = "org.ktorm:ktorm-support-mysql:3.6.0"
 
 liquibase-core = "org.liquibase:liquibase-core:4.21.1"
 
+logstash-logback-encoder = "net.logstash.logback:logstash-logback-encoder:7.3"
+
 mockk = "io.mockk:mockk:1.13.5"
 
 mockwebserver = "com.squareup.okhttp3:mockwebserver:4.11.0"

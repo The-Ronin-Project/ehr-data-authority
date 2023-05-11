@@ -31,6 +31,9 @@ dependencies {
     runtimeOnly(libs.interop.publishers.datalake)
     runtimeOnly(libs.interop.validation.client)
 
+    // Needed to format logs for DataDog
+    runtimeOnly(libs.logstash.logback.encoder)
+
     testImplementation(platform(libs.testcontainers.bom))
     testImplementation(libs.mockk)
     testImplementation(libs.interop.commonTestDb)
