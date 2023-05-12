@@ -26,7 +26,7 @@ jobs:
       - name: Get version.
         id: get-version
         run: |
-          VERSION=$(./gradlew currentVersion | awk '{ if(/Project version:/) { print $3; exit } }' | cut -d\- -f1)
+          VERSION=$(./gradlew currentVersion | awk '{ if(/Project version:/) { print $3; exit } }')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
     outputs:
       version: ${{ steps.get-version.outputs.version }}
