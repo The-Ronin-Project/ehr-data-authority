@@ -189,7 +189,6 @@ services:
   mock-server:
     platform: linux/amd64
     image: "docker-proxy.devops.projectronin.io/mockserver/mockserver:latest"
-    container_name: mirth-mock-oci
     volumes:
       - "./mock-oci/config/mockserver.properties:/config/mockserver.properties"
       - "./mock-oci/expectations:/expectations"

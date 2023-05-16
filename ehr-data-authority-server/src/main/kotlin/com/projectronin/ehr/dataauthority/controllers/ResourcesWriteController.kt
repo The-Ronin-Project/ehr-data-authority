@@ -15,6 +15,8 @@ import com.projectronin.ehr.dataauthority.validation.FailedValidation
 import com.projectronin.ehr.dataauthority.validation.PassedValidation
 import com.projectronin.ehr.dataauthority.validation.ValidationManager
 import com.projectronin.interop.aidbox.AidboxPublishService
+import com.projectronin.interop.fhir.r4.CodeSystem
+import com.projectronin.interop.fhir.r4.datatype.Identifier
 import com.projectronin.interop.fhir.r4.resource.Resource
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import kotlin.reflect.full.memberProperties
 
 @RestController
 class ResourcesWriteController(
@@ -39,6 +42,17 @@ class ResourcesWriteController(
         @PathVariable("tenantId") tenantId: String,
         @RequestBody resources: List<Resource<*>>
     ): ResponseEntity<BatchResourceResponse> {
+        val mismatches = getResourceTenantMismatches(resources, tenantId)
+        if (mismatches.isNotEmpty()) {
+            val failedResources = mismatches.map {
+                FailedResource(
+                    it.key.resourceType,
+                    it.key.id!!.value!!,
+                    it.value
+                )
+            }
+            return ResponseEntity.badRequest().body(BatchResourceResponse(emptyList(), failedResources))
+        }
         val resourcesByKey = resources.associateBy { it.toKey() }
         val changeStatusesByKey = changeDetectionService.determineChangeStatuses(tenantId, resourcesByKey)
 
@@ -115,4 +129,33 @@ class ResourcesWriteController(
             hash = this@toHashDO.hash
             updateDateTime = OffsetDateTime.now(ZoneOffset.UTC)
         }
+
+    private fun getResourceTenantMismatches(resources: List<Resource<*>>, tenantId: String): Map<Resource<*>, String> {
+        return resources.mapNotNull { resource ->
+            val error = checkResourcesAgainstTenant(resource, tenantId)
+            if (error != null) {
+                Pair(resource, error)
+            } else {
+                null
+            }
+        }.associate { it.first to it.second }
+    }
+
+    private fun checkResourcesAgainstTenant(resource: Resource<*>, tenantId: String): String? {
+        if (resource.id?.value?.startsWith(tenantId) != true) {
+            return "Resource ID does not match given tenant $tenantId"
+        }
+        val properties = resource.javaClass.kotlin.memberProperties
+        val identifierProperty = properties.singleOrNull {
+            it.name == "identifier"
+        } ?: return null
+        // the null here is a weird case, where we have a property called 'identifier'
+        // but it's not a list of identifier classes, something like a bundle would get through
+        val identifiers = identifierProperty.get(resource) as? List<Identifier> ?: return null
+        val tenantIdentifier = identifiers.singleOrNull { it.system == CodeSystem.RONIN_TENANT.uri }
+        if (tenantIdentifier == null || tenantIdentifier.value?.value != tenantId) {
+            return "Resource does not contain a tenant identifier for $tenantId"
+        }
+        return null
+    }
 }
