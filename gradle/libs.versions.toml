@@ -3,11 +3,11 @@ common-fhir-r4-models = "com.projectronin.fhir:common-fhir-r4-models:1.0.1"
 
 guava = "com.google.guava:guava:31.1-jre"
 
-interop-common = "com.projectronin.interop:interop-common:3.6.0"
-interop-commonHttp = "com.projectronin.interop:interop-common-http:3.6.0"
-interop-commonJackson = "com.projectronin.interop:interop-common-jackson:3.6.0"
-interop-commonKtorm = "com.projectronin.interop:interop-common-ktorm:3.6.0"
-interop-commonTestDb = "com.projectronin.interop:interop-common-test-db:3.6.0"
+interop-common = "com.projectronin.interop:interop-common:3.7.0"
+interop-commonHttp = "com.projectronin.interop:interop-common-http:3.7.0"
+interop-commonJackson = "com.projectronin.interop:interop-common-jackson:3.7.0"
+interop-commonKtorm = "com.projectronin.interop:interop-common-ktorm:3.7.0"
+interop-commonTestDb = "com.projectronin.interop:interop-common-test-db:3.7.0"
 
 interop-fhir = "com.projectronin.interop.fhir:interop-fhir:8.1.0"
 interop-fhirGenerators = "com.projectronin.interop.fhir:interop-fhir-generators:8.1.0"
