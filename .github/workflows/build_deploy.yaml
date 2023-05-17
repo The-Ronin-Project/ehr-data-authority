@@ -53,6 +53,6 @@ jobs:
       - image-build-push
     with:
       environment: dev
-      image-tag: ${{ needs.fetch-metadata.outputs.version }}
+      image-tag: ${{ github.sha }}
     secrets:
       argocd-svc-automation: ${{ secrets.ARGOCD_SVC_AUTOMATION }}
