@@ -12,6 +12,7 @@ import com.projectronin.fhir.r4.Patient
 import com.projectronin.interop.fhir.generators.datatypes.contactPoint
 import com.projectronin.interop.fhir.generators.datatypes.extension
 import com.projectronin.interop.fhir.generators.datatypes.identifier
+import com.projectronin.interop.fhir.generators.datatypes.name
 import com.projectronin.interop.fhir.generators.resources.PatientGenerator
 import com.projectronin.interop.fhir.generators.resources.patient
 import com.projectronin.interop.fhir.r4.CodeSystem
@@ -297,6 +298,13 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
             } plus identifier {
                 system of CodeSystem.RONIN_MRN.uri
                 type of CodeableConcepts.RONIN_MRN
+            } plus identifier {
+                value of "EHR Data Authority"
+                system of CodeSystem.RONIN_DATA_AUTHORITY.uri
+                type of CodeableConcepts.RONIN_DATA_AUTHORITY_ID
+            }
+            name plus name {
+                use of Code("official")
             }
             telecom of listOf(
                 contactPoint {
