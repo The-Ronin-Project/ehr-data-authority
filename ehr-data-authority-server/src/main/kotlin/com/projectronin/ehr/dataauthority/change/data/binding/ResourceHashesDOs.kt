@@ -12,6 +12,6 @@ object ResourceHashesDOs : Table<ResourceHashesDO>("resource_hashes") {
     var resourceId = varchar("resource_id").bindTo { it.resourceId }
     var resourceType = varchar("resource_type").bindTo { it.resourceType }
     var tenantId = varchar("tenant_id").bindTo { it.tenantId }
-    var hash = int("hash").bindTo { it.hash }
+    var hash = int("hash_code").bindTo { it.hash }
     var updateDateTime = utcDateTime("update_dt_tm").bindTo { it.updateDateTime }
 }

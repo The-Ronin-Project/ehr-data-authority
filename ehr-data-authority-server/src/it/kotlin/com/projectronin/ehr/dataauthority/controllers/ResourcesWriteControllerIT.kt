@@ -281,6 +281,53 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
         assertEquals(0, validationResources.size)
     }
 
+    @Test
+    fun `repeat requests result in unmodified`() {
+        // First we do a full new request.
+        val patient = roninPatient("tenant-12345", "tenant")
+
+        val response = EHRDAClient.addResources("tenant", listOf(patient))
+        assertEquals(1, response.succeeded.size)
+        assertEquals(0, response.failed.size)
+
+        val success1 = response.succeeded[0]
+        assertEquals("Patient", success1.resourceType)
+        assertEquals("tenant-12345", success1.resourceId)
+        assertEquals(ModificationType.CREATED, success1.modificationType)
+
+        val aidboxP = AidboxClient.getResource("Patient", "tenant-12345")
+        assertEquals("tenant-12345", aidboxP.id!!.value)
+
+        val hashP = DBClient.getStoredHashValue("tenant", "Patient", "tenant-12345")
+        assertEquals(patient.hashCode(), hashP)
+
+        val kafkaEvents = KafkaClient.readEvents("patient")
+        assertEquals(1, kafkaEvents.size)
+        assertTrue(kafkaEvents[0].type.endsWith("patient.create"))
+
+        val validationResources = ValidationClient.getResources()
+        assertEquals(0, validationResources.size)
+
+        // Now we do it all again with the same request.
+
+        val response2 = EHRDAClient.addResources("tenant", listOf(patient))
+        assertEquals(1, response2.succeeded.size)
+        assertEquals(0, response2.failed.size)
+
+        val success2 = response2.succeeded[0]
+        assertEquals("Patient", success2.resourceType)
+        assertEquals("tenant-12345", success2.resourceId)
+        assertEquals(ModificationType.UNMODIFIED, success2.modificationType)
+
+        val kafkaEvents2 = KafkaClient.readEvents("patient")
+        assertEquals(0, kafkaEvents2.size)
+
+        val validationResources2 = ValidationClient.getResources()
+        assertEquals(0, validationResources2.size)
+
+        AidboxClient.deleteResource("Patient", "tenant-12345")
+    }
+
     // This should only be used until INT-1652 has been completed.
     private fun roninPatient(fhirId: String, tenantId: String, block: PatientGenerator.() -> Unit = {}) =
         patient {

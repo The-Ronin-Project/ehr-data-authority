@@ -13,6 +13,7 @@ import org.ktorm.dsl.select
 import org.ktorm.dsl.update
 import org.ktorm.dsl.where
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -36,6 +37,7 @@ class ResourceHashesDAO(private val database: Database) {
     /**
      * Inserts the [resourceHashesDO] and returns the current view from the data store.
      */
+    @Transactional
     fun insertHash(resourceHashesDO: ResourceHashesDO): ResourceHashesDO {
         val uuid = UUID.randomUUID()
 
@@ -53,6 +55,7 @@ class ResourceHashesDAO(private val database: Database) {
     /**
      * Updates [hashId] to the [newHash] and returns the current view from the data store.
      */
+    @Transactional
     fun updateHash(hashId: UUID, newHash: Int): ResourceHashesDO {
         logger.debug { "Updating hash value for $hashId to $newHash" }
 

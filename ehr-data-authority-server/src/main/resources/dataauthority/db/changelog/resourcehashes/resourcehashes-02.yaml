@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: resource-hashes-rename-hash-column
+      author: Josh Smith
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            - columnExists:
+                tableName: resource_hashes
+                columnName: hash_code
+      changes:
+        - addColumn:
+            tableName: resource_hashes
+            columns:
+              - column:
+                  name: hash_code
+                  type: INT(50)
+                  constraints:
+                    nullable: true
+        - sql:
+            sql: UPDATE resource_hashes SET hash_code = `hash`
+        - addNotNullConstraint:
+            tableName: resource_hashes
+            columnName: hash_code
+            columnDataType: INT(50)
+        - dropColumn:
+            tableName: resource_hashes
+            columnName: hash

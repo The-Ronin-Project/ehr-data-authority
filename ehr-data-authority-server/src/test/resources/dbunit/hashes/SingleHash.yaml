@@ -4,5 +4,5 @@ resource_hashes:
     resource_id: "12345"
     resource_type: "Patient"
     tenant_id: "tenant1"
-    hash: 13579
+    hash_code: 13579
     update_dt_tm: "2022-08-01 11:18:00 +0000"

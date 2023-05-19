@@ -7,6 +7,9 @@ import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Import
+import org.springframework.jdbc.datasource.DataSourceTransactionManager
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.annotation.EnableTransactionManagement
 import javax.sql.DataSource
 
 /**
@@ -24,9 +27,14 @@ import javax.sql.DataSource
 )
 @Import(KafkaSpringConfig::class)
 @SpringBootApplication
+@EnableTransactionManagement
 class EHRDataAuthorityServer {
     @Bean
     fun database(dataSource: DataSource): Database = Database.connectWithSpringSupport(dataSource)
+
+    @Bean
+    fun transactionManager(dataSource: DataSource): PlatformTransactionManager =
+        DataSourceTransactionManager(dataSource)
 }
 
 fun main(args: Array<String>) {
