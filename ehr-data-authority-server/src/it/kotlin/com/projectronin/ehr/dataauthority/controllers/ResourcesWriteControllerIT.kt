@@ -56,7 +56,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
         AidboxClient.deleteResource("Patient", "tenant-12345")
 
         val hashP = DBClient.getStoredHashValue("tenant", "Patient", "tenant-12345")
-        assertEquals(patient.hashCode(), hashP)
+        assertEquals(patient.consistentHashCode(), hashP)
 
         val kafkaEvents = KafkaClient.readEvents("patient")
         assertEquals(1, kafkaEvents.size)
@@ -72,7 +72,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
             gender of AdministrativeGender.FEMALE.asCode()
         }
         val addedPatient = AidboxClient.addResource(originalPatient)
-        DBClient.setHashValue("tenant", "Patient", "tenant-12345", originalPatient.hashCode())
+        DBClient.setHashValue("tenant", "Patient", "tenant-12345", originalPatient.consistentHashCode())
 
         val updatedPatient = originalPatient.copy(gender = AdministrativeGender.MALE.asCode())
 
@@ -91,7 +91,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
         AidboxClient.deleteResource("Patient", "tenant-12345")
 
         val hashP = DBClient.getStoredHashValue("tenant", "Patient", "tenant-12345")
-        assertEquals(updatedPatient.hashCode(), hashP)
+        assertEquals(updatedPatient.consistentHashCode(), hashP)
 
         val kafkaEvents = KafkaClient.readEvents("patient")
         assertEquals(1, kafkaEvents.size)
@@ -111,7 +111,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
         val updatedPatient = originalPatient.copy(gender = AdministrativeGender.MALE.asCode())
 
         // Use the updated patient's hashCode.
-        DBClient.setHashValue("tenant", "Patient", "tenant-12345", updatedPatient.hashCode())
+        DBClient.setHashValue("tenant", "Patient", "tenant-12345", updatedPatient.consistentHashCode())
 
         val response = EHRDAClient.addResources("tenant", listOf(updatedPatient))
         assertEquals(1, response.succeeded.size)
@@ -128,7 +128,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
         AidboxClient.deleteResource("Patient", "tenant-12345")
 
         val hashP = DBClient.getStoredHashValue("tenant", "Patient", "tenant-12345")
-        assertEquals(updatedPatient.hashCode(), hashP)
+        assertEquals(updatedPatient.consistentHashCode(), hashP)
 
         val kafkaEvents = KafkaClient.readEvents("patient")
         assertEquals(1, kafkaEvents.size)
@@ -144,7 +144,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
             gender of AdministrativeGender.FEMALE.asCode()
         }
         val addedPatient = AidboxClient.addResource(originalPatient)
-        DBClient.setHashValue("tenant", "Patient", "tenant-12345", originalPatient.hashCode())
+        DBClient.setHashValue("tenant", "Patient", "tenant-12345", originalPatient.consistentHashCode())
 
         val response = EHRDAClient.addResources("tenant", listOf(originalPatient))
         assertEquals(1, response.succeeded.size)
@@ -161,7 +161,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
         AidboxClient.deleteResource("Patient", "tenant-12345")
 
         val hashP = DBClient.getStoredHashValue("tenant", "Patient", "tenant-12345")
-        assertEquals(originalPatient.hashCode(), hashP)
+        assertEquals(originalPatient.consistentHashCode(), hashP)
 
         val kafkaEvents = KafkaClient.readEvents("patient")
         assertEquals(0, kafkaEvents.size)
@@ -197,9 +197,9 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
         AidboxClient.deleteResource("Patient", "tenant-67890")
 
         val hashP1 = DBClient.getStoredHashValue("tenant", "Patient", "tenant-12345")
-        assertEquals(patient1.hashCode(), hashP1)
+        assertEquals(patient1.consistentHashCode(), hashP1)
         val hashP2 = DBClient.getStoredHashValue("tenant", "Patient", "tenant-67890")
-        assertEquals(patient2.hashCode(), hashP2)
+        assertEquals(patient2.consistentHashCode(), hashP2)
 
         val kafkaEvents = KafkaClient.readEvents("patient")
         assertEquals(2, kafkaEvents.size)
@@ -299,7 +299,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
         assertEquals("tenant-12345", aidboxP.id!!.value)
 
         val hashP = DBClient.getStoredHashValue("tenant", "Patient", "tenant-12345")
-        assertEquals(patient.hashCode(), hashP)
+        assertEquals(patient.consistentHashCode(), hashP)
 
         val kafkaEvents = KafkaClient.readEvents("patient")
         assertEquals(1, kafkaEvents.size)

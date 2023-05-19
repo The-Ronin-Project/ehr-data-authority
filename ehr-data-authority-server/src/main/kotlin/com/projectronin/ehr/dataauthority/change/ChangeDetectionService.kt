@@ -33,7 +33,7 @@ class ChangeDetectionService(private val aidboxClient: AidboxClient, private val
         val resourceType = resource.resourceType
         val resourceId = resource.id!!.value!!
 
-        val resourceHash = resource.hashCode()
+        val resourceHash = resource.consistentHashCode()
         val currentHashDO = getStoredHash(tenantId, resourceType, resourceId)
 
         logger.debug { "resourceHash = $resourceHash" }

@@ -41,7 +41,7 @@ class ChangeDetectionServiceTest {
         assertEquals("tenant-1234", status1.resourceId)
         assertEquals(ChangeType.NEW, status1.type)
         assertNull(status1.hashId)
-        assertEquals(patient.hashCode(), status1.hash)
+        assertEquals(patient.consistentHashCode(), status1.hash)
 
         verify(exactly = 1) { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") }
         verify { aidboxClient wasNot Called }
@@ -65,7 +65,7 @@ class ChangeDetectionServiceTest {
         assertEquals("tenant-1234", status1.resourceId)
         assertEquals(ChangeType.CHANGED, status1.type)
         assertEquals(hashUuid, status1.hashId)
-        assertEquals(patient.hashCode(), status1.hash)
+        assertEquals(patient.consistentHashCode(), status1.hash)
 
         verify(exactly = 1) { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") }
         verify { aidboxClient wasNot Called }
@@ -78,7 +78,7 @@ class ChangeDetectionServiceTest {
         val hashUuid = UUID.randomUUID()
         every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns mockk {
             every { hashId } returns hashUuid
-            every { hash } returns patient.hashCode()
+            every { hash } returns patient.consistentHashCode()
         }
 
         val aidboxPatient = Patient(
@@ -98,7 +98,7 @@ class ChangeDetectionServiceTest {
         assertEquals("tenant-1234", status1.resourceId)
         assertEquals(ChangeType.UNCHANGED, status1.type)
         assertEquals(hashUuid, status1.hashId)
-        assertEquals(patient.hashCode(), status1.hash)
+        assertEquals(patient.consistentHashCode(), status1.hash)
 
         verify(exactly = 1) { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") }
         coVerify(exactly = 1) { aidboxClient.getResource("Patient", "tenant-1234") }
@@ -111,7 +111,7 @@ class ChangeDetectionServiceTest {
         val hashUuid = UUID.randomUUID()
         every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns mockk {
             every { hashId } returns hashUuid
-            every { hash } returns patient.hashCode()
+            every { hash } returns patient.consistentHashCode()
         }
 
         val aidboxPatient = Patient(
@@ -132,7 +132,7 @@ class ChangeDetectionServiceTest {
         assertEquals("tenant-1234", status1.resourceId)
         assertEquals(ChangeType.CHANGED, status1.type)
         assertEquals(hashUuid, status1.hashId)
-        assertEquals(patient.hashCode(), status1.hash)
+        assertEquals(patient.consistentHashCode(), status1.hash)
 
         verify(exactly = 1) { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") }
         coVerify(exactly = 1) { aidboxClient.getResource("Patient", "tenant-1234") }
@@ -155,7 +155,7 @@ class ChangeDetectionServiceTest {
         val hashUuid3 = UUID.randomUUID()
         every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-9012") } returns mockk {
             every { hashId } returns hashUuid3
-            every { hash } returns patient3.hashCode()
+            every { hash } returns patient3.consistentHashCode()
         }
 
         val aidboxPatient = Patient(
@@ -175,21 +175,21 @@ class ChangeDetectionServiceTest {
         assertEquals("tenant-1234", status1.resourceId)
         assertEquals(ChangeType.NEW, status1.type)
         assertNull(status1.hashId)
-        assertEquals(patient1.hashCode(), status1.hash)
+        assertEquals(patient1.consistentHashCode(), status1.hash)
 
         val status2 = statuses[2]!!
         assertEquals("Patient", status2.resourceType)
         assertEquals("tenant-5678", status2.resourceId)
         assertEquals(ChangeType.CHANGED, status2.type)
         assertEquals(hashUuid2, status2.hashId)
-        assertEquals(patient2.hashCode(), status2.hash)
+        assertEquals(patient2.consistentHashCode(), status2.hash)
 
         val status3 = statuses[3]!!
         assertEquals("Patient", status3.resourceType)
         assertEquals("tenant-9012", status3.resourceId)
         assertEquals(ChangeType.UNCHANGED, status3.type)
         assertEquals(hashUuid3, status3.hashId)
-        assertEquals(patient3.hashCode(), status3.hash)
+        assertEquals(patient3.consistentHashCode(), status3.hash)
 
         verify(exactly = 1) { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") }
         verify(exactly = 1) { resourceHashesDAO.getHash("tenant", "Patient", "tenant-5678") }
