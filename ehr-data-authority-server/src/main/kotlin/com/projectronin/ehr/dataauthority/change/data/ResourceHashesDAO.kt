@@ -41,6 +41,8 @@ class ResourceHashesDAO(private val database: Database) {
     fun insertHash(resourceHashesDO: ResourceHashesDO): ResourceHashesDO {
         val uuid = UUID.randomUUID()
 
+        logger.debug { "Inserting new hash: $resourceHashesDO" }
+
         database.insert(ResourceHashesDOs) {
             set(it.hashId, uuid)
             set(it.resourceId, resourceHashesDO.resourceId)

@@ -9,6 +9,7 @@ import com.projectronin.interop.common.reflect.copy
 import com.projectronin.interop.fhir.r4.resource.Resource
 import io.ktor.client.call.body
 import kotlinx.coroutines.runBlocking
+import mu.KotlinLogging
 import org.springframework.stereotype.Component
 
 /**
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Component
  */
 @Component
 class ChangeDetectionService(private val aidboxClient: AidboxClient, private val resourceHashesDAO: ResourceHashesDAO) {
+    private val logger = KotlinLogging.logger { }
+
     /**
      * Determines the [ChangeStatus] for each of the supplied [resources]. The keys used for the input will be the keys
      * for the responses, allowing consumers to correlate the two.
@@ -33,6 +36,9 @@ class ChangeDetectionService(private val aidboxClient: AidboxClient, private val
         val resourceHash = resource.hashCode()
         val currentHashDO = getStoredHash(tenantId, resourceType, resourceId)
 
+        logger.debug { "resourceHash = $resourceHash" }
+        logger.debug { "currentHashDO = $currentHashDO" }
+
         val changeType = if (currentHashDO == null) {
             // If we have no record, we treat it as new
             ChangeType.NEW
@@ -44,6 +50,10 @@ class ChangeDetectionService(private val aidboxClient: AidboxClient, private val
             val storedResource = getStoredResource(resourceType, resourceId)
             val normalizedStored = normalizeResource(storedResource)
             val normalizedNew = normalizeResource(resource)
+
+            logger.debug { "Comparing new resource: $normalizedNew" }
+            logger.debug { "Comparing stored resource: $normalizedStored" }
+
             if (normalizedNew == normalizedStored) {
                 // If the normalized forms are equal, then there has been no change.
                 ChangeType.UNCHANGED
