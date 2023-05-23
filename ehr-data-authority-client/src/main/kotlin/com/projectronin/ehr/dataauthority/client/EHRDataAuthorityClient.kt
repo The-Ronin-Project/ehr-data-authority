@@ -1,16 +1,16 @@
 package com.projectronin.ehr.dataauthority.client
 
-import com.projectronin.ehr.dataauthority.client.auth.DataAuthorityAuthenticationService
-import com.projectronin.ehr.dataauthority.client.models.BatchResourceResponse
-import com.projectronin.ehr.dataauthority.client.models.Identifier
-import com.projectronin.ehr.dataauthority.client.models.IdentifierSearchResponse
-import com.projectronin.ehr.dataauthority.client.models.IdentifierSearchableResourceTypes
+import com.projectronin.ehr.dataauthority.client.auth.EHRDataAuthorityAuthenticationService
+import com.projectronin.ehr.dataauthority.models.BatchResourceResponse
+import com.projectronin.ehr.dataauthority.models.Identifier
+import com.projectronin.ehr.dataauthority.models.IdentifierSearchResponse
+import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
 import com.projectronin.interop.common.http.request
-import com.projectronin.interop.common.resource.ResourceType
 import com.projectronin.interop.fhir.r4.resource.Resource
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.accept
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
@@ -26,12 +26,13 @@ import org.springframework.stereotype.Component
  * Adds supplied resource
  */
 @Component
-class ResourceClient(
-    @Value("\${dataauthority.url:}")
+class EHRDataAuthorityClient(
+    @Value("\${ehrda.url}")
     private val hostUrl: String,
     private val client: HttpClient,
-    private val authenticationService: DataAuthorityAuthenticationService
+    private val authenticationService: EHRDataAuthorityAuthenticationService
 ) {
+    private val serverName = "EHR Data Authority"
 
     /**
      * takes in a list of resources cuts the list into chunks of no more than 25,
@@ -51,7 +52,7 @@ class ResourceClient(
     private suspend fun addResourcesByBatch(tenantId: String, resources: List<Resource<*>>): BatchResourceResponse {
         val resourceUrl = "$hostUrl/tenants/$tenantId/resources"
         val authentication = authenticationService.getAuthentication()
-        val response: HttpResponse = client.request("DataAuthority", resourceUrl) { url ->
+        val response: HttpResponse = client.request(serverName, resourceUrl) { url ->
             post(url) {
                 headers {
                     append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
@@ -64,12 +65,14 @@ class ResourceClient(
         return response.body()
     }
 
-    suspend fun getResource(tenantId: String, resourceType: ResourceType, udpId: String): Resource<*> {
-        val resourceTypeString = resourceType.name.lowercase().replaceFirstChar { it.uppercase() }
-        val resourceUrl = "$hostUrl/tenants/$tenantId/resources/$resourceTypeString/$udpId"
+    /**
+     * Retrieves the resource with [resourceType] and [udpId] for [tenantId].
+     */
+    suspend fun getResource(tenantId: String, resourceType: String, udpId: String): Resource<*> {
+        val resourceUrl = "$hostUrl/tenants/$tenantId/resources/$resourceType/$udpId"
         val authentication = authenticationService.getAuthentication()
 
-        val response: HttpResponse = client.request("DataAuthority", resourceUrl) { url ->
+        val response: HttpResponse = client.request(serverName, resourceUrl) { url ->
             get(url) {
                 headers {
                     append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
@@ -81,11 +84,18 @@ class ResourceClient(
         return response.body()
     }
 
-    suspend fun getResourceIdentifiers(tenantId: String, resourceType: IdentifierSearchableResourceTypes, identifiers: List<Identifier>): List<IdentifierSearchResponse> {
-        val identifierString = identifiers.joinToString(",")
+    /**
+     * Retrieves the identifiers associated to the [resourceType] with [identifiers] for [tenantId]
+     */
+    suspend fun getResourceIdentifiers(
+        tenantId: String,
+        resourceType: IdentifierSearchableResourceTypes,
+        identifiers: List<Identifier>
+    ): List<IdentifierSearchResponse> {
+        val identifierString = identifiers.joinToString(",") { it.toToken() }
         val resourceUrl = "$hostUrl/tenants/$tenantId/resources/${resourceType.name}/identifiers/$identifierString"
         val authentication = authenticationService.getAuthentication()
-        val response: HttpResponse = client.request("DataAuthority", resourceUrl) { url ->
+        val response: HttpResponse = client.request(serverName, resourceUrl) { url ->
             get(url) {
                 headers {
                     append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
@@ -95,5 +105,22 @@ class ResourceClient(
             }
         }
         return response.body()
+    }
+
+    /**
+     * Deletes the resource for [resourceType] and [udpId] for [tenantId]. This API only supports deleting from testing
+     * tenants. Any non-testing tenant that is attempted to be deleted from will result in a 400. If this request was
+     * unsuccessful, any exception returned by the EHR Data Authority will be thrown.
+     */
+    suspend fun deleteResource(tenantId: String, resourceType: String, udpId: String) {
+        val resourceUrl = "$hostUrl/tenants/$tenantId/resources/$resourceType/$udpId"
+        val authentication = authenticationService.getAuthentication()
+        client.request(serverName, resourceUrl) { url ->
+            delete(url) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+                }
+            }
+        }
     }
 }

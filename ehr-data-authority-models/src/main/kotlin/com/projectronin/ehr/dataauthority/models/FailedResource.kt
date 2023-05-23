@@ -1,4 +1,4 @@
-package com.projectronin.ehr.dataauthority.model
+package com.projectronin.ehr.dataauthority.models
 
 data class FailedResource(
     override val resourceType: String,

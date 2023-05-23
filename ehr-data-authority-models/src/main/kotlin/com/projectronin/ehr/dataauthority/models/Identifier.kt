@@ -1,4 +1,4 @@
-package com.projectronin.ehr.dataauthority.model
+package com.projectronin.ehr.dataauthority.models
 
 import com.projectronin.interop.fhir.r4.datatype.Identifier as FhirIdentifier
 
@@ -20,6 +20,7 @@ data class Identifier(
             return fhirIdentifiers.map { Identifier(it.system?.value!!, it.value?.value!!) }
         }
     }
+
     fun toToken(): String {
         return "$system|$value"
     }

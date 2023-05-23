@@ -14,6 +14,11 @@ coverage:
         threshold: 1%
         flags:
           - client
+      models:
+        target: auto
+        threshold: 1%
+        flags:
+          - models
     patch:
       default:
         target: 80
@@ -32,9 +37,13 @@ comment:
 flags:
   server:
     paths:
-      - server/
+      - ehr-data-authority-server/
     carryforward: true
   client:
     paths:
-      - client/
+      - ehr-data-authority-client/
+    carryforward: true
+  models:
+    paths:
+      - ehr-data-authority-models/
     carryforward: true

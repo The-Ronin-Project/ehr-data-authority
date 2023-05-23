@@ -1,31 +1,21 @@
 package com.projectronin.ehr.dataauthority.controllers
 
 import com.projectronin.ehr.dataauthority.BaseEHRDataAuthorityIT
-import com.projectronin.ehr.dataauthority.model.BatchResourceResponse
-import com.projectronin.ehr.dataauthority.model.ModificationType
+import com.projectronin.ehr.dataauthority.models.ModificationType
 import com.projectronin.ehr.dataauthority.testclients.AidboxClient
 import com.projectronin.ehr.dataauthority.testclients.DBClient
-import com.projectronin.ehr.dataauthority.testclients.EHRDAClient
 import com.projectronin.ehr.dataauthority.testclients.KafkaClient
 import com.projectronin.ehr.dataauthority.testclients.ValidationClient
 import com.projectronin.fhir.r4.Patient
-import com.projectronin.interop.fhir.generators.datatypes.contactPoint
-import com.projectronin.interop.fhir.generators.datatypes.extension
+import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.fhir.generators.datatypes.identifier
-import com.projectronin.interop.fhir.generators.datatypes.name
-import com.projectronin.interop.fhir.generators.resources.PatientGenerator
 import com.projectronin.interop.fhir.generators.resources.patient
 import com.projectronin.interop.fhir.r4.CodeSystem
 import com.projectronin.interop.fhir.r4.CodeableConcepts
-import com.projectronin.interop.fhir.r4.datatype.primitive.Code
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
-import com.projectronin.interop.fhir.r4.datatype.primitive.Uri
 import com.projectronin.interop.fhir.r4.valueset.AdministrativeGender
-import com.projectronin.interop.fhir.r4.valueset.ContactPointSystem
-import com.projectronin.interop.fhir.r4.valueset.ContactPointUse
 import com.projectronin.interop.fhir.util.asCode
-import io.ktor.client.call.body
-import io.ktor.client.plugins.ClientRequestException
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
@@ -42,7 +32,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
     fun `adds resource when new`() {
         val patient = roninPatient("tenant-12345", "tenant")
 
-        val response = EHRDAClient.addResources("tenant", listOf(patient))
+        val response = runBlocking { client.addResources("tenant", listOf(patient)) }
         assertEquals(1, response.succeeded.size)
         assertEquals(0, response.failed.size)
 
@@ -76,7 +66,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
         val updatedPatient = originalPatient.copy(gender = AdministrativeGender.MALE.asCode())
 
-        val response = EHRDAClient.addResources("tenant", listOf(updatedPatient))
+        val response = runBlocking { client.addResources("tenant", listOf(updatedPatient)) }
         assertEquals(1, response.succeeded.size)
         assertEquals(0, response.failed.size)
 
@@ -113,7 +103,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
         // Use the updated patient's hashCode.
         DBClient.setHashValue("tenant", "Patient", "tenant-12345", updatedPatient.consistentHashCode())
 
-        val response = EHRDAClient.addResources("tenant", listOf(updatedPatient))
+        val response = runBlocking { client.addResources("tenant", listOf(updatedPatient)) }
         assertEquals(1, response.succeeded.size)
         assertEquals(0, response.failed.size)
 
@@ -146,7 +136,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
         val addedPatient = AidboxClient.addResource(originalPatient)
         DBClient.setHashValue("tenant", "Patient", "tenant-12345", originalPatient.consistentHashCode())
 
-        val response = EHRDAClient.addResources("tenant", listOf(originalPatient))
+        val response = runBlocking { client.addResources("tenant", listOf(originalPatient)) }
         assertEquals(1, response.succeeded.size)
         assertEquals(0, response.failed.size)
 
@@ -175,7 +165,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
         val patient1 = roninPatient("tenant-12345", "tenant")
         val patient2 = roninPatient("tenant-67890", "tenant")
 
-        val response = EHRDAClient.addResources("tenant", listOf(patient1, patient2))
+        val response = runBlocking { client.addResources("tenant", listOf(patient1, patient2)) }
         assertEquals(2, response.succeeded.size)
         assertEquals(0, response.failed.size)
 
@@ -221,7 +211,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
             }
         }
 
-        val response = EHRDAClient.addResources("tenant", listOf(patient))
+        val response = runBlocking { client.addResources("tenant", listOf(patient)) }
         assertEquals(0, response.succeeded.size)
         assertEquals(1, response.failed.size)
 
@@ -256,17 +246,10 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
             }
         }
 
-        val response = assertThrows<ClientRequestException> { EHRDAClient.addResources("notTenant", listOf(patient)) }
-        val body = runBlocking {
-            response.response.body<BatchResourceResponse>()
-        }
-        assertEquals(0, body.succeeded.size)
-        assertEquals(1, body.failed.size)
-
-        val failure1 = body.failed[0]
-        assertEquals("Patient", failure1.resourceType)
-        assertEquals("tenant-12345", failure1.resourceId)
-        assertNotNull(failure1.error)
+        HttpStatusCode.BadRequest
+        val response =
+            assertThrows<ClientFailureException> { runBlocking { client.addResources("notTenant", listOf(patient)) } }
+        assertTrue(response.message!!.startsWith("Received 400"))
 
         val aidboxP = runCatching { AidboxClient.getResource("Patient", "tenant-12345") }.getOrNull()
         assertNull(aidboxP)
@@ -286,7 +269,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
         // First we do a full new request.
         val patient = roninPatient("tenant-12345", "tenant")
 
-        val response = EHRDAClient.addResources("tenant", listOf(patient))
+        val response = runBlocking { client.addResources("tenant", listOf(patient)) }
         assertEquals(1, response.succeeded.size)
         assertEquals(0, response.failed.size)
 
@@ -310,7 +293,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
         // Now we do it all again with the same request.
 
-        val response2 = EHRDAClient.addResources("tenant", listOf(patient))
+        val response2 = runBlocking { client.addResources("tenant", listOf(patient)) }
         assertEquals(1, response2.succeeded.size)
         assertEquals(0, response2.failed.size)
 
@@ -327,52 +310,4 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
         AidboxClient.deleteResource("Patient", "tenant-12345")
     }
-
-    // This should only be used until INT-1652 has been completed.
-    private fun roninPatient(fhirId: String, tenantId: String, block: PatientGenerator.() -> Unit = {}) =
-        patient {
-            block.invoke(this)
-
-            id of Id(fhirId)
-            identifier plus identifier {
-                system of CodeSystem.RONIN_TENANT.uri
-                value of tenantId
-                type of CodeableConcepts.RONIN_TENANT
-            } plus identifier {
-                system of CodeSystem.RONIN_FHIR_ID.uri
-                value of fhirId
-                type of CodeableConcepts.RONIN_FHIR_ID
-            } plus identifier {
-                system of CodeSystem.RONIN_MRN.uri
-                type of CodeableConcepts.RONIN_MRN
-            } plus identifier {
-                value of "EHR Data Authority"
-                system of CodeSystem.RONIN_DATA_AUTHORITY.uri
-                type of CodeableConcepts.RONIN_DATA_AUTHORITY_ID
-            }
-            name plus name {
-                use of Code("official")
-            }
-            telecom of listOf(
-                contactPoint {
-                    system of Code(
-                        ContactPointSystem.EMAIL.code,
-                        extension = listOf(
-                            extension {
-                                url of Uri("http://projectronin.io/fhir/StructureDefinition/Extension/tenant-sourceTelecomSystem")
-                            }
-                        )
-                    )
-                    value of "josh@projectronin.com"
-                    use of Code(
-                        ContactPointUse.HOME.code,
-                        extension = listOf(
-                            extension {
-                                url of Uri("http://projectronin.io/fhir/StructureDefinition/Extension/tenant-sourceTelecomUse")
-                            }
-                        )
-                    )
-                }
-            )
-        }
 }

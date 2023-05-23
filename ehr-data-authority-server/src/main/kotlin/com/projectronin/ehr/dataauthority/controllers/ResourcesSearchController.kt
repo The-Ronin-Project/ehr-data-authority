@@ -1,9 +1,9 @@
 package com.projectronin.ehr.dataauthority.controllers
 
-import com.projectronin.ehr.dataauthority.model.FoundResourceIdentifiers
-import com.projectronin.ehr.dataauthority.model.Identifier
-import com.projectronin.ehr.dataauthority.model.IdentifierSearchResponse
-import com.projectronin.ehr.dataauthority.model.IdentifierSearchableResourceTypes
+import com.projectronin.ehr.dataauthority.models.FoundResourceIdentifiers
+import com.projectronin.ehr.dataauthority.models.Identifier
+import com.projectronin.ehr.dataauthority.models.IdentifierSearchResponse
+import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
 import com.projectronin.interop.aidbox.client.AidboxClient
 import com.projectronin.interop.fhir.r4.resource.Bundle
 import com.projectronin.interop.fhir.r4.resource.Location
@@ -86,10 +86,12 @@ class ResourcesSearchController(private val aidboxClient: AidboxClient) {
                 this as Patient
                 this.identifier
             }
+
             IdentifierSearchableResourceTypes.Location -> {
                 this as Location
                 this.identifier
             }
+
             IdentifierSearchableResourceTypes.Practitioner -> {
                 this as Practitioner
                 this.identifier

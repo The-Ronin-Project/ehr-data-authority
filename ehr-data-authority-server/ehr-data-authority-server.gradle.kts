@@ -11,6 +11,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
 
+    implementation(project(":ehr-data-authority-models"))
     implementation(libs.common.fhir.r4.models)
     implementation(libs.interop.common)
     implementation(libs.interop.commonJackson)
@@ -43,6 +44,8 @@ dependencies {
     testRuntimeOnly("org.testcontainers:mysql")
 
     itImplementation(project)
+    itImplementation(project(":ehr-data-authority-models"))
+    itImplementation(project(":ehr-data-authority-client"))
     itImplementation(platform(libs.testcontainers.bom))
     itImplementation("org.testcontainers:testcontainers")
     itImplementation(libs.bundles.ktor)

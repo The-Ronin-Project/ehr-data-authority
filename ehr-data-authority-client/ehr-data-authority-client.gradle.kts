@@ -8,6 +8,7 @@ dependencies {
     // We don't actually use Spring Boot, but this parent can ensure our client and server are on the same versions.
     implementation(platform(libs.spring.boot.parent))
 
+    implementation(project(":ehr-data-authority-models"))
     implementation(libs.bundles.jackson)
     implementation(libs.bundles.ktor)
     implementation(libs.interop.common)

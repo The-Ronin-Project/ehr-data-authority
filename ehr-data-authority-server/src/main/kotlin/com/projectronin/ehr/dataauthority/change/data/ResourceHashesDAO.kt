@@ -5,6 +5,7 @@ import com.projectronin.ehr.dataauthority.change.data.model.ResourceHashesDO
 import mu.KotlinLogging
 import org.ktorm.database.Database
 import org.ktorm.dsl.and
+import org.ktorm.dsl.delete
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.from
 import org.ktorm.dsl.insert
@@ -71,6 +72,17 @@ class ResourceHashesDAO(private val database: Database) {
         }
 
         return getById(hashId)
+    }
+
+    /**
+     * Deletes the hash associated to the [resourceType] and [resourceId] for [tenantId]
+     */
+    @Transactional
+    fun deleteHash(tenantId: String, resourceType: String, resourceId: String): Boolean {
+        val recordsDeleted = database.delete(ResourceHashesDOs) {
+            (ResourceHashesDOs.tenantId eq tenantId) and (ResourceHashesDOs.resourceType eq resourceType) and (ResourceHashesDOs.resourceId eq resourceId)
+        }
+        return recordsDeleted > 0
     }
 
     /**

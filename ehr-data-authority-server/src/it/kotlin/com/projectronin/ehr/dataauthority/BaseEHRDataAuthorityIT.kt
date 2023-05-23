@@ -1,10 +1,25 @@
 package com.projectronin.ehr.dataauthority
 
+import com.projectronin.ehr.dataauthority.client.EHRDataAuthorityClient
+import com.projectronin.ehr.dataauthority.client.auth.EHRDataAuthorityAuthenticationService
 import com.projectronin.ehr.dataauthority.testclients.DBClient
 import com.projectronin.ehr.dataauthority.testclients.KafkaClient
 import com.projectronin.ehr.dataauthority.testclients.ValidationClient
 import com.projectronin.fhir.r4.Resource
 import com.projectronin.interop.common.http.spring.HttpSpringConfig
+import com.projectronin.interop.fhir.generators.datatypes.contactPoint
+import com.projectronin.interop.fhir.generators.datatypes.extension
+import com.projectronin.interop.fhir.generators.datatypes.identifier
+import com.projectronin.interop.fhir.generators.datatypes.name
+import com.projectronin.interop.fhir.generators.resources.PatientGenerator
+import com.projectronin.interop.fhir.generators.resources.patient
+import com.projectronin.interop.fhir.r4.CodeSystem
+import com.projectronin.interop.fhir.r4.CodeableConcepts
+import com.projectronin.interop.fhir.r4.datatype.primitive.Code
+import com.projectronin.interop.fhir.r4.datatype.primitive.Id
+import com.projectronin.interop.fhir.r4.datatype.primitive.Uri
+import com.projectronin.interop.fhir.r4.valueset.ContactPointSystem
+import com.projectronin.interop.fhir.r4.valueset.ContactPointUse
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.testcontainers.containers.DockerComposeContainer
@@ -46,6 +61,17 @@ abstract class BaseEHRDataAuthorityIT {
     protected val serverUrl = "http://localhost:8080"
     protected val httpClient = HttpSpringConfig().getHttpClient()
 
+    protected val authenticationService =
+        EHRDataAuthorityAuthenticationService(
+            httpClient,
+            "http://localhost:8081/ehr/token",
+            "https://ehr.dev.projectronin.io",
+            "id",
+            "secret",
+            false
+        )
+    protected val client = EHRDataAuthorityClient(serverUrl, httpClient, authenticationService)
+
     open val resources = mapOf<String, KClass<out Resource>>()
 
     @BeforeEach
@@ -61,4 +87,52 @@ abstract class BaseEHRDataAuthorityIT {
         KafkaClient.reset()
         ValidationClient.clearAllResources()
     }
+
+    // This should only be used until INT-1652 has been completed.
+    protected fun roninPatient(fhirId: String, tenantId: String, block: PatientGenerator.() -> Unit = {}) =
+        patient {
+            block.invoke(this)
+
+            id of Id(fhirId)
+            identifier plus identifier {
+                system of CodeSystem.RONIN_TENANT.uri
+                value of tenantId
+                type of CodeableConcepts.RONIN_TENANT
+            } plus identifier {
+                system of CodeSystem.RONIN_FHIR_ID.uri
+                value of fhirId
+                type of CodeableConcepts.RONIN_FHIR_ID
+            } plus identifier {
+                system of CodeSystem.RONIN_MRN.uri
+                type of CodeableConcepts.RONIN_MRN
+            } plus identifier {
+                value of "EHR Data Authority"
+                system of CodeSystem.RONIN_DATA_AUTHORITY.uri
+                type of CodeableConcepts.RONIN_DATA_AUTHORITY_ID
+            }
+            name plus name {
+                use of Code("official")
+            }
+            telecom of listOf(
+                contactPoint {
+                    system of Code(
+                        ContactPointSystem.EMAIL.code,
+                        extension = listOf(
+                            extension {
+                                url of Uri("http://projectronin.io/fhir/StructureDefinition/Extension/tenant-sourceTelecomSystem")
+                            }
+                        )
+                    )
+                    value of "josh@projectronin.com"
+                    use of Code(
+                        ContactPointUse.HOME.code,
+                        extension = listOf(
+                            extension {
+                                url of Uri("http://projectronin.io/fhir/StructureDefinition/Extension/tenant-sourceTelecomUse")
+                            }
+                        )
+                    )
+                }
+            )
+        }
 }

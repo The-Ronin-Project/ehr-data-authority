@@ -8,6 +8,7 @@ import com.projectronin.interop.common.test.database.dbrider.DBRiderConnection
 import com.projectronin.interop.common.test.database.ktorm.KtormHelper
 import com.projectronin.interop.common.test.database.liquibase.LiquibaseTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -121,5 +122,25 @@ class ResourceHashesDAOTest {
             hash.updateDateTime.isAfter(originalDateTime) &&
                 hash.updateDateTime.isBefore(OffsetDateTime.now(ZoneOffset.UTC))
         )
+    }
+
+    @Test
+    @DataSet(value = ["/dbunit/hashes/MultipleHashes.yaml"], cleanAfter = true)
+    @ExpectedDataSet(value = ["/dbunit/hashes/MultipleHashes.yaml"], orderBy = ["hash_id"])
+    fun `deleteHash returns false if no records deleted`() {
+        val dao = ResourceHashesDAO(KtormHelper.database())
+
+        val deleted = dao.deleteHash("tenant1", "Patient", "tenant1-13579")
+        assertFalse(deleted)
+    }
+
+    @Test
+    @DataSet(value = ["/dbunit/hashes/MultipleHashes.yaml"], cleanAfter = true)
+    @ExpectedDataSet(value = ["/dbunit/hashes/ExpectedHashesAfterDelete.yaml"])
+    fun `deleteHash returns true if records deleted`() {
+        val dao = ResourceHashesDAO(KtormHelper.database())
+
+        val deleted = dao.deleteHash("tenant1", "Patient", "tenant1-67890")
+        assertTrue(deleted)
     }
 }

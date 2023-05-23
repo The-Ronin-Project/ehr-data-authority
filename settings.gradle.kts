@@ -2,6 +2,7 @@ rootProject.name = "ehr-data-authority"
 
 include("ehr-data-authority-server")
 include("ehr-data-authority-client")
+include("ehr-data-authority-models")
 
 for (project in rootProject.children) {
     project.buildFileName = "${project.name}.gradle.kts"

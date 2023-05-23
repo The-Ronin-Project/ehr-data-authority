@@ -1,16 +1,17 @@
 package com.projectronin.ehr.dataauthority.controllers
 
 import com.projectronin.ehr.dataauthority.BaseEHRDataAuthorityIT
-import com.projectronin.ehr.dataauthority.model.Identifier
+import com.projectronin.ehr.dataauthority.models.Identifier
+import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
 import com.projectronin.ehr.dataauthority.testclients.AidboxClient
-import com.projectronin.ehr.dataauthority.testclients.EHRDAClient
+import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.fhir.generators.datatypes.identifier
 import com.projectronin.interop.fhir.generators.datatypes.name
 import com.projectronin.interop.fhir.generators.resources.patient
 import com.projectronin.interop.fhir.r4.CodeSystem
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.resource.Patient
-import io.ktor.client.plugins.ClientRequestException
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -53,7 +54,7 @@ class ResourcesSearchControllerIT : BaseEHRDataAuthorityIT() {
 
         AidboxClient.addResource(patient)
         AidboxClient.addResource(patient2)
-        val response = EHRDAClient.getResource("Test", "Patient", "Test-12345")
+        val response = runBlocking { client.getResource("Test", "Patient", "Test-12345") }
         AidboxClient.deleteResource("Patient", patient.id?.value!!)
         AidboxClient.deleteResource("Patient", patient2.id?.value!!)
         val patientResponse = response as Patient
@@ -96,8 +97,10 @@ class ResourcesSearchControllerIT : BaseEHRDataAuthorityIT() {
 
         AidboxClient.addResource(patient)
         AidboxClient.addResource(patient2)
-        assertThrows<ClientRequestException> {
-            EHRDAClient.getResource("DifferentTenant", "Patient", "Test-12345")
+        assertThrows<ClientFailureException> {
+            runBlocking {
+                client.getResource("DifferentTenant", "Patient", "Test-12345")
+            }
         }
         AidboxClient.deleteResource("Patient", patient.id?.value!!)
         AidboxClient.deleteResource("Patient", patient2.id?.value!!)
@@ -163,15 +166,16 @@ class ResourcesSearchControllerIT : BaseEHRDataAuthorityIT() {
         AidboxClient.addResource(patient2)
         AidboxClient.addResource(patient3)
         AidboxClient.addResource(patient4)
-        val response = EHRDAClient.searchResourceIdentifiers(
-
-            "Test",
-            "Patient",
-            listOf(
-                Identifier("system", "value"),
-                Identifier("system2", "value")
+        val response = runBlocking {
+            client.getResourceIdentifiers(
+                "Test",
+                IdentifierSearchableResourceTypes.Patient,
+                listOf(
+                    Identifier("system", "value"),
+                    Identifier("system2", "value")
+                )
             )
-        )
+        }
         AidboxClient.deleteResource("Patient", patient.id?.value!!)
         AidboxClient.deleteResource("Patient", patient2.id?.value!!)
         AidboxClient.deleteResource("Patient", patient3.id?.value!!)

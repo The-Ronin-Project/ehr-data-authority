@@ -1,0 +1,15 @@
+resource_hashes:
+  - hash_id: "tOjoCil6Sxm9WUuActucxA=="
+    # UUID: b4e8e80a-297a-4b19-bd59-4b8072db9cc4
+    resource_id: "tenant1-12345"
+    resource_type: "Patient"
+    tenant_id: "tenant1"
+    hash_code: 13579
+    update_dt_tm: "2022-08-01 11:18:00 +0000"
+  - hash_id: "kjTDDNS1RpuaAllCXfnHAg=="
+    # UUID: 9234c30c-d4b5-469b-9a02-59425df9c702
+    resource_id: "tenant1-67890"
+    resource_type: "Patient"
+    tenant_id: "tenant1"
+    hash_code: 24680
+    update_dt_tm: "2023-05-23 09:32:00 +0000"

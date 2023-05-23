@@ -1,4 +1,4 @@
-package com.projectronin.ehr.dataauthority.client.models
+package com.projectronin.ehr.dataauthority.models
 
 enum class ModificationType {
     CREATED,

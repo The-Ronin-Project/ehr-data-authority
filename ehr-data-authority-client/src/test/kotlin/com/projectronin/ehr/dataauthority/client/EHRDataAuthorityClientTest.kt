@@ -1,18 +1,17 @@
 package com.projectronin.ehr.dataauthority.client
 
-import com.projectronin.ehr.dataauthority.client.auth.DataAuthorityAuthenticationService
-import com.projectronin.ehr.dataauthority.client.models.BatchResourceResponse
-import com.projectronin.ehr.dataauthority.client.models.FailedResource
-import com.projectronin.ehr.dataauthority.client.models.FoundResource
-import com.projectronin.ehr.dataauthority.client.models.Identifier
-import com.projectronin.ehr.dataauthority.client.models.IdentifierSearchResponse
-import com.projectronin.ehr.dataauthority.client.models.IdentifierSearchableResourceTypes
-import com.projectronin.ehr.dataauthority.client.models.ModificationType
-import com.projectronin.ehr.dataauthority.client.models.SucceededResource
+import com.projectronin.ehr.dataauthority.client.auth.EHRDataAuthorityAuthenticationService
+import com.projectronin.ehr.dataauthority.models.BatchResourceResponse
+import com.projectronin.ehr.dataauthority.models.FailedResource
+import com.projectronin.ehr.dataauthority.models.FoundResourceIdentifiers
+import com.projectronin.ehr.dataauthority.models.Identifier
+import com.projectronin.ehr.dataauthority.models.IdentifierSearchResponse
+import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
+import com.projectronin.ehr.dataauthority.models.ModificationType
+import com.projectronin.ehr.dataauthority.models.SucceededResource
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.common.http.ktor.ContentLengthSupplier
 import com.projectronin.interop.common.jackson.JacksonManager
-import com.projectronin.interop.common.resource.ResourceType
 import com.projectronin.interop.fhir.r4.datatype.HumanName
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.datatype.primitive.asFHIR
@@ -34,9 +33,9 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
-class ResourceClientTest {
+class EHRDataAuthorityClientTest {
     private val authenticationToken = "12345678"
-    private val authenticationService = mockk<DataAuthorityAuthenticationService> {
+    private val authenticationService = mockk<EHRDataAuthorityAuthenticationService> {
         every { getAuthentication() } returns mockk {
             every { accessToken } returns authenticationToken
         }
@@ -75,7 +74,7 @@ class ResourceClientTest {
         )
         val url = mockWebServer.url("/test")
         val response = runBlocking {
-            val resourceToReturn = ResourceClient(url.toString(), client, authenticationService)
+            val resourceToReturn = EHRDataAuthorityClient(url.toString(), client, authenticationService)
                 .addResources("tenant", resource)
             resourceToReturn
         }
@@ -135,7 +134,10 @@ class ResourceClientTest {
         val url = mockWebServer.url("/test")
         val response = runBlocking {
             val resourceToReturn =
-                ResourceClient(url.toString(), client, authenticationService).addResources("tenant", listOfResources)
+                EHRDataAuthorityClient(url.toString(), client, authenticationService).addResources(
+                    "tenant",
+                    listOfResources
+                )
             resourceToReturn
         }
 
@@ -196,7 +198,10 @@ class ResourceClientTest {
         val url = mockWebServer.url("/test")
         val response = runBlocking {
             val resourceToReturn =
-                ResourceClient(url.toString(), client, authenticationService).addResources("tenant", listOfResources)
+                EHRDataAuthorityClient(url.toString(), client, authenticationService).addResources(
+                    "tenant",
+                    listOfResources
+                )
             resourceToReturn
         }
 
@@ -421,7 +426,10 @@ class ResourceClientTest {
         val url = mockWebServer.url("/test")
         val response = runBlocking {
             val resourcesToReturn =
-                ResourceClient(url.toString(), client, authenticationService).addResources("tenant", listOfResources)
+                EHRDataAuthorityClient(url.toString(), client, authenticationService).addResources(
+                    "tenant",
+                    listOfResources
+                )
             resourcesToReturn
         }
 
@@ -449,7 +457,10 @@ class ResourceClientTest {
         val url = mockWebServer.url("/test")
         val exception = assertThrows<ClientFailureException> {
             runBlocking {
-                ResourceClient(url.toString(), client, authenticationService).addResources("tenant", listOfResources)
+                EHRDataAuthorityClient(url.toString(), client, authenticationService).addResources(
+                    "tenant",
+                    listOfResources
+                )
             }
         }
 
@@ -477,8 +488,8 @@ class ResourceClientTest {
         )
         val url = mockWebServer.url("/test")
         val response = runBlocking {
-            ResourceClient(url.toString(), client, authenticationService)
-                .getResource("tenant", ResourceType.PATIENT, "123")
+            EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                .getResource("tenant", "Patient", "123")
         }
         val returnedResource = response as Patient
         val request = mockWebServer.takeRequest()
@@ -501,7 +512,11 @@ class ResourceClientTest {
 
         assertThrows<ClientFailureException> {
             runBlocking {
-                ResourceClient(url.toString(), client, authenticationService).getResource("tenant", ResourceType.PRACTITIONER, resourceId)
+                EHRDataAuthorityClient(url.toString(), client, authenticationService).getResource(
+                    "tenant",
+                    "Practitioner",
+                    resourceId
+                )
             }
         }
     }
@@ -515,14 +530,14 @@ class ResourceClientTest {
             IdentifierSearchResponse(
                 searchedIdentifier = ident1,
                 foundResources = listOf(
-                    FoundResource("udpId1", listOf(ident1, Identifier("notSearched", "notSearched"))),
-                    FoundResource("udpId2", listOf(ident1, Identifier("notSearched2", "notSearched2")))
+                    FoundResourceIdentifiers("udpId1", listOf(ident1, Identifier("notSearched", "notSearched"))),
+                    FoundResourceIdentifiers("udpId2", listOf(ident1, Identifier("notSearched2", "notSearched2")))
                 )
             ),
             IdentifierSearchResponse(
                 searchedIdentifier = ident2,
                 foundResources = listOf(
-                    FoundResource("udpId3", listOf(ident2))
+                    FoundResourceIdentifiers("udpId3", listOf(ident2))
                 )
             )
         )
@@ -539,7 +554,7 @@ class ResourceClientTest {
             ident2
         )
         val response = runBlocking {
-            ResourceClient(url.toString(), client, authenticationService)
+            EHRDataAuthorityClient(url.toString(), client, authenticationService)
                 .getResourceIdentifiers("tenant", IdentifierSearchableResourceTypes.Location, identifers)
         }
         val request = mockWebServer.takeRequest()
@@ -548,6 +563,49 @@ class ResourceClientTest {
         assertEquals(2, response[0].foundResources.size)
         assertEquals(ident1, response[0].searchedIdentifier)
         assertEquals(1, response[1].foundResources.size)
-        assertEquals("/test/tenants/tenant/resources/Location/identifiers/system1%7Cvalue1,system2%7Cvalue2", request.path)
+        assertEquals(
+            "/test/tenants/tenant/resources/Location/identifiers/system1%7Cvalue1,system2%7Cvalue2",
+            request.path
+        )
+    }
+
+    @Test
+    fun `deleteResource returns success when OK is returned from request`() {
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(MockResponse().setResponseCode(HttpStatusCode.OK.value))
+        val url = mockWebServer.url("/test")
+
+        runBlocking {
+            EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                .deleteResource("tenant", "Location", "tenant-1234")
+        }
+
+        val request = mockWebServer.takeRequest()
+        assertEquals(
+            "/test/tenants/tenant/resources/Location/tenant-1234",
+            request.path
+        )
+        assertEquals("DELETE", request.method)
+    }
+
+    @Test
+    fun `deleteResource returns failure when OK is not returned from request`() {
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(MockResponse().setResponseCode(HttpStatusCode.Gone.value))
+        val url = mockWebServer.url("/test")
+
+        assertThrows<ClientFailureException> {
+            runBlocking {
+                EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                    .deleteResource("tenant", "Location", "tenant-1234")
+            }
+        }
+
+        val request = mockWebServer.takeRequest()
+        assertEquals(
+            "/test/tenants/tenant/resources/Location/tenant-1234",
+            request.path
+        )
+        assertEquals("DELETE", request.method)
     }
 }

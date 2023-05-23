@@ -1,4 +1,4 @@
-package com.projectronin.ehr.dataauthority.model
+package com.projectronin.ehr.dataauthority.models
 
 sealed interface ResourceResponse {
     val resourceType: String

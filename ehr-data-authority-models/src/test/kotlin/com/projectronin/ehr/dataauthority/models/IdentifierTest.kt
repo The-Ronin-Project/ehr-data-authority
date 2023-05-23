@@ -1,15 +1,13 @@
-package com.projectronin.ehr.dataauthority.model
+package com.projectronin.ehr.dataauthority.models
 
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.lang.AssertionError
 import com.projectronin.interop.fhir.r4.datatype.Identifier as FhirIdentifier
 
 class IdentifierTest {
-
     @Test
     fun `identifier can be made from token`() {
         val ident = Identifier.fromToken("sys|val")

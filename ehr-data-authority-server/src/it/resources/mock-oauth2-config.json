@@ -13,7 +13,7 @@
             "sub": "clientId@clients",
             "aud": "https://ehr.dev.projectronin.io",
             "iss": "http://mock-oauth2:8080/ehr",
-            "scope": "write:resources search:resources"
+            "scope": "write:resources search:resources delete:resources"
           }
         }
       ]

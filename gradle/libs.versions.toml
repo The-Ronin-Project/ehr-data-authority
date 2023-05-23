@@ -15,9 +15,9 @@ interop-fhirGenerators = "com.projectronin.interop.fhir:interop-fhir-generators:
 interop-ehr-api = "com.projectronin.interop.ehr:interop-ehr:9.10.2"
 interop-ehr-fhir-ronin = "com.projectronin.interop.ehr:interop-fhir-ronin:9.10.2"
 
-interop-publishers-aidbox = "com.projectronin.interop.publish:interop-aidbox:8.0.0"
-interop-publishers-datalake = "com.projectronin.interop.publish:interop-datalake:8.0.0"
-interop-publishers-kafka = "com.projectronin.interop.publish:interop-kafka:8.0.0"
+interop-publishers-aidbox = "com.projectronin.interop.publish:interop-aidbox:8.1.0"
+interop-publishers-datalake = "com.projectronin.interop.publish:interop-datalake:8.1.0"
+interop-publishers-kafka = "com.projectronin.interop.publish:interop-kafka:8.1.0"
 
 interop-validation-client = "com.projectronin.interop.validation:interop-validation-client:2.0.0"
 
