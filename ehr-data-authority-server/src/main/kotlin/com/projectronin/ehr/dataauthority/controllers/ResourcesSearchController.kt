@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -39,19 +40,18 @@ class ResourcesSearchController(private val aidboxClient: AidboxClient) {
         return ResponseEntity.ok(resource)
     }
 
-    @GetMapping("/tenants/{tenantId}/resources/{resourceType}/identifiers/{identifier}")
+    @GetMapping("/tenants/{tenantId}/resources/{resourceType}/identifiers")
     @PreAuthorize("hasAuthority('SCOPE_search:resources')")
     fun getResourceIdentifiers(
         @PathVariable("tenantId") tenantId: String,
         @PathVariable("resourceType") resourceType: IdentifierSearchableResourceTypes,
-        @PathVariable("identifier") identifier: String
+        @RequestParam("identifier") identifiers: Array<String>
     ): ResponseEntity<List<IdentifierSearchResponse>> {
-        if (identifier.isEmpty() || !identifier.contains("|")) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (identifiers.isEmpty() || identifiers.any { !it.contains("|") }) {
+            return ResponseEntity.badRequest().build()
         }
-        val identifierList = identifier.split(",").map {
-            Identifier.fromToken(it)
-        }
+
+        val identifierList = identifiers.map { Identifier.fromToken(it) }
 
         val aidboxSearches = identifierList.associateWith {
             runBlocking {

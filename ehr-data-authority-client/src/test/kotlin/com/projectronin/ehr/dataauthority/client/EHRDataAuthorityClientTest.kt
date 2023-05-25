@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.net.URLEncoder
 
 class EHRDataAuthorityClientTest {
     private val authenticationToken = "12345678"
@@ -523,7 +524,7 @@ class EHRDataAuthorityClientTest {
 
     @Test
     fun `getResourceIdentifiers works`() {
-        val ident1 = Identifier("system1", "value1")
+        val ident1 = Identifier("http://projectronin.com/id/mrn", "value1")
         val ident2 = Identifier("system2", "value2")
 
         val searchResult = listOf(
@@ -564,7 +565,8 @@ class EHRDataAuthorityClientTest {
         assertEquals(ident1, response[0].searchedIdentifier)
         assertEquals(1, response[1].foundResources.size)
         assertEquals(
-            "/test/tenants/tenant/resources/Location/identifiers/system1%7Cvalue1,system2%7Cvalue2",
+            "/test/tenants/tenant/resources/Location/identifiers?" +
+                "identifier=${encode("http://projectronin.com/id/mrn|value1")}&identifier=${encode("system2|value2")}",
             request.path
         )
     }
@@ -608,4 +610,6 @@ class EHRDataAuthorityClientTest {
         )
         assertEquals("DELETE", request.method)
     }
+
+    private fun encode(value: String) = URLEncoder.encode(value, "UTF-8")
 }

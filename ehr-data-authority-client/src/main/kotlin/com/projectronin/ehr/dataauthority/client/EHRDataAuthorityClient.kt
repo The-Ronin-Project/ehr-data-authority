@@ -92,11 +92,13 @@ class EHRDataAuthorityClient(
         resourceType: IdentifierSearchableResourceTypes,
         identifiers: List<Identifier>
     ): List<IdentifierSearchResponse> {
-        val identifierString = identifiers.joinToString(",") { it.toToken() }
-        val resourceUrl = "$hostUrl/tenants/$tenantId/resources/${resourceType.name}/identifiers/$identifierString"
+        val resourceUrl = "$hostUrl/tenants/$tenantId/resources/${resourceType.name}/identifiers"
         val authentication = authenticationService.getAuthentication()
-        val response: HttpResponse = client.request(serverName, resourceUrl) { url ->
-            get(url) {
+        val response: HttpResponse = client.request(serverName, resourceUrl) { requestUrl ->
+            get(requestUrl) {
+                url {
+                    parameters.appendAll("identifier", identifiers.map { it.toToken() })
+                }
                 headers {
                     append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
                 }

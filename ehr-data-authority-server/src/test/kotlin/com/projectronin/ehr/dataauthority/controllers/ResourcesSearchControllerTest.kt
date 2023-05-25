@@ -118,7 +118,7 @@ class ResourcesSearchControllerTest {
         val response = resourcesWriteController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Location,
-            "sys1|ident1,sys2|ident1"
+            arrayOf("sys1|ident1", "sys2|ident1")
         )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
@@ -134,7 +134,7 @@ class ResourcesSearchControllerTest {
         val response = resourcesWriteController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Location,
-            ""
+            arrayOf()
         )
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
     }
@@ -144,7 +144,7 @@ class ResourcesSearchControllerTest {
         val response = resourcesWriteController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Location,
-            "justsendingvalues,valuesonly"
+            arrayOf("justsendingvalues", "valuesonly")
         )
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
     }
@@ -181,7 +181,7 @@ class ResourcesSearchControllerTest {
         val response = resourcesWriteController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Practitioner,
-            "sys1|ident1"
+            arrayOf("sys1|ident1")
         )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
@@ -213,7 +213,7 @@ class ResourcesSearchControllerTest {
             resourcesWriteController.getResourceIdentifiers(
                 "tenant",
                 IdentifierSearchableResourceTypes.Practitioner,
-                "sys1|ident1"
+                arrayOf("sys1|ident1")
             )
         }
     }
@@ -263,7 +263,7 @@ class ResourcesSearchControllerTest {
         val response = resourcesWriteController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Patient,
-            "sys1|ident1,sys2|ident1"
+            arrayOf("sys1|ident1", "sys2|ident1")
         )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!

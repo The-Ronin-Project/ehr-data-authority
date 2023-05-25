@@ -112,7 +112,7 @@ class ResourcesSearchControllerIT : BaseEHRDataAuthorityIT() {
             id of Id(value = "12345")
             identifier of listOf(
                 identifier {
-                    system of "system"
+                    system of CodeSystem.RONIN_MRN.uri.value!!
                     value of "value"
                 },
                 identifier {
@@ -171,7 +171,7 @@ class ResourcesSearchControllerIT : BaseEHRDataAuthorityIT() {
                 "Test",
                 IdentifierSearchableResourceTypes.Patient,
                 listOf(
-                    Identifier("system", "value"),
+                    Identifier(CodeSystem.RONIN_MRN.uri.value!!, "value"),
                     Identifier("system2", "value")
                 )
             )
