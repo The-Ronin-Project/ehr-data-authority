@@ -10,11 +10,14 @@ import com.projectronin.interop.common.http.spring.HttpSpringConfig
 import com.projectronin.interop.fhir.generators.datatypes.contactPoint
 import com.projectronin.interop.fhir.generators.datatypes.extension
 import com.projectronin.interop.fhir.generators.datatypes.identifier
+import com.projectronin.interop.fhir.generators.datatypes.meta
 import com.projectronin.interop.fhir.generators.datatypes.name
+import com.projectronin.interop.fhir.generators.primitives.of
 import com.projectronin.interop.fhir.generators.resources.PatientGenerator
 import com.projectronin.interop.fhir.generators.resources.patient
 import com.projectronin.interop.fhir.r4.CodeSystem
 import com.projectronin.interop.fhir.r4.CodeableConcepts
+import com.projectronin.interop.fhir.r4.datatype.primitive.Canonical
 import com.projectronin.interop.fhir.r4.datatype.primitive.Code
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.datatype.primitive.Uri
@@ -94,6 +97,10 @@ abstract class BaseEHRDataAuthorityIT {
             block.invoke(this)
 
             id of Id(fhirId)
+            meta of meta {
+                profile of listOf(Canonical("http://projectronin.io/fhir/StructureDefinition/ronin-patient"))
+                source of "ehrda-test-data"
+            }
             identifier plus identifier {
                 system of CodeSystem.RONIN_TENANT.uri
                 value of tenantId

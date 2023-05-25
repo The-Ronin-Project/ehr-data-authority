@@ -1,5 +1,5 @@
 [libraries]
-common-fhir-r4-models = "com.projectronin.fhir:common-fhir-r4-models:1.0.1"
+common-fhir-r4-models = "com.projectronin.fhir:common-fhir-r4-models:1.1.0"
 
 guava = "com.google.guava:guava:31.1-jre"
 
@@ -12,8 +12,8 @@ interop-commonTestDb = "com.projectronin.interop:interop-common-test-db:3.8.0"
 interop-fhir = "com.projectronin.interop.fhir:interop-fhir:8.2.0"
 interop-fhirGenerators = "com.projectronin.interop.fhir:interop-fhir-generators:8.2.0"
 
-interop-ehr-api = "com.projectronin.interop.ehr:interop-ehr:9.10.2"
-interop-ehr-fhir-ronin = "com.projectronin.interop.ehr:interop-fhir-ronin:9.10.2"
+interop-ehr-api = "com.projectronin.interop.ehr:interop-ehr:9.11.0"
+interop-ehr-fhir-ronin = "com.projectronin.interop.ehr:interop-fhir-ronin:9.11.0"
 
 interop-publishers-aidbox = "com.projectronin.interop.publish:interop-aidbox:8.1.0"
 interop-publishers-datalake = "com.projectronin.interop.publish:interop-datalake:8.1.0"
