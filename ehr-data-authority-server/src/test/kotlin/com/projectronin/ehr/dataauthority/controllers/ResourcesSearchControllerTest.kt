@@ -2,6 +2,7 @@ package com.projectronin.ehr.dataauthority.controllers
 
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
 import com.projectronin.interop.aidbox.client.AidboxClient
+import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.fhir.r4.resource.Bundle
 import com.projectronin.interop.fhir.r4.resource.Location
 import com.projectronin.interop.fhir.r4.resource.Patient
@@ -55,6 +56,36 @@ class ResourcesSearchControllerTest {
 
         val response = resourcesWriteController.getResource("tenant", "Patient", "1")
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+    }
+
+    @Test
+    fun `getResource returns 404 when receiving Not Found exception from Aidbox`() {
+        coEvery {
+            aidboxClient.getResource("Patient", "1")
+        } throws ClientFailureException(HttpStatusCode.NotFound, "Aidbox")
+
+        val response = resourcesWriteController.getResource("tenant", "Patient", "1")
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+    }
+
+    @Test
+    fun `getResource returns 404 when receiving Gone exception from Aidbox`() {
+        coEvery {
+            aidboxClient.getResource("Patient", "1")
+        } throws ClientFailureException(HttpStatusCode.Gone, "Aidbox")
+
+        val response = resourcesWriteController.getResource("tenant", "Patient", "1")
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+    }
+
+    @Test
+    fun `getResource returns 500 when receiving other exceptions from Aidbox`() {
+        coEvery {
+            aidboxClient.getResource("Patient", "1")
+        } throws ClientFailureException(HttpStatusCode.ServiceUnavailable, "Aidbox")
+
+        val response = resourcesWriteController.getResource("tenant", "Patient", "1")
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.statusCode)
     }
 
     @Test

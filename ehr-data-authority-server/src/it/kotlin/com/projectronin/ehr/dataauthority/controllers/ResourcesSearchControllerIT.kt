@@ -11,6 +11,7 @@ import com.projectronin.interop.fhir.generators.resources.patient
 import com.projectronin.interop.fhir.r4.CodeSystem
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.resource.Patient
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -59,6 +60,14 @@ class ResourcesSearchControllerIT : BaseEHRDataAuthorityIT() {
         AidboxClient.deleteResource("Patient", patient2.id?.value!!)
         val patientResponse = response as Patient
         assertEquals("Lastnameski", patientResponse.name.first().family?.value)
+    }
+
+    @Test
+    fun `get returns a 404 if requested resource does not exist`() {
+        val exception = assertThrows<ClientFailureException> {
+            runBlocking { client.getResource("Test", "Patient", "Test-fake-not-real-patient") }
+        }
+        assertEquals(HttpStatusCode.NotFound, exception.status)
     }
 
     @Test

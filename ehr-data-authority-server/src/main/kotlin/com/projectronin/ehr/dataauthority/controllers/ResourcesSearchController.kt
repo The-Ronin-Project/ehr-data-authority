@@ -5,13 +5,17 @@ import com.projectronin.ehr.dataauthority.models.Identifier
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchResponse
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
 import com.projectronin.interop.aidbox.client.AidboxClient
+import com.projectronin.interop.common.http.exceptions.HttpException
+import com.projectronin.interop.common.logmarkers.getLogMarker
 import com.projectronin.interop.fhir.r4.resource.Bundle
 import com.projectronin.interop.fhir.r4.resource.Location
 import com.projectronin.interop.fhir.r4.resource.Patient
 import com.projectronin.interop.fhir.r4.resource.Practitioner
 import com.projectronin.interop.fhir.r4.resource.Resource
 import io.ktor.client.call.body
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
+import mu.KotlinLogging
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -22,6 +26,11 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class ResourcesSearchController(private val aidboxClient: AidboxClient) {
+    // Aidbox responds Gone once a resource has been deleted, but we should just treat this as NotFound.
+    private val notFoundStatuses = listOf(HttpStatusCode.NotFound, HttpStatusCode.Gone)
+
+    private val logger = KotlinLogging.logger { }
+
     @GetMapping("/tenants/{tenantId}/resources/{resourceType}/{udpId}")
     @PreAuthorize("hasAuthority('SCOPE_search:resources')")
     fun getResource(
@@ -29,10 +38,20 @@ class ResourcesSearchController(private val aidboxClient: AidboxClient) {
         @PathVariable("resourceType") resourceType: String,
         @PathVariable("udpId") udpId: String
     ): ResponseEntity<Resource<*>> {
-        val resource = runBlocking {
-            val response = aidboxClient.getResource(resourceType, udpId)
-            response.body<Resource<*>>()
+        val resource = try {
+            runBlocking {
+                val response = aidboxClient.getResource(resourceType, udpId)
+                response.body<Resource<*>>()
+            }
+        } catch (exception: Exception) {
+            if (exception is HttpException && exception.status in notFoundStatuses) {
+                return ResponseEntity.notFound().build()
+            } else {
+                logger.error(exception.getLogMarker(), exception) { "Exception will retrieving from Aidbox" }
+                return ResponseEntity.internalServerError().build()
+            }
         }
+
         // the tenant ID should be in identifiers, but that would require us casting to every resource type
         if (resource.id?.value?.startsWith("$tenantId-") == false) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)

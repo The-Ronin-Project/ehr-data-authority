@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":ehr-data-authority-models"))
     implementation(libs.common.fhir.r4.models)
     implementation(libs.interop.common)
+    implementation(libs.interop.commonHttp)
     implementation(libs.interop.commonJackson)
     implementation(libs.interop.commonKtorm)
     implementation(libs.interop.fhir)
