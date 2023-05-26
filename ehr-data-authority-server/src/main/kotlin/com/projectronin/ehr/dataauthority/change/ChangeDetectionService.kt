@@ -48,17 +48,24 @@ class ChangeDetectionService(private val aidboxClient: AidboxClient, private val
         } else {
             // Since they do match, we'll do a deeper comparison.
             val storedResource = getStoredResource(resourceType, resourceId)
-            val normalizedStored = normalizeResource(storedResource)
-            val normalizedNew = normalizeResource(resource)
 
-            logger.debug { "Comparing new resource: $normalizedNew" }
-            logger.debug { "Comparing stored resource: $normalizedStored" }
-
-            if (normalizedNew == normalizedStored) {
-                // If the normalized forms are equal, then there has been no change.
-                ChangeType.UNCHANGED
-            } else {
+            // The normalized form will strip out the meta, so we are intentionally checking the profile
+            // If the profile has changed, then the resource has changed.
+            if (resource.meta?.profile != storedResource.meta?.profile) {
                 ChangeType.CHANGED
+            } else {
+                val normalizedStored = normalizeResource(storedResource)
+                val normalizedNew = normalizeResource(resource)
+
+                logger.debug { "Comparing new resource: $normalizedNew" }
+                logger.debug { "Comparing stored resource: $normalizedStored" }
+
+                if (normalizedNew == normalizedStored) {
+                    // If the normalized forms are equal, then there has been no change.
+                    ChangeType.UNCHANGED
+                } else {
+                    ChangeType.CHANGED
+                }
             }
         }
 

@@ -73,7 +73,10 @@ class ChangeDetectionServiceTest {
 
     @Test
     fun `resource with matching hash and matching normalized form`() {
-        val patient = Patient(id = Id("tenant-1234"))
+        val patient = Patient(
+            id = Id("tenant-1234"),
+            meta = Meta(profile = listOf(Canonical("profile1")))
+        )
 
         val hashUuid = UUID.randomUUID()
         every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns mockk {
@@ -106,7 +109,10 @@ class ChangeDetectionServiceTest {
 
     @Test
     fun `resource with matching hash and non-matching normalized form`() {
-        val patient = Patient(id = Id("tenant-1234"))
+        val patient = Patient(
+            id = Id("tenant-1234"),
+            meta = Meta(profile = listOf(Canonical("profile1")))
+        )
 
         val hashUuid = UUID.randomUUID()
         every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns mockk {
@@ -139,10 +145,55 @@ class ChangeDetectionServiceTest {
     }
 
     @Test
+    fun `resource with matching hash and different profile is considered changes`() {
+        val patient = Patient(
+            id = Id("tenant-1234"),
+            meta = Meta(profile = listOf(Canonical("profile2")))
+        )
+
+        val hashUuid = UUID.randomUUID()
+        every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns mockk {
+            every { hashId } returns hashUuid
+            every { hash } returns patient.consistentHashCode()
+        }
+
+        val aidboxPatient = Patient(
+            id = Id("tenant-1234"),
+            meta = Meta(profile = listOf(Canonical("profile1")))
+        )
+        coEvery { aidboxClient.getResource("Patient", "tenant-1234") } returns mockk {
+            coEvery { body<Resource<*>>() } returns aidboxPatient
+        }
+
+        val statuses = service.determineChangeStatuses("tenant", mapOf(1 to patient))
+
+        assertEquals(1, statuses.size)
+
+        val status1 = statuses[1]!!
+        assertEquals("Patient", status1.resourceType)
+        assertEquals("tenant-1234", status1.resourceId)
+        assertEquals(ChangeType.CHANGED, status1.type)
+        assertEquals(hashUuid, status1.hashId)
+        assertEquals(patient.consistentHashCode(), status1.hash)
+
+        verify(exactly = 1) { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") }
+        coVerify(exactly = 1) { aidboxClient.getResource("Patient", "tenant-1234") }
+    }
+
+    @Test
     fun `multiple resources with different matching types`() {
-        val patient1 = Patient(id = Id("tenant-1234"))
-        val patient2 = Patient(id = Id("tenant-5678"))
-        val patient3 = Patient(id = Id("tenant-9012"))
+        val patient1 = Patient(
+            id = Id("tenant-1234"),
+            meta = Meta(profile = listOf(Canonical("profile1")))
+        )
+        val patient2 = Patient(
+            id = Id("tenant-5678"),
+            meta = Meta(profile = listOf(Canonical("profile1")))
+        )
+        val patient3 = Patient(
+            id = Id("tenant-9012"),
+            meta = Meta(profile = listOf(Canonical("profile1")))
+        )
 
         every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns null
 
