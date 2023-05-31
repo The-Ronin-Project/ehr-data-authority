@@ -57,7 +57,7 @@ ronin-test-data-generator = "com.projectronin.test:ronin-test-data-generator:0.0
 
 spring-boot-parent = "org.springframework.boot:spring-boot-parent:2.7.8"
 spring-bom = "org.springframework.boot:spring-boot-parent:2.7.8"
-testcontainers-bom = "org.testcontainers:testcontainers-bom:1.18.1"
+testcontainers-bom = "org.testcontainers:testcontainers-bom:1.18.2"
 
 [bundles]
 data-generators = ["interop-fhirGenerators", "ronin-test-data-generator"]
