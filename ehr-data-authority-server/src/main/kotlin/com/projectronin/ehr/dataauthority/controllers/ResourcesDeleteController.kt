@@ -1,7 +1,7 @@
 package com.projectronin.ehr.dataauthority.controllers
 
+import com.projectronin.ehr.dataauthority.aidbox.AidboxClient
 import com.projectronin.ehr.dataauthority.change.data.ResourceHashesDAO
-import com.projectronin.interop.aidbox.client.AidboxClient
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.springframework.http.ResponseEntity

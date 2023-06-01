@@ -1,5 +1,6 @@
 package com.projectronin.ehr.dataauthority
 
+import com.projectronin.interop.common.http.spring.HttpSpringConfig
 import com.projectronin.interop.kafka.spring.KafkaSpringConfig
 import org.ktorm.database.Database
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -18,14 +19,13 @@ import javax.sql.DataSource
 @ComponentScan(
     basePackages = [
         "com.projectronin.ehr",
-        "com.projectronin.interop.aidbox",
         "com.projectronin.interop.fhir.ronin",
         "com.projectronin.interop.validation",
         "com.projectronin.interop.datalake",
         "com.projectronin.interop.ehr"
     ]
 )
-@Import(KafkaSpringConfig::class)
+@Import(*[KafkaSpringConfig::class, HttpSpringConfig::class])
 @SpringBootApplication
 @EnableTransactionManagement
 class EHRDataAuthorityServer {

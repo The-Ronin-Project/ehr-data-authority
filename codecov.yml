@@ -20,10 +20,21 @@ coverage:
         flags:
           - models
     patch:
-      default:
-        target: 80
+      server:
+        target: auto
         threshold: 1%
-        base: auto
+        flags:
+          - server
+      client:
+        target: auto
+        threshold: 1%
+        flags:
+          - client
+      models:
+        target: auto
+        threshold: 1%
+        flags:
+          - models
 
 comment:
   layout: "reach, diff, flags, files"

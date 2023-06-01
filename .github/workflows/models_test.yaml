@@ -30,7 +30,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
           file: ./ehr-data-authority-models/codecov/test/jacocoTestReport.xml
-          flags: client
+          flags: models
 
       - name: Upload report to DataDog
         if: always() && !cancelled()

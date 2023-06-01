@@ -9,15 +9,15 @@ interop-commonJackson = "com.projectronin.interop:interop-common-jackson:3.8.0"
 interop-commonKtorm = "com.projectronin.interop:interop-common-ktorm:3.8.0"
 interop-commonTestDb = "com.projectronin.interop:interop-common-test-db:3.8.0"
 
+interop-datalake = "com.projectronin.interop.publish:interop-datalake:8.1.1"
+
 interop-fhir = "com.projectronin.interop.fhir:interop-fhir:8.2.0"
 interop-fhirGenerators = "com.projectronin.interop.fhir:interop-fhir-generators:8.2.0"
 
 interop-ehr-api = "com.projectronin.interop.ehr:interop-ehr:9.11.0"
 interop-ehr-fhir-ronin = "com.projectronin.interop.ehr:interop-fhir-ronin:9.11.0"
 
-interop-publishers-aidbox = "com.projectronin.interop.publish:interop-aidbox:8.1.0"
-interop-publishers-datalake = "com.projectronin.interop.publish:interop-datalake:8.1.0"
-interop-publishers-kafka = "com.projectronin.interop.publish:interop-kafka:8.1.0"
+interop-kafka = "com.projectronin.interop.publish:interop-kafka:8.1.1"
 
 interop-validation-client = "com.projectronin.interop.validation:interop-validation-client:2.0.0"
 
@@ -57,7 +57,7 @@ ronin-test-data-generator = "com.projectronin.test:ronin-test-data-generator:0.0
 
 spring-boot-parent = "org.springframework.boot:spring-boot-parent:2.7.8"
 spring-bom = "org.springframework.boot:spring-boot-parent:2.7.8"
-testcontainers-bom = "org.testcontainers:testcontainers-bom:1.18.2"
+testcontainers-bom = "org.testcontainers:testcontainers-bom:1.18.3"
 
 [bundles]
 data-generators = ["interop-fhirGenerators", "ronin-test-data-generator"]

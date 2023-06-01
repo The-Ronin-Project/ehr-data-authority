@@ -1,7 +1,7 @@
 package com.projectronin.ehr.dataauthority.controllers
 
+import com.projectronin.ehr.dataauthority.aidbox.AidboxClient
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
-import com.projectronin.interop.aidbox.client.AidboxClient
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.fhir.r4.resource.Bundle
 import com.projectronin.interop.fhir.r4.resource.Location

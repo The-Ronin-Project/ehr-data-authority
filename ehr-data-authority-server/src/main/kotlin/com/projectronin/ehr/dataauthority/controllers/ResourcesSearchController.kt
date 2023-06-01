@@ -1,10 +1,10 @@
 package com.projectronin.ehr.dataauthority.controllers
 
+import com.projectronin.ehr.dataauthority.aidbox.AidboxClient
 import com.projectronin.ehr.dataauthority.models.FoundResourceIdentifiers
 import com.projectronin.ehr.dataauthority.models.Identifier
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchResponse
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
-import com.projectronin.interop.aidbox.client.AidboxClient
 import com.projectronin.interop.common.http.exceptions.HttpException
 import com.projectronin.interop.common.logmarkers.getLogMarker
 import com.projectronin.interop.fhir.r4.resource.Bundle

@@ -1,5 +1,6 @@
 package com.projectronin.ehr.dataauthority.controllers
 
+import com.projectronin.ehr.dataauthority.aidbox.AidboxPublishService
 import com.projectronin.ehr.dataauthority.change.ChangeDetectionService
 import com.projectronin.ehr.dataauthority.change.data.ResourceHashesDAO
 import com.projectronin.ehr.dataauthority.change.data.model.ResourceHashesDO
@@ -14,7 +15,6 @@ import com.projectronin.ehr.dataauthority.models.SucceededResource
 import com.projectronin.ehr.dataauthority.validation.FailedValidation
 import com.projectronin.ehr.dataauthority.validation.PassedValidation
 import com.projectronin.ehr.dataauthority.validation.ValidationManager
-import com.projectronin.interop.aidbox.AidboxPublishService
 import com.projectronin.interop.fhir.r4.CodeSystem
 import com.projectronin.interop.fhir.r4.datatype.Identifier
 import com.projectronin.interop.fhir.r4.resource.Resource
