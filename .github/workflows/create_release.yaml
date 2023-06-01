@@ -58,9 +58,9 @@ jobs:
         run: |
           VERSION=$(./gradlew currentVersion | awk '{ if(/Project version:/) { print $3; exit } }' | cut -d\- -f1)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-              
+
     outputs:
-      tag: ${{ steps.get-version.outputs.version }}
+      tag: "v${{ steps.get-version.outputs.version }}"
 
   release:
     runs-on: self-hosted
