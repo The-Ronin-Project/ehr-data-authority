@@ -1,5 +1,6 @@
 package com.projectronin.ehr.dataauthority.validation
 
+import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.resource.Appointment
 import com.projectronin.interop.fhir.r4.resource.Location
 import com.projectronin.interop.fhir.r4.resource.Patient
@@ -41,6 +42,7 @@ class ValidationManagerTest {
         val validation = mockk<Validation> {
             every { hasIssues() } returns true
             every { hasErrors() } returns false
+            every { issues() } returns emptyList()
         }
 
         val patient = mockk<Patient>()
@@ -58,10 +60,13 @@ class ValidationManagerTest {
         val validation = mockk<Validation> {
             every { hasIssues() } returns true
             every { hasErrors() } returns true
+            every { issues() } returns emptyList()
             every { getErrorString() } returns "the errors"
         }
 
         val patient = mockk<Patient>()
+        every { patient.resourceType } returns "Patient"
+        every { patient.id } returns Id("tenant1-12345fake")
         every { patientValidator.validate(patient) } returns validation
         every { validationClient.reportIssues(validation, patient, "test") } returns UUID.randomUUID()
 
@@ -77,9 +82,12 @@ class ValidationManagerTest {
         val validation = mockk<Validation> {
             every { hasIssues() } returns false
             every { hasErrors() } returns false
+            every { issues() } returns emptyList()
         }
 
         val location = mockk<Location>()
+        every { location.resourceType } returns "Location"
+        every { location.id } returns Id("tenant1-12345fake")
         every { locationValidator.validate(location) } returns validation
 
         val response = manager.validateResource(location, "test")

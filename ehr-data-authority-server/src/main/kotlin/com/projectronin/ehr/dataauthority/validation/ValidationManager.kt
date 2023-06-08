@@ -1,5 +1,6 @@
 package com.projectronin.ehr.dataauthority.validation
 
+import com.projectronin.interop.common.logmarkers.LogMarkers
 import com.projectronin.interop.fhir.r4.resource.Resource
 import com.projectronin.interop.fhir.ronin.validation.ValidationClient
 import com.projectronin.interop.fhir.validate.ProfileValidator
@@ -27,7 +28,10 @@ class ValidationManager(private val validationClient: ValidationClient, validato
 
         val validation = validator.validate(resource as T)
         if (validation.hasIssues()) {
-            logger.info { "Validation issues found for resource ${resource.resourceType}/${resource.id!!.value}" }
+            logger.warn(LogMarkers.VALIDATION_ISSUE) {
+                "Validation issues found for resource ${resource.resourceType}/${resource.id!!.value}: \n" +
+                    validation.issues().joinToString("\n") { it.toString() } + "\n"
+            }
             validationClient.reportIssues(validation, resource, tenantId)
         }
 
