@@ -33,7 +33,8 @@ class ChangeDetectionService(private val aidboxClient: AidboxClient, private val
         val resourceType = resource.resourceType
         val resourceId = resource.id!!.value!!
 
-        val resourceHash = resource.consistentHashCode()
+        val normalizedResource = normalizeResource(resource)
+        val resourceHash = normalizedResource.consistentHashCode()
         val currentHashDO = getStoredHash(tenantId, resourceType, resourceId)
 
         logger.debug { "resourceHash = $resourceHash" }
@@ -55,12 +56,10 @@ class ChangeDetectionService(private val aidboxClient: AidboxClient, private val
                 ChangeType.CHANGED
             } else {
                 val normalizedStored = normalizeResource(storedResource)
-                val normalizedNew = normalizeResource(resource)
 
-                logger.debug { "Comparing new resource: $normalizedNew" }
-                logger.debug { "Comparing stored resource: $normalizedStored" }
+                logger.debug { "Comparing new resource $normalizedResource to stored resource $normalizedStored" }
 
-                if (normalizedNew == normalizedStored) {
+                if (normalizedResource == normalizedStored) {
                     // If the normalized forms are equal, then there has been no change.
                     ChangeType.UNCHANGED
                 } else {

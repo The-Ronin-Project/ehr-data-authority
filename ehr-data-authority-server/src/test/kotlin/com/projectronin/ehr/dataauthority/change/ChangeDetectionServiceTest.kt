@@ -77,11 +77,12 @@ class ChangeDetectionServiceTest {
             id = Id("tenant-1234"),
             meta = Meta(profile = listOf(Canonical("profile1")))
         )
+        val comparedPatient = patient.copy(meta = null)
 
         val hashUuid = UUID.randomUUID()
         every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns mockk {
             every { hashId } returns hashUuid
-            every { hash } returns patient.consistentHashCode()
+            every { hash } returns comparedPatient.consistentHashCode()
         }
 
         val aidboxPatient = Patient(
@@ -101,7 +102,7 @@ class ChangeDetectionServiceTest {
         assertEquals("tenant-1234", status1.resourceId)
         assertEquals(ChangeType.UNCHANGED, status1.type)
         assertEquals(hashUuid, status1.hashId)
-        assertEquals(patient.consistentHashCode(), status1.hash)
+        assertEquals(comparedPatient.consistentHashCode(), status1.hash)
 
         verify(exactly = 1) { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") }
         coVerify(exactly = 1) { aidboxClient.getResource("Patient", "tenant-1234") }
@@ -113,11 +114,12 @@ class ChangeDetectionServiceTest {
             id = Id("tenant-1234"),
             meta = Meta(profile = listOf(Canonical("profile1")))
         )
+        val comparedPatient = patient.copy(meta = null)
 
         val hashUuid = UUID.randomUUID()
         every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns mockk {
             every { hashId } returns hashUuid
-            every { hash } returns patient.consistentHashCode()
+            every { hash } returns comparedPatient.consistentHashCode()
         }
 
         val aidboxPatient = Patient(
@@ -138,23 +140,24 @@ class ChangeDetectionServiceTest {
         assertEquals("tenant-1234", status1.resourceId)
         assertEquals(ChangeType.CHANGED, status1.type)
         assertEquals(hashUuid, status1.hashId)
-        assertEquals(patient.consistentHashCode(), status1.hash)
+        assertEquals(comparedPatient.consistentHashCode(), status1.hash)
 
         verify(exactly = 1) { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") }
         coVerify(exactly = 1) { aidboxClient.getResource("Patient", "tenant-1234") }
     }
 
     @Test
-    fun `resource with matching hash and different profile is considered changes`() {
+    fun `resource with matching hash and different profile is considered changed`() {
         val patient = Patient(
             id = Id("tenant-1234"),
             meta = Meta(profile = listOf(Canonical("profile2")))
         )
+        val comparedPatient = patient.copy(meta = null)
 
         val hashUuid = UUID.randomUUID()
         every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns mockk {
             every { hashId } returns hashUuid
-            every { hash } returns patient.consistentHashCode()
+            every { hash } returns comparedPatient.consistentHashCode()
         }
 
         val aidboxPatient = Patient(
@@ -174,7 +177,7 @@ class ChangeDetectionServiceTest {
         assertEquals("tenant-1234", status1.resourceId)
         assertEquals(ChangeType.CHANGED, status1.type)
         assertEquals(hashUuid, status1.hashId)
-        assertEquals(patient.consistentHashCode(), status1.hash)
+        assertEquals(comparedPatient.consistentHashCode(), status1.hash)
 
         verify(exactly = 1) { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") }
         coVerify(exactly = 1) { aidboxClient.getResource("Patient", "tenant-1234") }
@@ -186,14 +189,17 @@ class ChangeDetectionServiceTest {
             id = Id("tenant-1234"),
             meta = Meta(profile = listOf(Canonical("profile1")))
         )
+        val comparedPatient1 = patient1.copy(meta = null)
         val patient2 = Patient(
             id = Id("tenant-5678"),
             meta = Meta(profile = listOf(Canonical("profile1")))
         )
+        val comparedPatient2 = patient2.copy(meta = null)
         val patient3 = Patient(
             id = Id("tenant-9012"),
             meta = Meta(profile = listOf(Canonical("profile1")))
         )
+        val comparedPatient3 = patient3.copy(meta = null)
 
         every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns null
 
@@ -206,7 +212,7 @@ class ChangeDetectionServiceTest {
         val hashUuid3 = UUID.randomUUID()
         every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-9012") } returns mockk {
             every { hashId } returns hashUuid3
-            every { hash } returns patient3.consistentHashCode()
+            every { hash } returns comparedPatient3.consistentHashCode()
         }
 
         val aidboxPatient = Patient(
@@ -226,21 +232,21 @@ class ChangeDetectionServiceTest {
         assertEquals("tenant-1234", status1.resourceId)
         assertEquals(ChangeType.NEW, status1.type)
         assertNull(status1.hashId)
-        assertEquals(patient1.consistentHashCode(), status1.hash)
+        assertEquals(comparedPatient1.consistentHashCode(), status1.hash)
 
         val status2 = statuses[2]!!
         assertEquals("Patient", status2.resourceType)
         assertEquals("tenant-5678", status2.resourceId)
         assertEquals(ChangeType.CHANGED, status2.type)
         assertEquals(hashUuid2, status2.hashId)
-        assertEquals(patient2.consistentHashCode(), status2.hash)
+        assertEquals(comparedPatient2.consistentHashCode(), status2.hash)
 
         val status3 = statuses[3]!!
         assertEquals("Patient", status3.resourceType)
         assertEquals("tenant-9012", status3.resourceId)
         assertEquals(ChangeType.UNCHANGED, status3.type)
         assertEquals(hashUuid3, status3.hashId)
-        assertEquals(patient3.consistentHashCode(), status3.hash)
+        assertEquals(comparedPatient3.consistentHashCode(), status3.hash)
 
         verify(exactly = 1) { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") }
         verify(exactly = 1) { resourceHashesDAO.getHash("tenant", "Patient", "tenant-5678") }
