@@ -14,8 +14,8 @@ interop-datalake = "com.projectronin.interop.publish:interop-datalake:8.1.2"
 interop-fhir = "com.projectronin.interop.fhir:interop-fhir:8.2.1"
 interop-fhirGenerators = "com.projectronin.interop.fhir:interop-fhir-generators:8.2.1"
 
-interop-ehr-api = "com.projectronin.interop.ehr:interop-ehr:10.0.0"
-interop-ehr-fhir-ronin = "com.projectronin.interop.ehr:interop-fhir-ronin:10.0.0"
+interop-ehr-api = "com.projectronin.interop.ehr:interop-ehr:10.1.0"
+interop-ehr-fhir-ronin = "com.projectronin.interop.ehr:interop-fhir-ronin:10.1.0"
 
 interop-kafka = "com.projectronin.interop.publish:interop-kafka:8.1.1"
 
