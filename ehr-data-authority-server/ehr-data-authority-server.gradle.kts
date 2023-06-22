@@ -18,8 +18,14 @@ dependencies {
     implementation(libs.interop.commonJackson)
     implementation(libs.interop.commonKtorm)
     implementation(libs.interop.fhir)
-    implementation(libs.interop.ehr.api)
-    implementation(libs.interop.ehr.fhir.ronin)
+    implementation(libs.interop.ehr.api) {
+        // Shouldn't have these circular dependencies, but we do. So excluding for now and making a future problem
+        exclude(group = "com.projectronin.ehr")
+    }
+    implementation(libs.interop.ehr.fhir.ronin) {
+        // Shouldn't have these circular dependencies, but we do. So excluding for now and making a future problem
+        exclude(group = "com.projectronin.ehr")
+    }
     implementation(libs.interop.kafka)
 
     implementation(libs.guava)
