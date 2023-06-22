@@ -17,7 +17,13 @@ data class Identifier(
         }
 
         fun fromFhirIdentifiers(fhirIdentifiers: List<FhirIdentifier>): List<Identifier> {
-            return fhirIdentifiers.map { Identifier(it.system?.value!!, it.value?.value!!) }
+            return fhirIdentifiers.mapNotNull {
+                it.system?.value?.let { system ->
+                    it.value?.value?.let { value ->
+                        Identifier(system, value)
+                    }
+                }
+            }
         }
     }
 

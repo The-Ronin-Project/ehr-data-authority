@@ -35,21 +35,39 @@ class IdentifierTest {
     }
 
     @Test
-    fun `identifier throws error from bad fhir identifier system`() {
+    fun `identifier ignores null fhir identifier system`() {
+        val fhirIdent = mockk<FhirIdentifier> {
+            every { system } returns null
+            every { value?.value } returns "val"
+        }
+        assertEquals(emptyList<Identifier>(), Identifier.fromFhirIdentifiers(listOf(fhirIdent)))
+    }
+
+    @Test
+    fun `identifier ignores null fhir identifier system value`() {
         val fhirIdent = mockk<FhirIdentifier> {
             every { system?.value } returns null
             every { value?.value } returns "val"
         }
-        assertThrows<NullPointerException> { Identifier.fromFhirIdentifiers(listOf(fhirIdent)) }
+        assertEquals(emptyList<Identifier>(), Identifier.fromFhirIdentifiers(listOf(fhirIdent)))
     }
 
     @Test
-    fun `identifier throws error from bad fhir identifier value`() {
+    fun `identifier ignores null fhir identifier value`() {
+        val fhirIdent = mockk<FhirIdentifier> {
+            every { system?.value } returns "sys"
+            every { value } returns null
+        }
+        assertEquals(emptyList<Identifier>(), Identifier.fromFhirIdentifiers(listOf(fhirIdent)))
+    }
+
+    @Test
+    fun `identifier ignores null fhir identifier value value`() {
         val fhirIdent = mockk<FhirIdentifier> {
             every { system?.value } returns "sys"
             every { value?.value } returns null
         }
-        assertThrows<NullPointerException> { Identifier.fromFhirIdentifiers(listOf(fhirIdent)) }
+        assertEquals(emptyList<Identifier>(), Identifier.fromFhirIdentifiers(listOf(fhirIdent)))
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.projectronin.ehr.dataauthority.controllers
 
 import com.projectronin.ehr.dataauthority.aidbox.AidboxClient
+import com.projectronin.ehr.dataauthority.models.Identifier
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.fhir.r4.resource.Bundle
@@ -301,5 +302,225 @@ class ResourcesSearchControllerTest {
 
         assertEquals(2, body.size)
         assertEquals(1, body[0].foundResources.size)
+    }
+
+    @Test
+    fun `search ignores identifiers missing system`() {
+        val mockPatient1 = mockk<Patient> {
+            every { id?.value } returns "1"
+            every { identifier } returns listOf(
+                mockk {
+                    every { system } returns null
+                    every { value?.value } returns "val1"
+                },
+                mockk {
+                    every { system?.value } returns "sys2"
+                    every { value?.value } returns "val2"
+                }
+            )
+        }
+
+        coEvery {
+            aidboxClient.searchForResources("Patient", "tenant", "sys1|ident1")
+        } returns mockk {
+            every { status } returns HttpStatusCode.OK
+            coEvery { body<Bundle>() } returns mockk {
+                every { entry } returns listOf(
+                    mockk {
+                        every { resource } returns mockPatient1
+                    }
+                )
+            }
+        }
+
+        coEvery {
+            aidboxClient.searchForResources("Patient", "tenant", "sys2|ident1")
+        } returns mockk {
+            every { status } returns HttpStatusCode.OK
+            coEvery { body<Bundle>() } returns mockk {
+                every { entry } returns listOf(
+                    mockk {
+                        every { resource } returns mockPatient1
+                    }
+                )
+            }
+        }
+
+        val response = resourcesWriteController.getResourceIdentifiers(
+            "tenant",
+            IdentifierSearchableResourceTypes.Patient,
+            arrayOf("sys1|ident1", "sys2|ident1")
+        )
+        assertEquals(HttpStatus.OK, response.statusCode)
+        val body = response.body!!
+
+        assertEquals(2, body.size)
+        assertEquals(1, body[0].foundResources.size)
+        assertEquals(listOf(Identifier("sys2", "val2")), body[0].foundResources[0].identifiers)
+    }
+
+    @Test
+    fun `search ignores identifiers missing system value`() {
+        val mockPatient1 = mockk<Patient> {
+            every { id?.value } returns "1"
+            every { identifier } returns listOf(
+                mockk {
+                    every { system?.value } returns null
+                    every { value?.value } returns "val1"
+                },
+                mockk {
+                    every { system?.value } returns "sys2"
+                    every { value?.value } returns "val2"
+                }
+            )
+        }
+
+        coEvery {
+            aidboxClient.searchForResources("Patient", "tenant", "sys1|ident1")
+        } returns mockk {
+            every { status } returns HttpStatusCode.OK
+            coEvery { body<Bundle>() } returns mockk {
+                every { entry } returns listOf(
+                    mockk {
+                        every { resource } returns mockPatient1
+                    }
+                )
+            }
+        }
+
+        coEvery {
+            aidboxClient.searchForResources("Patient", "tenant", "sys2|ident1")
+        } returns mockk {
+            every { status } returns HttpStatusCode.OK
+            coEvery { body<Bundle>() } returns mockk {
+                every { entry } returns listOf(
+                    mockk {
+                        every { resource } returns mockPatient1
+                    }
+                )
+            }
+        }
+
+        val response = resourcesWriteController.getResourceIdentifiers(
+            "tenant",
+            IdentifierSearchableResourceTypes.Patient,
+            arrayOf("sys1|ident1", "sys2|ident1")
+        )
+        assertEquals(HttpStatus.OK, response.statusCode)
+        val body = response.body!!
+
+        assertEquals(2, body.size)
+        assertEquals(1, body[0].foundResources.size)
+        assertEquals(listOf(Identifier("sys2", "val2")), body[0].foundResources[0].identifiers)
+    }
+
+    @Test
+    fun `search ignores identifiers missing value`() {
+        val mockPatient1 = mockk<Patient> {
+            every { id?.value } returns "1"
+            every { identifier } returns listOf(
+                mockk {
+                    every { system?.value } returns "sys1"
+                    every { value } returns null
+                },
+                mockk {
+                    every { system?.value } returns "sys2"
+                    every { value?.value } returns "val2"
+                }
+            )
+        }
+
+        coEvery {
+            aidboxClient.searchForResources("Patient", "tenant", "sys1|ident1")
+        } returns mockk {
+            every { status } returns HttpStatusCode.OK
+            coEvery { body<Bundle>() } returns mockk {
+                every { entry } returns listOf(
+                    mockk {
+                        every { resource } returns mockPatient1
+                    }
+                )
+            }
+        }
+
+        coEvery {
+            aidboxClient.searchForResources("Patient", "tenant", "sys2|ident1")
+        } returns mockk {
+            every { status } returns HttpStatusCode.OK
+            coEvery { body<Bundle>() } returns mockk {
+                every { entry } returns listOf(
+                    mockk {
+                        every { resource } returns mockPatient1
+                    }
+                )
+            }
+        }
+
+        val response = resourcesWriteController.getResourceIdentifiers(
+            "tenant",
+            IdentifierSearchableResourceTypes.Patient,
+            arrayOf("sys1|ident1", "sys2|ident1")
+        )
+        assertEquals(HttpStatus.OK, response.statusCode)
+        val body = response.body!!
+
+        assertEquals(2, body.size)
+        assertEquals(1, body[0].foundResources.size)
+        assertEquals(listOf(Identifier("sys2", "val2")), body[0].foundResources[0].identifiers)
+    }
+
+    @Test
+    fun `search ignores identifiers missing value value`() {
+        val mockPatient1 = mockk<Patient> {
+            every { id?.value } returns "1"
+            every { identifier } returns listOf(
+                mockk {
+                    every { system?.value } returns "sys1"
+                    every { value?.value } returns null
+                },
+                mockk {
+                    every { system?.value } returns "sys2"
+                    every { value?.value } returns "val2"
+                }
+            )
+        }
+
+        coEvery {
+            aidboxClient.searchForResources("Patient", "tenant", "sys1|ident1")
+        } returns mockk {
+            every { status } returns HttpStatusCode.OK
+            coEvery { body<Bundle>() } returns mockk {
+                every { entry } returns listOf(
+                    mockk {
+                        every { resource } returns mockPatient1
+                    }
+                )
+            }
+        }
+
+        coEvery {
+            aidboxClient.searchForResources("Patient", "tenant", "sys2|ident1")
+        } returns mockk {
+            every { status } returns HttpStatusCode.OK
+            coEvery { body<Bundle>() } returns mockk {
+                every { entry } returns listOf(
+                    mockk {
+                        every { resource } returns mockPatient1
+                    }
+                )
+            }
+        }
+
+        val response = resourcesWriteController.getResourceIdentifiers(
+            "tenant",
+            IdentifierSearchableResourceTypes.Patient,
+            arrayOf("sys1|ident1", "sys2|ident1")
+        )
+        assertEquals(HttpStatus.OK, response.statusCode)
+        val body = response.body!!
+
+        assertEquals(2, body.size)
+        assertEquals(1, body[0].foundResources.size)
+        assertEquals(listOf(Identifier("sys2", "val2")), body[0].foundResources[0].identifiers)
     }
 }
