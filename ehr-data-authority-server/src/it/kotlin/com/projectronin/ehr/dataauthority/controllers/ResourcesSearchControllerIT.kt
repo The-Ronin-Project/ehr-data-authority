@@ -5,13 +5,22 @@ import com.projectronin.ehr.dataauthority.models.Identifier
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
 import com.projectronin.ehr.dataauthority.testclients.AidboxClient
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
+import com.projectronin.interop.common.http.request
 import com.projectronin.interop.fhir.generators.datatypes.identifier
 import com.projectronin.interop.fhir.generators.datatypes.name
 import com.projectronin.interop.fhir.generators.resources.patient
 import com.projectronin.interop.fhir.r4.CodeSystem
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.resource.Patient
+import io.ktor.client.call.body
+import io.ktor.client.request.accept
+import io.ktor.client.request.get
+import io.ktor.client.request.headers
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -65,7 +74,21 @@ class ResourcesSearchControllerIT : BaseEHRDataAuthorityIT() {
     @Test
     fun `get returns a 404 if requested resource does not exist`() {
         val exception = assertThrows<ClientFailureException> {
-            runBlocking { client.getResource("Test", "Patient", "Test-fake-not-real-patient") }
+            val resourceUrl = "$serverUrl/tenants/Test/resources/Patient/Test-fake-not-real-patient"
+            val authentication = authenticationService.getAuthentication()
+
+            runBlocking {
+                val response: HttpResponse = httpClient.request("test", resourceUrl) { url ->
+                    get(url) {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+                        }
+                        accept(ContentType.Application.Json)
+                        contentType(ContentType.Application.Json)
+                    }
+                }
+                response.body()
+            }
         }
         assertEquals(HttpStatusCode.NotFound, exception.status)
     }

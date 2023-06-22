@@ -10,6 +10,7 @@ import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTyp
 import com.projectronin.ehr.dataauthority.models.ModificationType
 import com.projectronin.ehr.dataauthority.models.SucceededResource
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
+import com.projectronin.interop.common.http.exceptions.ServerFailureException
 import com.projectronin.interop.common.http.ktor.ContentLengthSupplier
 import com.projectronin.interop.common.jackson.JacksonManager
 import com.projectronin.interop.fhir.r4.datatype.HumanName
@@ -29,6 +30,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -474,7 +476,7 @@ class EHRDataAuthorityClientTest {
     }
 
     @Test
-    fun `getResource works`() {
+    fun `getResource works when found`() {
         val resourceId = "123"
         val resource: Resource<*> = Patient(
             id = Id(value = resourceId),
@@ -500,8 +502,7 @@ class EHRDataAuthorityClientTest {
     }
 
     @Test
-    fun `getResource can return 404`() {
-        val resourceId = "123"
+    fun `getResource returns null for 404`() {
         val mockWebServer = MockWebServer()
         mockWebServer.enqueue(
             MockResponse()
@@ -511,9 +512,142 @@ class EHRDataAuthorityClientTest {
         )
         val url = mockWebServer.url("/test")
 
-        assertThrows<ClientFailureException> {
+        val response = runBlocking {
+            EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                .getResource("tenant", "Patient", "123")
+        }
+        val request = mockWebServer.takeRequest()
+
+        assertNull(response)
+        assertEquals("/test/tenants/tenant/resources/Patient/123", request.path)
+    }
+
+    @Test
+    fun `getResource returns null for 410`() {
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.Gone.value)
+                .setBody("{\"errorMessage\": \"No resources ever\"}")
+                .setHeader("Content-Type", "application/json")
+        )
+        val url = mockWebServer.url("/test")
+
+        val response = runBlocking {
+            EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                .getResource("tenant", "Patient", "123")
+        }
+        val request = mockWebServer.takeRequest()
+
+        assertNull(response)
+        assertEquals("/test/tenants/tenant/resources/Patient/123", request.path)
+    }
+
+    @Test
+    fun `getResource throws exception for 500`() {
+        val resourceId = "123"
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.InternalServerError.value)
+                .setBody("{\"errorMessage\": \"No resources ever\"}")
+                .setHeader("Content-Type", "application/json")
+        )
+        val url = mockWebServer.url("/test")
+
+        assertThrows<ServerFailureException> {
             runBlocking {
                 EHRDataAuthorityClient(url.toString(), client, authenticationService).getResource(
+                    "tenant",
+                    "Practitioner",
+                    resourceId
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `getResourceAs works when found`() {
+        val resourceId = "123"
+        val resource: Resource<*> = Patient(
+            id = Id(value = resourceId),
+            name = listOf(HumanName(family = "Test".asFHIR()))
+        )
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.OK.value)
+                .setBody(JacksonManager.objectMapper.writeValueAsString(resource))
+                .setHeader("Content-Type", "application/json")
+        )
+        val url = mockWebServer.url("/test")
+        val returnedResource = runBlocking {
+            EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                .getResourceAs<Patient>("tenant", "Patient", "123")
+        }
+        val request = mockWebServer.takeRequest()
+
+        assertEquals("Test", returnedResource!!.name.first().family?.value)
+        assertEquals("/test/tenants/tenant/resources/Patient/123", request.path)
+    }
+
+    @Test
+    fun `getResourceAs returns null for 404`() {
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.NotFound.value)
+                .setBody("{\"errorMessage\": \"No resources ever\"}")
+                .setHeader("Content-Type", "application/json")
+        )
+        val url = mockWebServer.url("/test")
+
+        val returnedResource = runBlocking {
+            EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                .getResourceAs<Patient>("tenant", "Patient", "123")
+        }
+        val request = mockWebServer.takeRequest()
+
+        assertNull(returnedResource)
+        assertEquals("/test/tenants/tenant/resources/Patient/123", request.path)
+    }
+
+    @Test
+    fun `getResourceAs returns null for 410`() {
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.Gone.value)
+                .setBody("{\"errorMessage\": \"No resources ever\"}")
+                .setHeader("Content-Type", "application/json")
+        )
+        val url = mockWebServer.url("/test")
+
+        val returnedResource = runBlocking {
+            EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                .getResourceAs<Patient>("tenant", "Patient", "123")
+        }
+        val request = mockWebServer.takeRequest()
+
+        assertNull(returnedResource)
+        assertEquals("/test/tenants/tenant/resources/Patient/123", request.path)
+    }
+
+    @Test
+    fun `getResourceAs throws exception for 500`() {
+        val resourceId = "123"
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.InternalServerError.value)
+                .setBody("{\"errorMessage\": \"No resources ever\"}")
+                .setHeader("Content-Type", "application/json")
+        )
+        val url = mockWebServer.url("/test")
+
+        assertThrows<ServerFailureException> {
+            runBlocking {
+                EHRDataAuthorityClient(url.toString(), client, authenticationService).getResourceAs<Patient>(
                     "tenant",
                     "Practitioner",
                     resourceId

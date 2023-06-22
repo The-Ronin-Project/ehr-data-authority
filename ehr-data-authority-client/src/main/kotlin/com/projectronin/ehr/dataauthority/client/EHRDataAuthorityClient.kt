@@ -5,6 +5,7 @@ import com.projectronin.ehr.dataauthority.models.BatchResourceResponse
 import com.projectronin.ehr.dataauthority.models.Identifier
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchResponse
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
+import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.common.http.request
 import com.projectronin.interop.fhir.r4.resource.Resource
 import io.ktor.client.HttpClient
@@ -18,7 +19,9 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import kotlinx.coroutines.runBlocking
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
@@ -33,6 +36,7 @@ class EHRDataAuthorityClient(
     private val authenticationService: EHRDataAuthorityAuthenticationService
 ) {
     private val serverName = "EHR Data Authority"
+    val notFoundStatuses = listOf(HttpStatusCode.NotFound, HttpStatusCode.Gone)
 
     /**
      * takes in a list of resources cuts the list into chunks of no more than 25,
@@ -68,21 +72,40 @@ class EHRDataAuthorityClient(
     /**
      * Retrieves the resource with [resourceType] and [udpId] for [tenantId].
      */
-    suspend fun getResource(tenantId: String, resourceType: String, udpId: String): Resource<*> {
-        val resourceUrl = "$hostUrl/tenants/$tenantId/resources/$resourceType/$udpId"
-        val authentication = authenticationService.getAuthentication()
+    suspend fun getResource(tenantId: String, resourceType: String, udpId: String): Resource<*>? {
+        return runCatching<Resource<*>?> {
+            val resourceUrl = "$hostUrl/tenants/$tenantId/resources/$resourceType/$udpId"
+            val authentication = authenticationService.getAuthentication()
 
-        val response: HttpResponse = client.request(serverName, resourceUrl) { url ->
-            get(url) {
-                headers {
-                    append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+            val response: HttpResponse = client.request(serverName, resourceUrl) { url ->
+                get(url) {
+                    headers {
+                        append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+                    }
+                    accept(ContentType.Application.Json)
+                    contentType(ContentType.Application.Json)
                 }
-                accept(ContentType.Application.Json)
-                contentType(ContentType.Application.Json)
             }
-        }
-        return response.body()
+            response.body()
+        }.fold(
+            onSuccess = { it },
+            onFailure = {
+                if (it is ClientFailureException && it.status in notFoundStatuses) {
+                    null
+                } else {
+                    throw it
+                }
+            }
+        )
     }
+
+    /**
+     * Reified version of [getResource] allowing for specifying the type.
+     */
+    final inline fun <reified T : Resource<T>> getResourceAs(tenantId: String, resourceType: String, udpId: String): T? =
+        runBlocking {
+            getResource(tenantId, resourceType, udpId) as? T
+        }
 
     /**
      * Retrieves the identifiers associated to the [resourceType] with [identifiers] for [tenantId]

@@ -65,6 +65,7 @@ dependencies {
     itImplementation(libs.bundles.data.generators)
     itImplementation(libs.interop.commonJackson)
     itImplementation(libs.interop.commonHttp)
+    itImplementation(libs.interop.commonKtorm)
     itImplementation(libs.ktorm.core)
     itImplementation(libs.kotlinx.coroutines.core)
     itImplementation(libs.kotlin.logging)
