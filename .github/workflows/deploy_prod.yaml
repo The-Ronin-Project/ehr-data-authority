@@ -18,8 +18,8 @@ jobs:
       argocd-svc-automation: ${{ secrets.ARGOCD_SVC_AUTOMATION }}
 
   tag_prod_deploy:
-    uses: projectronin/github/.github/workflows/tag_commit_w_stamp.yml@tag_commit_w_stamp/v1
-    needs: [argocd_prod]
+    uses: projectronin/github/.github/workflows/tag_commit_w_stamp.yml@tag_commit_w_stamp/v2
+    needs: [ argocd_prod ]
     with:
       deploy-env: prod
       commit-sha: ${{ inputs.image_tag }}
