@@ -172,4 +172,18 @@ class KafkaTopicConfigTest {
         assertEquals(com.projectronin.interop.fhir.r4.resource.Observation::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Observation::class, topic.eventClass)
     }
+
+    @Test
+    fun `creates request group topic`() {
+        val topic = kafkaTopicConfig.requestGroupTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.request-group.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/RequestGroup-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.RequestGroup::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.RequestGroup::class, topic.eventClass)
+    }
 }

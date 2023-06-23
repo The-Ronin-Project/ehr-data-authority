@@ -80,6 +80,12 @@ class KafkaTopicConfig(kafkaConfig: KafkaConfig) {
         com.projectronin.fhir.r4.PractitionerRole::class
     )
 
+    @Bean
+    fun requestGroupTopic() = createTopic(
+        com.projectronin.interop.fhir.r4.resource.RequestGroup::class,
+        com.projectronin.fhir.r4.RequestGroup::class
+    )
+
     private fun createTopic(
         resourceClass: KClass<out Resource<*>>,
         eventClass: KClass<out EventResource>

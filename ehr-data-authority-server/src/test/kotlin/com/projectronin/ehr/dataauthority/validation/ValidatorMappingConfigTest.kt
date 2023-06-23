@@ -11,6 +11,7 @@ import com.projectronin.interop.fhir.r4.resource.Observation
 import com.projectronin.interop.fhir.r4.resource.Patient
 import com.projectronin.interop.fhir.r4.resource.Practitioner
 import com.projectronin.interop.fhir.r4.resource.PractitionerRole
+import com.projectronin.interop.fhir.r4.resource.RequestGroup
 import com.projectronin.interop.fhir.ronin.resource.RoninAppointment
 import com.projectronin.interop.fhir.ronin.resource.RoninConditions
 import com.projectronin.interop.fhir.ronin.resource.RoninEncounter
@@ -22,6 +23,7 @@ import com.projectronin.interop.fhir.ronin.resource.RoninObservations
 import com.projectronin.interop.fhir.ronin.resource.RoninPatient
 import com.projectronin.interop.fhir.ronin.resource.RoninPractitioner
 import com.projectronin.interop.fhir.ronin.resource.RoninPractitionerRole
+import com.projectronin.interop.fhir.ronin.resource.RoninRequestGroup
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -112,6 +114,14 @@ class ValidatorMappingConfigTest {
         val validator = mockk<RoninObservations>()
         val mapping = ValidatorMappingConfig().observationValidator(validator)
         assertEquals(Observation::class, mapping.resourceClass)
+        assertEquals(validator, mapping.validator)
+    }
+
+    @Test
+    fun `creates request group mapping`() {
+        val validator = mockk<RoninRequestGroup>()
+        val mapping = ValidatorMappingConfig().requestGroupValidator(validator)
+        assertEquals(RequestGroup::class, mapping.resourceClass)
         assertEquals(validator, mapping.validator)
     }
 }
