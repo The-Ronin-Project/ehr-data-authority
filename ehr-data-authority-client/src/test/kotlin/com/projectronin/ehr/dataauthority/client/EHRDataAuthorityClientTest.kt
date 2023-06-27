@@ -698,10 +698,77 @@ class EHRDataAuthorityClientTest {
         assertEquals(2, response[0].foundResources.size)
         assertEquals(ident1, response[0].searchedIdentifier)
         assertEquals(1, response[1].foundResources.size)
+        assertEquals("/test/tenants/tenant/resources/Location/identifiers", request.path)
         assertEquals(
-            "/test/tenants/tenant/resources/Location/identifiers?" +
-                "identifier=${encode("http://projectronin.com/id/mrn|value1")}&identifier=${encode("system2|value2")}",
-            request.path
+            """[{"system":"http://projectronin.com/id/mrn","value":"value1"},{"system":"system2","value":"value2"}]""",
+            request.body.readUtf8()
+        )
+    }
+
+    @Test
+    fun `getResourceIdentifiers honors batch size`() {
+        val ident1 = Identifier("http://projectronin.com/id/mrn", "value1")
+        val ident2 = Identifier("system2", "value2")
+
+        val searchResult1 = listOf(
+            IdentifierSearchResponse(
+                searchedIdentifier = ident1,
+                foundResources = listOf(
+                    FoundResourceIdentifiers("udpId1", listOf(ident1, Identifier("notSearched", "notSearched"))),
+                    FoundResourceIdentifiers("udpId2", listOf(ident1, Identifier("notSearched2", "notSearched2")))
+                )
+            )
+        )
+        val searchResult2 = listOf(
+            IdentifierSearchResponse(
+                searchedIdentifier = ident2,
+                foundResources = listOf(
+                    FoundResourceIdentifiers("udpId3", listOf(ident2))
+                )
+            )
+        )
+
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.OK.value)
+                .setBody(JacksonManager.objectMapper.writeValueAsString(searchResult1))
+                .setHeader("Content-Type", "application/json")
+        )
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.OK.value)
+                .setBody(JacksonManager.objectMapper.writeValueAsString(searchResult2))
+                .setHeader("Content-Type", "application/json")
+        )
+        val url = mockWebServer.url("/test")
+        val identifers = listOf(
+            ident1,
+            ident2
+        )
+        val response = runBlocking {
+            EHRDataAuthorityClient(url.toString(), client, authenticationService, 1)
+                .getResourceIdentifiers("tenant", IdentifierSearchableResourceTypes.Location, identifers)
+        }
+        assertEquals(2, response.size)
+        assertEquals(2, response[0].foundResources.size)
+        assertEquals(ident1, response[0].searchedIdentifier)
+        assertEquals(1, response[1].foundResources.size)
+
+        assertEquals(2, mockWebServer.requestCount)
+
+        val request1 = mockWebServer.takeRequest()
+        assertEquals("/test/tenants/tenant/resources/Location/identifiers", request1.path)
+        assertEquals(
+            """[{"system":"http://projectronin.com/id/mrn","value":"value1"}]""",
+            request1.body.readUtf8()
+        )
+
+        val request2 = mockWebServer.takeRequest()
+        assertEquals("/test/tenants/tenant/resources/Location/identifiers", request2.path)
+        assertEquals(
+            """[{"system":"system2","value":"value2"}]""",
+            request2.body.readUtf8()
         )
     }
 

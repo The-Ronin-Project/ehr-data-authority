@@ -33,7 +33,9 @@ class EHRDataAuthorityClient(
     @Value("\${ehrda.url}")
     private val hostUrl: String,
     private val client: HttpClient,
-    private val authenticationService: EHRDataAuthorityAuthenticationService
+    private val authenticationService: EHRDataAuthorityAuthenticationService,
+    @Value("\${ehrda.batch.identifiers:50")
+    private val identifiersBatchSize: Int = 50
 ) {
     private val serverName = "EHR Data Authority"
     val notFoundStatuses = listOf(HttpStatusCode.NotFound, HttpStatusCode.Gone)
@@ -102,7 +104,11 @@ class EHRDataAuthorityClient(
     /**
      * Reified version of [getResource] allowing for specifying the type.
      */
-    final inline fun <reified T : Resource<T>> getResourceAs(tenantId: String, resourceType: String, udpId: String): T? =
+    final inline fun <reified T : Resource<T>> getResourceAs(
+        tenantId: String,
+        resourceType: String,
+        udpId: String
+    ): T? =
         runBlocking {
             getResource(tenantId, resourceType, udpId) as? T
         }
@@ -116,20 +122,20 @@ class EHRDataAuthorityClient(
         identifiers: List<Identifier>
     ): List<IdentifierSearchResponse> {
         val resourceUrl = "$hostUrl/tenants/$tenantId/resources/${resourceType.name}/identifiers"
-        val authentication = authenticationService.getAuthentication()
-        val response: HttpResponse = client.request(serverName, resourceUrl) { requestUrl ->
-            get(requestUrl) {
-                url {
-                    parameters.appendAll("identifier", identifiers.map { it.toToken() })
+        return identifiers.chunked(identifiersBatchSize).flatMap { batch ->
+            val authentication = authenticationService.getAuthentication()
+            val response: HttpResponse = client.request(serverName, resourceUrl) { requestUrl ->
+                post(requestUrl) {
+                    headers {
+                        append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+                    }
+                    accept(ContentType.Application.Json)
+                    contentType(ContentType.Application.Json)
+                    setBody(batch)
                 }
-                headers {
-                    append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
-                }
-                accept(ContentType.Application.Json)
-                contentType(ContentType.Application.Json)
             }
+            response.body<List<IdentifierSearchResponse>>()
         }
-        return response.body()
     }
 
     /**

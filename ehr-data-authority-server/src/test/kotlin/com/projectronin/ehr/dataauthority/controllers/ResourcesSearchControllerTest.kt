@@ -150,7 +150,7 @@ class ResourcesSearchControllerTest {
         val response = resourcesWriteController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Location,
-            arrayOf("sys1|ident1", "sys2|ident1")
+            arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
         )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
@@ -167,16 +167,6 @@ class ResourcesSearchControllerTest {
             "tenant",
             IdentifierSearchableResourceTypes.Location,
             arrayOf()
-        )
-        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
-    }
-
-    @Test
-    fun `search throws error when called with malformed identifier parameter 2`() {
-        val response = resourcesWriteController.getResourceIdentifiers(
-            "tenant",
-            IdentifierSearchableResourceTypes.Location,
-            arrayOf("justsendingvalues", "valuesonly")
         )
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
     }
@@ -213,7 +203,7 @@ class ResourcesSearchControllerTest {
         val response = resourcesWriteController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Practitioner,
-            arrayOf("sys1|ident1")
+            arrayOf(Identifier("sys1", "ident1"))
         )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
@@ -245,7 +235,7 @@ class ResourcesSearchControllerTest {
             resourcesWriteController.getResourceIdentifiers(
                 "tenant",
                 IdentifierSearchableResourceTypes.Practitioner,
-                arrayOf("sys1|ident1")
+                arrayOf(Identifier("sys1", "ident1"))
             )
         }
     }
@@ -295,7 +285,7 @@ class ResourcesSearchControllerTest {
         val response = resourcesWriteController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Patient,
-            arrayOf("sys1|ident1", "sys2|ident1")
+            arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
         )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
@@ -349,7 +339,7 @@ class ResourcesSearchControllerTest {
         val response = resourcesWriteController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Patient,
-            arrayOf("sys1|ident1", "sys2|ident1")
+            arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
         )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
@@ -404,7 +394,7 @@ class ResourcesSearchControllerTest {
         val response = resourcesWriteController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Patient,
-            arrayOf("sys1|ident1", "sys2|ident1")
+            arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
         )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
@@ -459,7 +449,7 @@ class ResourcesSearchControllerTest {
         val response = resourcesWriteController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Patient,
-            arrayOf("sys1|ident1", "sys2|ident1")
+            arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
         )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
@@ -514,7 +504,7 @@ class ResourcesSearchControllerTest {
         val response = resourcesWriteController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Patient,
-            arrayOf("sys1|ident1", "sys2|ident1")
+            arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
         )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
