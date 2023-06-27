@@ -34,7 +34,7 @@ class EHRDataAuthorityClient(
     private val hostUrl: String,
     private val client: HttpClient,
     private val authenticationService: EHRDataAuthorityAuthenticationService,
-    @Value("\${ehrda.batch.identifiers:50")
+    @Value("\${ehrda.batch.identifiers:50}")
     private val identifiersBatchSize: Int = 50
 ) {
     private val serverName = "EHR Data Authority"
