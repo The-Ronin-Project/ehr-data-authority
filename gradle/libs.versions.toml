@@ -17,7 +17,7 @@ interop-fhirGenerators = "com.projectronin.interop.fhir:interop-fhir-generators:
 interop-ehr-api = "com.projectronin.interop.ehr:interop-ehr:10.2.3"
 interop-ehr-fhir-ronin = "com.projectronin.interop.ehr:interop-fhir-ronin:10.2.3"
 
-interop-kafka = "com.projectronin.interop.publish:interop-kafka:8.1.1"
+interop-kafka = "com.projectronin.interop.publish:interop-kafka:8.1.2"
 
 interop-validation-client = "com.projectronin.interop.validation:interop-validation-client:2.0.0"
 
