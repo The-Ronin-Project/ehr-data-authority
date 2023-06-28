@@ -1,6 +1,7 @@
 package com.projectronin.ehr.dataauthority.validation
 
 import com.projectronin.interop.fhir.r4.resource.Appointment
+import com.projectronin.interop.fhir.r4.resource.CarePlan
 import com.projectronin.interop.fhir.r4.resource.Condition
 import com.projectronin.interop.fhir.r4.resource.Encounter
 import com.projectronin.interop.fhir.r4.resource.Location
@@ -13,6 +14,7 @@ import com.projectronin.interop.fhir.r4.resource.Practitioner
 import com.projectronin.interop.fhir.r4.resource.PractitionerRole
 import com.projectronin.interop.fhir.r4.resource.RequestGroup
 import com.projectronin.interop.fhir.ronin.resource.RoninAppointment
+import com.projectronin.interop.fhir.ronin.resource.RoninCarePlan
 import com.projectronin.interop.fhir.ronin.resource.RoninConditions
 import com.projectronin.interop.fhir.ronin.resource.RoninEncounter
 import com.projectronin.interop.fhir.ronin.resource.RoninLocation
@@ -122,6 +124,14 @@ class ValidatorMappingConfigTest {
         val validator = mockk<RoninRequestGroup>()
         val mapping = ValidatorMappingConfig().requestGroupValidator(validator)
         assertEquals(RequestGroup::class, mapping.resourceClass)
+        assertEquals(validator, mapping.validator)
+    }
+
+    @Test
+    fun `creates care plan mapping`() {
+        val validator = mockk<RoninCarePlan>()
+        val mapping = ValidatorMappingConfig().carePlanValidator(validator)
+        assertEquals(CarePlan::class, mapping.resourceClass)
         assertEquals(validator, mapping.validator)
     }
 }
