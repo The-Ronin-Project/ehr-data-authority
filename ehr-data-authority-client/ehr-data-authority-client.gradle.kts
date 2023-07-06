@@ -1,7 +1,7 @@
 plugins {
-    id("com.projectronin.interop.gradle.junit")
-    id("com.projectronin.interop.gradle.spring")
-    kotlin("plugin.serialization")
+    alias(libs.plugins.interop.junit)
+    alias(libs.plugins.interop.spring.framework)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {

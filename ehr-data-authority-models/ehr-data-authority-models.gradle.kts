@@ -1,5 +1,5 @@
 plugins {
-    id("com.projectronin.interop.gradle.junit")
+    alias(libs.plugins.interop.junit)
 }
 
 dependencies {

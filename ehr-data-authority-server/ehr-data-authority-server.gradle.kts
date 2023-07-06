@@ -1,6 +1,6 @@
 plugins {
-    id("com.projectronin.interop.gradle.spring-boot")
-    id("com.projectronin.interop.gradle.docker-integration")
+    alias(libs.plugins.interop.spring.boot)
+    alias(libs.plugins.interop.docker.integration)
 }
 
 dependencies {
