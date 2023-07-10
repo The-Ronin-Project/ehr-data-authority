@@ -27,6 +27,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import java.util.UUID
@@ -207,7 +208,7 @@ class ResourcesWriteControllerTest {
         every { kafkaPublisher.publishResource(testPatient, ChangeType.NEW) } just Runs
 
         val hashSlot = slot<ResourceHashesDO>()
-        every { resourceHashesDAO.insertHash(capture(hashSlot)) } returns mockk()
+        every { resourceHashesDAO.upsertHash(capture(hashSlot)) } returns mockk()
 
         val response = resourcesWriteController.addNewResources(mockTenantId, listOf(testPatient))
         assertEquals(HttpStatus.OK, response.statusCode)
@@ -222,10 +223,45 @@ class ResourcesWriteControllerTest {
         assertEquals(ModificationType.CREATED, success1.modificationType)
 
         val hashDO = hashSlot.captured
+        assertNull(hashDO.hashId)
         assertEquals("tenant-1", hashDO.resourceId)
         assertEquals("Patient", hashDO.resourceType)
         assertEquals(mockTenantId, hashDO.tenantId)
         assertEquals(1234, hashDO.hash)
+
+        verify(exactly = 1) { kafkaPublisher.publishResource(testPatient, ChangeType.NEW) }
+    }
+
+    @Test
+    fun `new resource fails hash creation after publication`() {
+        val changeStatus1 = ChangeStatus("Patient", "tenant-1", ChangeType.NEW, null, 1234)
+
+        every {
+            changeDetectionService.determineChangeStatuses(
+                mockTenantId,
+                mapOf("Patient:tenant-1" to testPatient)
+            )
+        } returns mapOf("Patient:tenant-1" to changeStatus1)
+
+        every { validationManager.validateResource(testPatient, mockTenantId) } returns PassedValidation
+
+        every { aidboxPublishService.publish(listOf(testPatient)) } returns true
+
+        every { kafkaPublisher.publishResource(testPatient, ChangeType.NEW) } just Runs
+
+        every { resourceHashesDAO.upsertHash(any()) } throws IllegalStateException("Exception")
+
+        val response = resourcesWriteController.addNewResources(mockTenantId, listOf(testPatient))
+        assertEquals(HttpStatus.OK, response.statusCode)
+
+        val resourceResponse = response.body!!
+        assertEquals(0, resourceResponse.succeeded.size)
+        assertEquals(1, resourceResponse.failed.size)
+
+        val failed1 = resourceResponse.failed[0]
+        assertEquals("Patient", failed1.resourceType)
+        assertEquals("tenant-1", failed1.resourceId)
+        assertEquals("Error updating the hash store", failed1.error)
 
         verify(exactly = 1) { kafkaPublisher.publishResource(testPatient, ChangeType.NEW) }
     }
@@ -248,7 +284,8 @@ class ResourcesWriteControllerTest {
 
         every { kafkaPublisher.publishResource(testPatient, ChangeType.CHANGED) } just Runs
 
-        every { resourceHashesDAO.updateHash(hashUuid, 1234) } returns mockk()
+        val hashSlot = slot<ResourceHashesDO>()
+        every { resourceHashesDAO.upsertHash(capture(hashSlot)) } returns mockk()
 
         val response = resourcesWriteController.addNewResources(mockTenantId, listOf(testPatient))
         assertEquals(HttpStatus.OK, response.statusCode)
@@ -262,8 +299,49 @@ class ResourcesWriteControllerTest {
         assertEquals("tenant-1", success1.resourceId)
         assertEquals(ModificationType.UPDATED, success1.modificationType)
 
+        val hashDO = hashSlot.captured
+        assertEquals(hashUuid, hashDO.hashId)
+        assertEquals("tenant-1", hashDO.resourceId)
+        assertEquals("Patient", hashDO.resourceType)
+        assertEquals(mockTenantId, hashDO.tenantId)
+        assertEquals(1234, hashDO.hash)
+
         verify(exactly = 1) { kafkaPublisher.publishResource(testPatient, ChangeType.CHANGED) }
-        verify(exactly = 1) { resourceHashesDAO.updateHash(hashUuid, 1234) }
+    }
+
+    @Test
+    fun `changed resource fails hash update after publication`() {
+        val hashUuid = UUID.randomUUID()
+        val changeStatus1 = ChangeStatus("Patient", "tenant-1", ChangeType.CHANGED, hashUuid, 1234)
+
+        every {
+            changeDetectionService.determineChangeStatuses(
+                mockTenantId,
+                mapOf("Patient:tenant-1" to testPatient)
+            )
+        } returns mapOf("Patient:tenant-1" to changeStatus1)
+
+        every { validationManager.validateResource(testPatient, mockTenantId) } returns PassedValidation
+
+        every { aidboxPublishService.publish(listOf(testPatient)) } returns true
+
+        every { kafkaPublisher.publishResource(testPatient, ChangeType.CHANGED) } just Runs
+
+        every { resourceHashesDAO.upsertHash(any()) } throws IllegalStateException("Exception")
+
+        val response = resourcesWriteController.addNewResources(mockTenantId, listOf(testPatient))
+        assertEquals(HttpStatus.OK, response.statusCode)
+
+        val resourceResponse = response.body!!
+        assertEquals(0, resourceResponse.succeeded.size)
+        assertEquals(1, resourceResponse.failed.size)
+
+        val failed1 = resourceResponse.failed[0]
+        assertEquals("Patient", failed1.resourceType)
+        assertEquals("tenant-1", failed1.resourceId)
+        assertEquals("Error updating the hash store", failed1.error)
+
+        verify(exactly = 1) { kafkaPublisher.publishResource(testPatient, ChangeType.CHANGED) }
     }
 
     @Test
@@ -283,7 +361,7 @@ class ResourcesWriteControllerTest {
 
         every { aidboxPublishService.publish(any()) } returns true
         every { kafkaPublisher.publishResource(any(), any()) } just Runs
-        every { resourceHashesDAO.updateHash(any(), any()) } returns mockk()
+        every { resourceHashesDAO.upsertHash(any()) } returns mockk()
 
         val response = resourcesWriteController.addNewResources(mockTenantId, listOf(testPatient, testObservation))
         assertEquals(HttpStatus.OK, response.statusCode)
@@ -298,7 +376,7 @@ class ResourcesWriteControllerTest {
         assertEquals(ModificationType.UPDATED, body.succeeded[1].modificationType)
 
         verify(exactly = 2) { kafkaPublisher.publishResource(any(), any()) }
-        verify(exactly = 2) { resourceHashesDAO.updateHash(any(), any()) }
+        verify(exactly = 2) { resourceHashesDAO.upsertHash(any()) }
     }
 
     @Test
@@ -320,7 +398,7 @@ class ResourcesWriteControllerTest {
 
         every { kafkaPublisher.publishResource(any(), any()) } just Runs
 
-        every { resourceHashesDAO.updateHash(any(), any()) } returns mockk()
+        every { resourceHashesDAO.upsertHash(any()) } returns mockk()
 
         val response = resourcesWriteController.addNewResources(mockTenantId, listOf(testPatient, testObservation))
         assertEquals(HttpStatus.OK, response.statusCode)
@@ -335,7 +413,7 @@ class ResourcesWriteControllerTest {
         assertEquals("Error publishing to data store.", body.failed[0].error)
 
         verify(exactly = 1) { kafkaPublisher.publishResource(any(), any()) }
-        verify(exactly = 1) { resourceHashesDAO.updateHash(any(), any()) }
+        verify(exactly = 1) { resourceHashesDAO.upsertHash(any()) }
     }
 
     @Test

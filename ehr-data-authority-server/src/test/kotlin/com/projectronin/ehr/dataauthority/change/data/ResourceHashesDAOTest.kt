@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -72,8 +71,11 @@ class ResourceHashesDAOTest {
 
     @Test
     @DataSet(value = ["/dbunit/hashes/NoHashes.yaml"], cleanAfter = true)
-    @ExpectedDataSet(value = ["/dbunit/hashes/ExpectedHashesAfterInsert.yaml"], ignoreCols = ["hash_id"])
-    fun `insertHash adds the hash`() {
+    @ExpectedDataSet(
+        value = ["/dbunit/hashes/ExpectedHashesAfterInsert.yaml"],
+        ignoreCols = ["hash_id", "update_dt_tm"]
+    )
+    fun `upsertHash adds the hash`() {
         val newHash = ResourceHashesDO {
             resourceId = "67890"
             resourceType = "Location"
@@ -83,34 +85,32 @@ class ResourceHashesDAOTest {
         }
 
         val dao = ResourceHashesDAO(KtormHelper.database())
-        val hash = dao.insertHash(newHash)
+        val hash = dao.upsertHash(newHash)
 
         assertNotNull(hash.hashId)
         assertEquals("67890", hash.resourceId)
         assertEquals("Location", hash.resourceType)
         assertEquals("tenant2", hash.tenantId)
         assertEquals(1470258, hash.hash)
-        assertEquals(OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC), hash.updateDateTime)
-    }
-
-    @Test
-    @DataSet(value = ["/dbunit/hashes/SingleHash.yaml"], cleanAfter = true)
-    @ExpectedDataSet(value = ["/dbunit/hashes/SingleHash.yaml"])
-    fun `updateHash fails when given a non-existent UUID`() {
-        val dao = ResourceHashesDAO(KtormHelper.database())
-
-        val uuid = UUID.randomUUID()
-        val exception = assertThrows<IllegalArgumentException> { dao.updateHash(uuid, 1234567890) }
-        assertEquals("No hash found for $uuid", exception.message)
+        assertNotNull(hash.updateDateTime)
     }
 
     @Test
     @DataSet(value = ["/dbunit/hashes/SingleHash.yaml"], cleanAfter = true)
     @ExpectedDataSet(value = ["/dbunit/hashes/ExpectedHashesAfterUpdate.yaml"], ignoreCols = ["update_dt_tm"])
-    fun `updateHash updates the hash value`() {
+    fun `upsertHash updates the hash value`() {
         val dao = ResourceHashesDAO(KtormHelper.database())
 
-        val hash = dao.updateHash(UUID.fromString("b4e8e80a-297a-4b19-bd59-4b8072db9cc4"), 1234567890)
+        val updatedHash = ResourceHashesDO {
+            hashId = UUID.fromString("b4e8e80a-297a-4b19-bd59-4b8072db9cc4")
+            resourceId = "12345"
+            resourceType = "Patient"
+            tenantId = "tenant1"
+            hash = 1234567890
+            updateDateTime = OffsetDateTime.now(ZoneOffset.UTC)
+        }
+
+        val hash = dao.upsertHash(updatedHash)
         assertEquals(UUID.fromString("b4e8e80a-297a-4b19-bd59-4b8072db9cc4"), hash.hashId)
         assertEquals("12345", hash.resourceId)
         assertEquals("Patient", hash.resourceType)
@@ -118,10 +118,44 @@ class ResourceHashesDAOTest {
         assertEquals(1234567890, hash.hash)
 
         val originalDateTime = OffsetDateTime.of(2022, 8, 1, 11, 18, 0, 0, ZoneOffset.UTC)
+        val now = OffsetDateTime.now(ZoneOffset.UTC)
         assertTrue(
             hash.updateDateTime.isAfter(originalDateTime) &&
-                hash.updateDateTime.isBefore(OffsetDateTime.now(ZoneOffset.UTC))
+                (hash.updateDateTime.isBefore(now) || hash.equals(now))
         )
+    }
+
+    @Test
+    @DataSet(value = ["/dbunit/hashes/NoHashes.yaml"], cleanAfter = true)
+    @ExpectedDataSet(
+        value = ["/dbunit/hashes/ExpectedHashesAfterInsert.yaml"],
+        ignoreCols = ["hash_id", "update_dt_tm"]
+    )
+    fun `upsertHash ignores repeat calls with no ID`() {
+        val newHash = ResourceHashesDO {
+            resourceId = "67890"
+            resourceType = "Location"
+            tenantId = "tenant2"
+            hash = 1470258
+            updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
+        }
+
+        val dao = ResourceHashesDAO(KtormHelper.database())
+        val hash = dao.upsertHash(newHash)
+
+        assertNotNull(hash.hashId)
+        assertEquals("67890", hash.resourceId)
+        assertEquals("Location", hash.resourceType)
+        assertEquals("tenant2", hash.tenantId)
+        assertEquals(1470258, hash.hash)
+        assertNotNull(hash.updateDateTime)
+
+        val hash2 = dao.upsertHash(newHash)
+        assertEquals(hash.hashId, hash2.hashId)
+        assertEquals(hash.resourceId, hash2.resourceId)
+        assertEquals(hash.resourceType, hash2.resourceType)
+        assertEquals(hash.tenantId, hash2.tenantId)
+        assertEquals(hash.hash, hash2.hash)
     }
 
     @Test

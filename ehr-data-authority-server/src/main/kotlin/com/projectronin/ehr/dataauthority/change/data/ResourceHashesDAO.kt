@@ -8,11 +8,10 @@ import org.ktorm.dsl.and
 import org.ktorm.dsl.delete
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.from
-import org.ktorm.dsl.insert
 import org.ktorm.dsl.map
 import org.ktorm.dsl.select
-import org.ktorm.dsl.update
 import org.ktorm.dsl.where
+import org.ktorm.support.mysql.insertOrUpdate
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
@@ -20,7 +19,7 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 /**
- * DAO responsible for managing resource hasehs.
+ * DAO responsible for managing resource hashes.
  */
 @Repository
 class ResourceHashesDAO(private val database: Database) {
@@ -36,42 +35,37 @@ class ResourceHashesDAO(private val database: Database) {
     }
 
     /**
-     * Inserts the [resourceHashesDO] and returns the current view from the data store.
+     * Inserts or updates the [resourceHashesDO] and returns the current view from the data store.
      */
     @Transactional
-    fun insertHash(resourceHashesDO: ResourceHashesDO): ResourceHashesDO {
-        val uuid = UUID.randomUUID()
+    fun upsertHash(resourceHashesDO: ResourceHashesDO): ResourceHashesDO {
+        logger.debug { "Upserting hash: $resourceHashesDO" }
 
-        logger.debug { "Inserting new hash: $resourceHashesDO" }
-
-        database.insert(ResourceHashesDOs) {
+        val uuid = resourceHashesDO.hashId ?: UUID.randomUUID()
+        database.insertOrUpdate(ResourceHashesDOs) {
             set(it.hashId, uuid)
             set(it.resourceId, resourceHashesDO.resourceId)
             set(it.resourceType, resourceHashesDO.resourceType)
             set(it.tenantId, resourceHashesDO.tenantId)
             set(it.hash, resourceHashesDO.hash)
-            set(it.updateDateTime, resourceHashesDO.updateDateTime)
-        }
-        return getById(uuid)
-    }
-
-    /**
-     * Updates [hashId] to the [newHash] and returns the current view from the data store.
-     */
-    @Transactional
-    fun updateHash(hashId: UUID, newHash: Int): ResourceHashesDO {
-        logger.debug { "Updating hash value for $hashId to $newHash" }
-
-        database.update(ResourceHashesDOs) {
-            set(it.hash, newHash)
             set(it.updateDateTime, OffsetDateTime.now(ZoneOffset.UTC))
 
-            where {
-                it.hashId eq hashId
+            onDuplicateKey {
+                set(it.hash, resourceHashesDO.hash)
+                set(it.updateDateTime, OffsetDateTime.now(ZoneOffset.UTC))
             }
         }
 
-        return getById(hashId)
+        return if (resourceHashesDO.hashId != null) {
+            getById(uuid)
+        } else {
+            // Since we don't actually know the ID, we have to do the lookup, but it will exist.
+            getHash(
+                resourceHashesDO.tenantId,
+                resourceHashesDO.resourceType,
+                resourceHashesDO.resourceId
+            )!!
+        }
     }
 
     /**

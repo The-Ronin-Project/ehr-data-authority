@@ -17,7 +17,7 @@ object DBClient {
         resourceHashesDAO.getHash(tenantId, resourceType, resourceId)?.hash
 
     fun setHashValue(tenantId: String, resourceType: String, resourceId: String, hash: Int) =
-        resourceHashesDAO.insertHash(
+        resourceHashesDAO.upsertHash(
             ResourceHashesDO {
                 this.tenantId = tenantId
                 this.resourceType = resourceType

@@ -18,6 +18,7 @@ import com.projectronin.ehr.dataauthority.validation.ValidationManager
 import com.projectronin.interop.fhir.r4.CodeSystem
 import com.projectronin.interop.fhir.r4.datatype.Identifier
 import com.projectronin.interop.fhir.r4.resource.Resource
+import mu.KotlinLogging
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
@@ -36,6 +37,8 @@ class ResourcesWriteController(
     private val kafkaPublisher: KafkaPublisher,
     private val validationManager: ValidationManager
 ) {
+    private val logger = KotlinLogging.logger { }
+
     @PostMapping("/tenants/{tenantId}/resources")
     @PreAuthorize("hasAuthority('SCOPE_write:resources')")
     fun addNewResources(
@@ -102,14 +105,21 @@ class ResourcesWriteController(
             )
         }
 
+        val resourceHashesDO = changeStatus.toHashDO(tenantId)
         val modificationType = when (changeStatus.type) {
             ChangeType.NEW -> {
-                resourceHashesDAO.insertHash(changeStatus.toHashDO(tenantId))
+                runCatching { resourceHashesDAO.upsertHash(resourceHashesDO) }.onFailure {
+                    logger.error(it) { "Exception persisting new hash for $resourceHashesDO" }
+                    return FailedResource(resource.resourceType, resource.id!!.value!!, "Error updating the hash store")
+                }
                 ModificationType.CREATED
             }
 
             ChangeType.CHANGED -> {
-                resourceHashesDAO.updateHash(changeStatus.hashId!!, changeStatus.hash)
+                runCatching { resourceHashesDAO.upsertHash(resourceHashesDO) }.onFailure {
+                    logger.error(it) { "Exception persisting updated hash for $resourceHashesDO" }
+                    return FailedResource(resource.resourceType, resource.id!!.value!!, "Error updating the hash store")
+                }
                 ModificationType.UPDATED
             }
 
@@ -123,6 +133,7 @@ class ResourcesWriteController(
 
     fun ChangeStatus.toHashDO(tenant: String) =
         ResourceHashesDO {
+            hashId = this@toHashDO.hashId
             resourceId = this@toHashDO.resourceId
             resourceType = this@toHashDO.resourceType
             tenantId = tenant
