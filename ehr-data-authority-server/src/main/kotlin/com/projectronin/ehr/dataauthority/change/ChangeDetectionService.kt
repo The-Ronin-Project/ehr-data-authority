@@ -4,7 +4,7 @@ import com.projectronin.ehr.dataauthority.aidbox.AidboxClient
 import com.projectronin.ehr.dataauthority.change.data.ResourceHashesDAO
 import com.projectronin.ehr.dataauthority.change.data.model.ResourceHashesDO
 import com.projectronin.ehr.dataauthority.change.model.ChangeStatus
-import com.projectronin.ehr.dataauthority.change.model.ChangeType
+import com.projectronin.ehr.dataauthority.models.ChangeType
 import com.projectronin.interop.common.reflect.copy
 import com.projectronin.interop.fhir.r4.resource.Resource
 import io.ktor.client.call.body

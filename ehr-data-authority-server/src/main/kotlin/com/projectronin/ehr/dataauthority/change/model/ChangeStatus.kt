@@ -1,5 +1,6 @@
 package com.projectronin.ehr.dataauthority.change.model
 
+import com.projectronin.ehr.dataauthority.models.ChangeType
 import java.util.UUID
 
 data class ChangeStatus(

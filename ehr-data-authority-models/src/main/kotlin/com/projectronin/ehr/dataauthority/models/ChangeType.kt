@@ -1,4 +1,4 @@
-package com.projectronin.ehr.dataauthority.change.model
+package com.projectronin.ehr.dataauthority.models
 
 enum class ChangeType {
     NEW,

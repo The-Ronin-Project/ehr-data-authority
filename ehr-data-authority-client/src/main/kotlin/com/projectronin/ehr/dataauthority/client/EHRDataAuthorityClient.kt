@@ -1,6 +1,7 @@
 package com.projectronin.ehr.dataauthority.client
 
 import com.projectronin.ehr.dataauthority.client.auth.EHRDataAuthorityAuthenticationService
+import com.projectronin.ehr.dataauthority.models.BatchResourceChangeResponse
 import com.projectronin.ehr.dataauthority.models.BatchResourceResponse
 import com.projectronin.ehr.dataauthority.models.Identifier
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchResponse
@@ -153,5 +154,34 @@ class EHRDataAuthorityClient(
                 }
             }
         }
+    }
+
+    /**
+     * Returns the change status of given [resources] compared against the existing stored resources.
+     */
+    suspend fun getResourcesChangeStatus(tenantId: String, resources: List<Resource<*>>): BatchResourceChangeResponse {
+        val batchResources = resources.chunked(25).map { getResourcesChangeByBatch(tenantId, it) }
+        val succeeded = batchResources.flatMap { it.succeeded }
+        val failed = batchResources.flatMap { it.failed }
+        return BatchResourceChangeResponse(succeeded, failed)
+    }
+
+    /**
+     * Posts a batch/chunk of resources.
+     */
+    private suspend fun getResourcesChangeByBatch(tenantId: String, resources: List<Resource<*>>): BatchResourceChangeResponse {
+        val resourceUrl = "$hostUrl/tenants/$tenantId/resources/changeStatus"
+        val authentication = authenticationService.getAuthentication()
+        val response: HttpResponse = client.request(serverName, resourceUrl) { url ->
+            post(url) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+                }
+                accept(ContentType.Application.Json)
+                contentType(ContentType.Application.Json)
+                setBody(resources)
+            }
+        }
+        return response.body()
     }
 }

@@ -2,7 +2,7 @@ package com.projectronin.ehr.dataauthority.change
 
 import com.projectronin.ehr.dataauthority.aidbox.AidboxClient
 import com.projectronin.ehr.dataauthority.change.data.ResourceHashesDAO
-import com.projectronin.ehr.dataauthority.change.model.ChangeType
+import com.projectronin.ehr.dataauthority.models.ChangeType
 import com.projectronin.interop.fhir.r4.datatype.HumanName
 import com.projectronin.interop.fhir.r4.datatype.Meta
 import com.projectronin.interop.fhir.r4.datatype.primitive.Canonical

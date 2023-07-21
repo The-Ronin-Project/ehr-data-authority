@@ -5,8 +5,8 @@ import com.projectronin.ehr.dataauthority.change.ChangeDetectionService
 import com.projectronin.ehr.dataauthority.change.data.ResourceHashesDAO
 import com.projectronin.ehr.dataauthority.change.data.model.ResourceHashesDO
 import com.projectronin.ehr.dataauthority.change.model.ChangeStatus
-import com.projectronin.ehr.dataauthority.change.model.ChangeType
 import com.projectronin.ehr.dataauthority.kafka.KafkaPublisher
+import com.projectronin.ehr.dataauthority.models.ChangeType
 import com.projectronin.ehr.dataauthority.models.ModificationType
 import com.projectronin.ehr.dataauthority.validation.FailedValidation
 import com.projectronin.ehr.dataauthority.validation.PassedValidation

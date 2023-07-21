@@ -21,17 +21,17 @@ coverage:
           - models
     patch:
       server:
-        target: auto
+        target: 80
         threshold: 1%
         flags:
           - server
       client:
-        target: auto
+        target: 80
         threshold: 1%
         flags:
           - client
       models:
-        target: auto
+        target: 80
         threshold: 1%
         flags:
           - models
