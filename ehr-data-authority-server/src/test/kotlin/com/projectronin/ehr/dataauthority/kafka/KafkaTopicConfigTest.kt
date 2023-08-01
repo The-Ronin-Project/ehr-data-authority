@@ -200,4 +200,18 @@ class KafkaTopicConfigTest {
         assertEquals(com.projectronin.interop.fhir.r4.resource.CarePlan::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.CarePlan::class, topic.eventClass)
     }
+
+    @Test
+    fun `creates document reference topic`() {
+        val topic = kafkaTopicConfig.documentReferenceTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.document-reference.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/DocumentReference-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.DocumentReference::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.DocumentReference::class, topic.eventClass)
+    }
 }

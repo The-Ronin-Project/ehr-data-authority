@@ -92,6 +92,12 @@ class KafkaTopicConfig(kafkaConfig: KafkaConfig) {
         com.projectronin.fhir.r4.CarePlan::class
     )
 
+    @Bean
+    fun documentReferenceTopic() = createTopic(
+        com.projectronin.interop.fhir.r4.resource.DocumentReference::class,
+        com.projectronin.fhir.r4.DocumentReference::class
+    )
+
     private fun createTopic(
         resourceClass: KClass<out Resource<*>>,
         eventClass: KClass<out EventResource>
