@@ -10,4 +10,6 @@ data class EhrDAKafkaTopic(
     override val dataSchema: String,
     val resourceClass: KClass<out Resource<*>>,
     val eventClass: KClass<out com.projectronin.fhir.r4.Resource>
-) : KafkaTopic
+) : KafkaTopic {
+    override val useLatestOffset: Boolean = false
+}

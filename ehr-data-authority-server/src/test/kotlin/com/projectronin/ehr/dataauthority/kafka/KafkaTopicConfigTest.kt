@@ -4,6 +4,7 @@ import com.projectronin.interop.kafka.spring.KafkaConfig
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 
 class KafkaTopicConfigTest {
@@ -31,6 +32,7 @@ class KafkaTopicConfigTest {
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Appointment::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Appointment::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
     }
 
     @Test
@@ -45,6 +47,7 @@ class KafkaTopicConfigTest {
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Condition::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Condition::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
     }
 
     @Test
@@ -59,6 +62,7 @@ class KafkaTopicConfigTest {
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Location::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Location::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
     }
 
     @Test
@@ -73,6 +77,7 @@ class KafkaTopicConfigTest {
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Patient::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Patient::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
     }
 
     @Test
@@ -87,6 +92,7 @@ class KafkaTopicConfigTest {
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Practitioner::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Practitioner::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
     }
 
     @Test
@@ -101,6 +107,7 @@ class KafkaTopicConfigTest {
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.PractitionerRole::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.PractitionerRole::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
     }
 
     @Test
@@ -115,6 +122,7 @@ class KafkaTopicConfigTest {
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Encounter::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Encounter::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
     }
 
     @Test
@@ -129,6 +137,7 @@ class KafkaTopicConfigTest {
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Medication::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Medication::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
     }
 
     @Test
@@ -143,6 +152,7 @@ class KafkaTopicConfigTest {
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.MedicationRequest::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.MedicationRequest::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
     }
 
     @Test
@@ -157,6 +167,7 @@ class KafkaTopicConfigTest {
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.MedicationStatement::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.MedicationStatement::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
     }
 
     @Test
@@ -185,6 +196,7 @@ class KafkaTopicConfigTest {
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.RequestGroup::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.RequestGroup::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
     }
 
     @Test
@@ -199,6 +211,7 @@ class KafkaTopicConfigTest {
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.CarePlan::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.CarePlan::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
     }
 
     @Test
@@ -213,5 +226,6 @@ class KafkaTopicConfigTest {
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.DocumentReference::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.DocumentReference::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
     }
 }
