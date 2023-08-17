@@ -126,9 +126,18 @@ services:
     restart: on-failure
     image: docker-proxy.devops.projectronin.io/interop-validation:latest
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://validationuser:ThePassword@mysql-server:3306/validation-db
-      - AUTH0_AUDIENCE=https://interop-validation.dev.projectronin.io
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://mock-oauth2:8080/validation
+      SPRING_DATASOURCE_URL: "jdbc:mysql://validationuser:ThePassword@mysql-server:3306/validation-db"
+      AUTH0_AUDIENCE: "https://interop-validation.dev.projectronin.io"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "http://mock-oauth2:8080/validation"
+      KAFKA_CLOUD_VENDOR: "oci"
+      KAFKA_CLOUD_REGION: "us-phoenix-1"
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:19092"
+      KAFKA_PUBLISH_SOURCE: "ehr-data-authority-it"
+      KAFKA_RETRIEVE_GROUPID: "ehr-data-authority-it"
+      KAFKA_RETRIEVE_SERVICEID: "interop-validation"
+      KAFKA_PROPERTIES_SECURITY_PROTOCOL: "PLAINTEXT"
+      KAFKA_PROPERTIES_SASL_MECHANISM: "GSSAPI"
+      KAFKA_PROPERTIES_SASL_JAAS: "nothing"
     ports:
       - "8082:8080"
     depends_on:
