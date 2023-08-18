@@ -249,7 +249,6 @@ class EHRDataAuthorityClientTest {
             resource1, resource2, resource3, resource4, resource5,
             resource1, resource2, resource3, resource4, resource5,
             resource1, resource2, resource3, resource4, resource5,
-            resource1, resource2, resource3, resource4, resource5,
             resource1, resource2, resource3, resource4, resource5
         )
 
@@ -298,31 +297,6 @@ class EHRDataAuthorityClientTest {
                 SucceededResource(
                     resourceType = "Patient",
                     resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
                     modificationType = ModificationType.CREATED
                 ),
                 SucceededResource(
@@ -442,8 +416,90 @@ class EHRDataAuthorityClientTest {
         val request = mockWebServer.takeRequest()
         assertEquals(true, request.path?.endsWith("/tenants/tenant/resources"))
         assertEquals(response.failed.size, 8)
-        assertEquals(response.succeeded.size, 22)
+        assertEquals(response.succeeded.size, 17)
         assertTrue(response.failed.all { it.error == "Error publishing to data store" })
+        assertEquals("Bearer $authenticationToken", request.getHeader("Authorization"))
+    }
+
+    @Test
+    fun `addResources works with custom batch size`() {
+        val resourceId1 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1"
+        val resource1 = Patient(Id(value = resourceId1))
+        val resourceId2 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2"
+        val resource2 = Patient(Id(value = resourceId2))
+        val resourceId3 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3"
+        val resource3 = Patient(Id(value = resourceId3))
+        val resourceId4 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4"
+        val resource4 = Patient(Id(value = resourceId4))
+        val resourceId5 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5"
+        val resource5 = Patient(Id(value = resourceId5))
+
+        val listOfResources = listOf<Resource<*>>(resource1, resource2, resource3, resource4, resource5)
+
+        val resourcesReturned1 = BatchResourceResponse(
+            succeeded = listOf(
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                    modificationType = ModificationType.CREATED
+                )
+            )
+        )
+        val resourcesReturned2 = BatchResourceResponse(
+            succeeded = listOf(
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                    modificationType = ModificationType.CREATED
+                )
+            )
+        )
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue( // mock first response from chunk
+            MockResponse()
+                .setResponseCode(HttpStatusCode.OK.value)
+                .setBody(JacksonManager.objectMapper.writeValueAsString(resourcesReturned1))
+                .setHeader("Content-Type", "application/json")
+        )
+        mockWebServer.enqueue( // mock second response from chunk
+            MockResponse()
+                .setResponseCode(HttpStatusCode.OK.value)
+                .setBody(JacksonManager.objectMapper.writeValueAsString(resourcesReturned2))
+                .setHeader("Content-Type", "application/json")
+        )
+
+        val url = mockWebServer.url("/test")
+        val response = runBlocking {
+            val resourcesToReturn =
+                EHRDataAuthorityClient(url.toString(), client, authenticationService, addBatchSize = 3).addResources(
+                    "tenant",
+                    listOfResources
+                )
+            resourcesToReturn
+        }
+
+        assertEquals(0, response.failed.size)
+        assertEquals(5, response.succeeded.size)
+
+        assertEquals(2, mockWebServer.requestCount)
+
+        val request = mockWebServer.takeRequest()
+        assertEquals(true, request.path?.endsWith("/tenants/tenant/resources"))
         assertEquals("Bearer $authenticationToken", request.getHeader("Authorization"))
     }
 

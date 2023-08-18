@@ -36,7 +36,9 @@ class EHRDataAuthorityClient(
     private val client: HttpClient,
     private val authenticationService: EHRDataAuthorityAuthenticationService,
     @Value("\${ehrda.batch.identifiers:50}")
-    private val identifiersBatchSize: Int = 50
+    private val identifiersBatchSize: Int = 50,
+    @Value("\${ehrda.batch.add:20}")
+    private val addBatchSize: Int = 20
 ) {
     private val serverName = "EHR Data Authority"
     val notFoundStatuses = listOf(HttpStatusCode.NotFound, HttpStatusCode.Gone)
@@ -47,7 +49,7 @@ class EHRDataAuthorityClient(
      * returns list of [BatchResourceResponse]
      */
     suspend fun addResources(tenantId: String, resources: List<Resource<*>>): BatchResourceResponse {
-        val batchResources = resources.chunked(25).map { addResourcesByBatch(tenantId, it) }
+        val batchResources = resources.chunked(addBatchSize).map { addResourcesByBatch(tenantId, it) }
         val succeeded = batchResources.flatMap { it.succeeded }
         val failed = batchResources.flatMap { it.failed }
         return BatchResourceResponse(succeeded, failed)
@@ -169,7 +171,10 @@ class EHRDataAuthorityClient(
     /**
      * Posts a batch/chunk of resources.
      */
-    private suspend fun getResourcesChangeByBatch(tenantId: String, resources: List<Resource<*>>): BatchResourceChangeResponse {
+    private suspend fun getResourcesChangeByBatch(
+        tenantId: String,
+        resources: List<Resource<*>>
+    ): BatchResourceChangeResponse {
         val resourceUrl = "$hostUrl/tenants/$tenantId/resources/changeStatus"
         val authentication = authenticationService.getAuthentication()
         val response: HttpResponse = client.request(serverName, resourceUrl) { url ->
