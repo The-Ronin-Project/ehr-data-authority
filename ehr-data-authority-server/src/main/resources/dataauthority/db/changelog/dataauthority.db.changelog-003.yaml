@@ -1,0 +1,3 @@
+databaseChangeLog:
+  - include:
+      file: dataauthority/db/changelog/resourcehashes/resourcehashes-03.yaml

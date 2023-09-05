@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: INT-2158-fix-unique-constraints
+      author: Josh Smith
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            - indexExists:
+                indexName: uk_hashes_tenant_resource_type_id
+      changes:
+        - addUniqueConstraint:
+            tableName: resource_hashes
+            columnNames: resource_type, resource_id, tenant_id
+            constraintName: uk_hashes_tenant_resource_type_id
+        - dropUniqueConstraint:
+            tableName: resource_hashes
+            constraintName: uk_resource_hashes_tenant_resource

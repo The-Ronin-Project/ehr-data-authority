@@ -159,6 +159,33 @@ class ResourceHashesDAOTest {
     }
 
     @Test
+    @DataSet(value = ["/dbunit/hashes/SingleHash.yaml"], cleanAfter = true)
+    @ExpectedDataSet(
+        value = ["/dbunit/hashes/ExpectedHashesAfterInsertWithSimilarResource.yaml"],
+        ignoreCols = ["hash_id", "update_dt_tm"],
+        orderBy = ["resource_type"]
+    )
+    fun `upsertHash adds the hash when the same tenant and resource ID but different resource type`() {
+        val newHash = ResourceHashesDO {
+            resourceId = "12345"
+            resourceType = "Practitioner"
+            tenantId = "tenant1"
+            hash = 1470258
+            updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
+        }
+
+        val dao = ResourceHashesDAO(KtormHelper.database())
+        val hash = dao.upsertHash(newHash)
+
+        assertNotNull(hash.hashId)
+        assertEquals("12345", hash.resourceId)
+        assertEquals("Practitioner", hash.resourceType)
+        assertEquals("tenant1", hash.tenantId)
+        assertEquals(1470258, hash.hash)
+        assertNotNull(hash.updateDateTime)
+    }
+
+    @Test
     @DataSet(value = ["/dbunit/hashes/MultipleHashes.yaml"], cleanAfter = true)
     @ExpectedDataSet(value = ["/dbunit/hashes/MultipleHashes.yaml"], orderBy = ["hash_id"])
     fun `deleteHash returns false if no records deleted`() {

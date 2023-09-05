@@ -3,3 +3,5 @@ databaseChangeLog:
       file: dataauthority/db/changelog/dataauthority.db.changelog-001.yaml
   - include:
       file: dataauthority/db/changelog/dataauthority.db.changelog-002.yaml
+  - include:
+      file: dataauthority/db/changelog/dataauthority.db.changelog-003.yaml
