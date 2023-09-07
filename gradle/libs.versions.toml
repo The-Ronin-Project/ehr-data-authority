@@ -24,7 +24,7 @@ logstash = "7.3"
 mockk = "1.13.7"
 mockwebserver = "4.11.0"
 mysql = "8.0.33"
-ronin-kafka = "1.0.0"
+ronin-kafka = "1.1.0"
 ronin-test = "0.2.0"
 # @pin until can move to JDK 17
 spring-boot = "2.7.13"
