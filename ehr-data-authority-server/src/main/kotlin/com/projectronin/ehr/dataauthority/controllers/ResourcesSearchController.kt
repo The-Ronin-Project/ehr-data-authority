@@ -7,6 +7,7 @@ import com.projectronin.ehr.dataauthority.models.IdentifierSearchResponse
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
 import com.projectronin.interop.common.http.exceptions.HttpException
 import com.projectronin.interop.common.logmarkers.getLogMarker
+import com.projectronin.interop.datalake.DatalakeRetrieveService
 import com.projectronin.interop.fhir.r4.resource.Bundle
 import com.projectronin.interop.fhir.r4.resource.Location
 import com.projectronin.interop.fhir.r4.resource.Patient
@@ -26,11 +27,26 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class ResourcesSearchController(private val aidboxClient: AidboxClient) {
+class ResourcesSearchController(private val aidboxClient: AidboxClient, private val datalakeRetrieveService: DatalakeRetrieveService) {
     // Aidbox responds Gone once a resource has been deleted, but we should just treat this as NotFound.
     private val notFoundStatuses = listOf(HttpStatusCode.NotFound, HttpStatusCode.Gone)
 
     private val logger = KotlinLogging.logger { }
+
+    @GetMapping("/tenants/{tenantId}/resources/Binary/{udpId}")
+    fun getBinaryResource(
+        @PathVariable("tenantId") tenantId: String,
+        @PathVariable("udpId") udpId: String
+    ): ResponseEntity<Resource<*>> {
+        val resource = datalakeRetrieveService.retrieveBinaryData(tenantId, udpId)
+            ?: return ResponseEntity.notFound().build()
+
+        if (resource.id?.value?.startsWith("$tenantId-") == false) {
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
+
+        return ResponseEntity.ok(resource)
+    }
 
     @GetMapping("/tenants/{tenantId}/resources/{resourceType}/{udpId}")
     @PreAuthorize("hasAuthority('SCOPE_search:resources')")

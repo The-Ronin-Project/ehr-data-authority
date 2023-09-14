@@ -4,6 +4,8 @@ import com.projectronin.ehr.dataauthority.aidbox.AidboxClient
 import com.projectronin.ehr.dataauthority.models.Identifier
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
+import com.projectronin.interop.datalake.DatalakeRetrieveService
+import com.projectronin.interop.fhir.r4.resource.Binary
 import com.projectronin.interop.fhir.r4.resource.Bundle
 import com.projectronin.interop.fhir.r4.resource.Location
 import com.projectronin.interop.fhir.r4.resource.Patient
@@ -21,7 +23,8 @@ import org.springframework.http.HttpStatus
 
 class ResourcesSearchControllerTest {
     private val aidboxClient = mockk<AidboxClient>()
-    private val resourcesWriteController = ResourcesSearchController(aidboxClient)
+    private val datalakeRetrieveService = mockk<DatalakeRetrieveService>()
+    private val resourcesSearchController = ResourcesSearchController(aidboxClient, datalakeRetrieveService)
 
     @Test
     fun `getResource works`() {
@@ -36,7 +39,7 @@ class ResourcesSearchControllerTest {
             coEvery { body<Resource<*>>() } returns mockPatient
         }
 
-        val response = resourcesWriteController.getResource("tenant", "Patient", "tenant-1")
+        val response = resourcesSearchController.getResource("tenant", "Patient", "tenant-1")
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
         assertEquals("tenant-1", body.id?.value)
@@ -55,7 +58,7 @@ class ResourcesSearchControllerTest {
             coEvery { body<Resource<*>>() } returns mockPatient
         }
 
-        val response = resourcesWriteController.getResource("tenant", "Patient", "1")
+        val response = resourcesSearchController.getResource("tenant", "Patient", "1")
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
     }
 
@@ -65,7 +68,7 @@ class ResourcesSearchControllerTest {
             aidboxClient.getResource("Patient", "1")
         } throws ClientFailureException(HttpStatusCode.NotFound, "Aidbox")
 
-        val response = resourcesWriteController.getResource("tenant", "Patient", "1")
+        val response = resourcesSearchController.getResource("tenant", "Patient", "1")
         assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
     }
 
@@ -75,7 +78,7 @@ class ResourcesSearchControllerTest {
             aidboxClient.getResource("Patient", "1")
         } throws ClientFailureException(HttpStatusCode.Gone, "Aidbox")
 
-        val response = resourcesWriteController.getResource("tenant", "Patient", "1")
+        val response = resourcesSearchController.getResource("tenant", "Patient", "1")
         assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
     }
 
@@ -85,7 +88,7 @@ class ResourcesSearchControllerTest {
             aidboxClient.getResource("Patient", "1")
         } throws ClientFailureException(HttpStatusCode.ServiceUnavailable, "Aidbox")
 
-        val response = resourcesWriteController.getResource("tenant", "Patient", "1")
+        val response = resourcesSearchController.getResource("tenant", "Patient", "1")
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.statusCode)
     }
 
@@ -147,7 +150,7 @@ class ResourcesSearchControllerTest {
             }
         }
 
-        val response = resourcesWriteController.getResourceIdentifiers(
+        val response = resourcesSearchController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Location,
             arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
@@ -163,7 +166,7 @@ class ResourcesSearchControllerTest {
 
     @Test
     fun `search throws error when called with malformed identifier parameter`() {
-        val response = resourcesWriteController.getResourceIdentifiers(
+        val response = resourcesSearchController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Location,
             arrayOf()
@@ -200,7 +203,7 @@ class ResourcesSearchControllerTest {
             }
         }
 
-        val response = resourcesWriteController.getResourceIdentifiers(
+        val response = resourcesSearchController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Practitioner,
             arrayOf(Identifier("sys1", "ident1"))
@@ -232,7 +235,7 @@ class ResourcesSearchControllerTest {
         }
 
         assertThrows<NullPointerException> {
-            resourcesWriteController.getResourceIdentifiers(
+            resourcesSearchController.getResourceIdentifiers(
                 "tenant",
                 IdentifierSearchableResourceTypes.Practitioner,
                 arrayOf(Identifier("sys1", "ident1"))
@@ -282,7 +285,7 @@ class ResourcesSearchControllerTest {
             }
         }
 
-        val response = resourcesWriteController.getResourceIdentifiers(
+        val response = resourcesSearchController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Patient,
             arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
@@ -336,7 +339,7 @@ class ResourcesSearchControllerTest {
             }
         }
 
-        val response = resourcesWriteController.getResourceIdentifiers(
+        val response = resourcesSearchController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Patient,
             arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
@@ -391,7 +394,7 @@ class ResourcesSearchControllerTest {
             }
         }
 
-        val response = resourcesWriteController.getResourceIdentifiers(
+        val response = resourcesSearchController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Patient,
             arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
@@ -446,7 +449,7 @@ class ResourcesSearchControllerTest {
             }
         }
 
-        val response = resourcesWriteController.getResourceIdentifiers(
+        val response = resourcesSearchController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Patient,
             arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
@@ -501,7 +504,7 @@ class ResourcesSearchControllerTest {
             }
         }
 
-        val response = resourcesWriteController.getResourceIdentifiers(
+        val response = resourcesSearchController.getResourceIdentifiers(
             "tenant",
             IdentifierSearchableResourceTypes.Patient,
             arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
@@ -512,5 +515,49 @@ class ResourcesSearchControllerTest {
         assertEquals(2, body.size)
         assertEquals(1, body[0].foundResources.size)
         assertEquals(listOf(Identifier("sys2", "val2")), body[0].foundResources[0].identifiers)
+    }
+
+    @Test
+    fun `getBinaryResource resource works`() {
+        val tenantId = "tenant"
+        val udpId = "tenant-1"
+        val binary = mockk<Binary> {
+            every { id!!.value } returns udpId
+        }
+        every {
+            datalakeRetrieveService.retrieveBinaryData(tenantId, udpId)
+        } returns binary
+
+        val response = resourcesSearchController.getBinaryResource(tenantId, udpId)
+        assertEquals(HttpStatus.OK, response.statusCode)
+        val body = response.body!!
+        assertEquals(udpId, body.id?.value)
+    }
+
+    @Test
+    fun `getBinaryResource fails with tenant mismatch`() {
+        val tenantId = "tenant"
+        val udpId = "tenant-1"
+        val binary = mockk<Binary> {
+            every { id!!.value } returns "1"
+        }
+        every {
+            datalakeRetrieveService.retrieveBinaryData(tenantId, udpId)
+        } returns binary
+        val response = resourcesSearchController.getBinaryResource(tenantId, udpId)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+    }
+
+    @Test
+    fun `getBinaryResource fails when binary is not found`() {
+        val tenantId = "tenant"
+        val udpId = "tenant-1"
+        val binary = null
+        every {
+            datalakeRetrieveService.retrieveBinaryData(tenantId, udpId)
+        } returns binary
+
+        val response = resourcesSearchController.getBinaryResource(tenantId, udpId)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
     }
 }

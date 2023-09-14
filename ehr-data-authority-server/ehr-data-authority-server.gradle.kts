@@ -27,6 +27,7 @@ dependencies {
         exclude(group = "com.projectronin.ehr")
     }
     implementation(libs.interop.kafka)
+    implementation(libs.interop.datalake)
 
     implementation(libs.guava)
     implementation(libs.bundles.ktor)
@@ -35,7 +36,6 @@ dependencies {
 
     runtimeOnly(libs.liquibase.core)
     runtimeOnly(libs.mysql.connector.java)
-    runtimeOnly(libs.interop.datalake)
     runtimeOnly(libs.interop.validation.client)
 
     // Needed to format logs for DataDog

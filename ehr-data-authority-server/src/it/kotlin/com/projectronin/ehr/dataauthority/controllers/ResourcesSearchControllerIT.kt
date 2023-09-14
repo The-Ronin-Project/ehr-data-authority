@@ -11,6 +11,7 @@ import com.projectronin.interop.fhir.generators.datatypes.name
 import com.projectronin.interop.fhir.generators.resources.patient
 import com.projectronin.interop.fhir.r4.CodeSystem
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
+import com.projectronin.interop.fhir.r4.resource.Binary
 import com.projectronin.interop.fhir.r4.resource.Patient
 import io.ktor.client.call.body
 import io.ktor.client.request.accept
@@ -223,5 +224,15 @@ class ResourcesSearchControllerIT : BaseEHRDataAuthorityIT() {
         assertEquals(2, searchResult2.foundResources.size)
         assertEquals("154321", searchResult2.foundResources[0].udpId)
         assertTrue(searchResult2.foundResources[1].identifiers.contains(Identifier("cool-system", "wow")))
+    }
+
+    @Test
+    fun `ehr da support retrieval of binary`() {
+        val response = runBlocking {
+            client.getResource("Test", "Binary", "Test-7788")
+        }
+        val binary = response as Binary
+        assertEquals("Test-7788", binary.id?.value)
+        assertEquals("VGhpcyB3b3Jrcw==", binary.data?.value)
     }
 }

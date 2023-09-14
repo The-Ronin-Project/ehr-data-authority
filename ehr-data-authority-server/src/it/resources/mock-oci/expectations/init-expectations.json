@@ -278,5 +278,22 @@
     "times": {
       "unlimited": true
     }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/n/.*/b/publish-bucket/o/ehr%2FBinary%2Ffhir_tenant_id=Test%2FTest-7788.json"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+      },
+      "body": {
+        "id": "Test-7788",
+        "resourceType": "Binary",
+        "contentType": "html",
+        "data": "VGhpcyB3b3Jrcw=="
+      }
+    }
   }
 ]
