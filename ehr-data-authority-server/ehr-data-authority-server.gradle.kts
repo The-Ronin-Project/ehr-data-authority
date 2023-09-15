@@ -10,6 +10,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
     implementation(project(":ehr-data-authority-models"))
     implementation(libs.common.fhir.r4.models)
@@ -58,6 +59,7 @@ dependencies {
     itImplementation(libs.bundles.ktor)
     itImplementation(libs.interop.fhir)
     itImplementation(libs.common.fhir.r4.models)
+    itImplementation(libs.interop.ehr.fhir.roninGenerators)
     itImplementation(libs.interop.validation.client)
     itImplementation(libs.interop.kafka)
     itImplementation(libs.kafka.clients)

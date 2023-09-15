@@ -5,6 +5,8 @@ import com.projectronin.ehr.dataauthority.testclients.AidboxClient
 import com.projectronin.ehr.dataauthority.testclients.DBClient
 import com.projectronin.ehr.dataauthority.testclients.KafkaClient
 import com.projectronin.ehr.dataauthority.testclients.ValidationClient
+import com.projectronin.interop.fhir.r4.datatype.primitive.Id
+import com.projectronin.interop.fhir.ronin.generators.resource.rcdmPatient
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -13,16 +15,18 @@ import org.junit.jupiter.api.Test
 class ResourcesDeleteControllerIT : BaseEHRDataAuthorityIT() {
     @Test
     fun `delete works`() {
-        val patient = roninPatient("ronintst-12345", "ronintst") { }
+        Thread.sleep(20000) // need to wait for db and tables to be ready or it yells at us.
+        val patient = rcdmPatient("ehrda") {
+            id of Id("ehrda-12345")
+        }
         AidboxClient.addResource(patient)
-        DBClient.setHashValue("ronintst", "Patient", "ronintst-12345", patient.consistentHashCode())
+        DBClient.setHashValue("ehrda", "Patient", "ehrda-12345", patient.consistentHashCode())
+        runBlocking { client.deleteResource("ehrda", "Patient", "ehrda-12345") }
 
-        runBlocking { client.deleteResource("ronintst", "Patient", "ronintst-12345") }
-
-        val aidboxP = runCatching { AidboxClient.getResource("Patient", "ronintst-12345") }.getOrNull()
+        val aidboxP = runCatching { AidboxClient.getResource("Patient", "ehrda-12345") }.getOrNull()
         assertNull(aidboxP)
 
-        val hashP = DBClient.getStoredHashValue("ronintst", "Patient", "ronintst-12345")
+        val hashP = DBClient.getStoredHashValue("ehrda", "Patient", "ehrda-12345")
         assertNull(hashP)
 
         val kafkaEvents = KafkaClient.readEvents("patient")

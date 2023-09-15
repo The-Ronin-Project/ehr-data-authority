@@ -120,8 +120,8 @@ class ResourceHashesDAOTest {
         val originalDateTime = OffsetDateTime.of(2022, 8, 1, 11, 18, 0, 0, ZoneOffset.UTC)
         val now = OffsetDateTime.now(ZoneOffset.UTC)
         assertTrue(
-            hash.updateDateTime.isAfter(originalDateTime) &&
-                (hash.updateDateTime.isBefore(now) || hash.equals(now))
+            hash.updateDateTime!!.isAfter(originalDateTime) &&
+                (hash.updateDateTime!!.isBefore(now) || hash.equals(now))
         )
     }
 
@@ -203,5 +203,12 @@ class ResourceHashesDAOTest {
 
         val deleted = dao.deleteHash("tenant1", "Patient", "tenant1-67890")
         assertTrue(deleted)
+    }
+
+    @Test
+    fun `deleteAll returns false`() {
+        val dao = ResourceHashesDAO(KtormHelper.database())
+        val deleted = dao.deleteAllOfHash()
+        assertFalse(deleted)
     }
 }

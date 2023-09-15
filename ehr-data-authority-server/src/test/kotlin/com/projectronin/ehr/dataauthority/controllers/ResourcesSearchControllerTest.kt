@@ -1,21 +1,20 @@
 package com.projectronin.ehr.dataauthority.controllers
 
 import com.projectronin.ehr.dataauthority.aidbox.AidboxClient
+import com.projectronin.ehr.dataauthority.change.data.services.StorageMode
 import com.projectronin.ehr.dataauthority.models.Identifier
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.datalake.DatalakeRetrieveService
 import com.projectronin.interop.fhir.r4.resource.Binary
-import com.projectronin.interop.fhir.r4.resource.Bundle
 import com.projectronin.interop.fhir.r4.resource.Location
 import com.projectronin.interop.fhir.r4.resource.Patient
 import com.projectronin.interop.fhir.r4.resource.Practitioner
-import com.projectronin.interop.fhir.r4.resource.Resource
-import io.ktor.client.call.body
 import io.ktor.http.HttpStatusCode
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -24,7 +23,12 @@ import org.springframework.http.HttpStatus
 class ResourcesSearchControllerTest {
     private val aidboxClient = mockk<AidboxClient>()
     private val datalakeRetrieveService = mockk<DatalakeRetrieveService>()
-    private val resourcesSearchController = ResourcesSearchController(aidboxClient, datalakeRetrieveService)
+    private val storageMode = StorageMode.AIDBOX
+    private val resourcesSearchController = ResourcesSearchController(
+        datalakeRetrieveService,
+        aidboxClient,
+        storageMode
+    )
 
     @Test
     fun `getResource works`() {
@@ -33,14 +37,12 @@ class ResourcesSearchControllerTest {
             every { id!!.value } returns "tenant-1"
         }
         coEvery {
-            aidboxClient.getResource("Patient", "tenant-1")
-        } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Resource<*>>() } returns mockPatient
-        }
+            runBlocking { aidboxClient.getResource("Patient", "tenant-1") }
+        } returns mockPatient
 
         val response = resourcesSearchController.getResource("tenant", "Patient", "tenant-1")
-        assertEquals(HttpStatus.OK, response.statusCode)
+
+        assertEquals(mockPatient, response.body)
         val body = response.body!!
         assertEquals("tenant-1", body.id?.value)
     }
@@ -53,10 +55,7 @@ class ResourcesSearchControllerTest {
         }
         coEvery {
             aidboxClient.getResource("Patient", "1")
-        } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Resource<*>>() } returns mockPatient
-        }
+        } returns mockPatient
 
         val response = resourcesSearchController.getResource("tenant", "Patient", "1")
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
@@ -124,30 +123,24 @@ class ResourcesSearchControllerTest {
         coEvery {
             aidboxClient.searchForResources("Location", "tenant", "sys1|ident1")
         } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Bundle>() } returns mockk {
-                every { entry } returns listOf(
-                    mockk {
-                        every { resource } returns mockLocation1
-                    }
-                )
-            }
+            every { entry } returns listOf(
+                mockk {
+                    every { resource } returns mockLocation1
+                }
+            )
         }
 
         coEvery {
             aidboxClient.searchForResources("Location", "tenant", "sys2|ident1")
         } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Bundle>() } returns mockk {
-                every { entry } returns listOf(
-                    mockk {
-                        every { resource } returns mockLocation1
-                    },
-                    mockk {
-                        every { resource } returns mockLocation2
-                    }
-                )
-            }
+            every { entry } returns listOf(
+                mockk {
+                    every { resource } returns mockLocation1
+                },
+                mockk {
+                    every { resource } returns mockLocation2
+                }
+            )
         }
 
         val response = resourcesSearchController.getResourceIdentifiers(
@@ -193,14 +186,11 @@ class ResourcesSearchControllerTest {
         coEvery {
             aidboxClient.searchForResources("Practitioner", "tenant", "sys1|ident1")
         } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Bundle>() } returns mockk {
-                every { entry } returns listOf(
-                    mockk {
-                        every { resource } returns mockPractitioner
-                    }
-                )
-            }
+            every { entry } returns listOf(
+                mockk {
+                    every { resource } returns mockPractitioner
+                }
+            )
         }
 
         val response = resourcesSearchController.getResourceIdentifiers(
@@ -224,14 +214,11 @@ class ResourcesSearchControllerTest {
         coEvery {
             aidboxClient.searchForResources("Practitioner", "tenant", "sys1|ident1")
         } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Bundle>() } returns mockk {
-                every { entry } returns listOf(
-                    mockk {
-                        every { resource } returns mockPractitioner
-                    }
-                )
-            }
+            every { entry } returns listOf(
+                mockk {
+                    every { resource } returns mockPractitioner
+                }
+            )
         }
 
         assertThrows<NullPointerException> {
@@ -262,27 +249,21 @@ class ResourcesSearchControllerTest {
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys1|ident1")
         } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Bundle>() } returns mockk {
-                every { entry } returns listOf(
-                    mockk {
-                        every { resource } returns mockPatient1
-                    }
-                )
-            }
+            every { entry } returns listOf(
+                mockk {
+                    every { resource } returns mockPatient1
+                }
+            )
         }
 
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys2|ident1")
         } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Bundle>() } returns mockk {
-                every { entry } returns listOf(
-                    mockk {
-                        every { resource } returns mockPatient1
-                    }
-                )
-            }
+            every { entry } returns listOf(
+                mockk {
+                    every { resource } returns mockPatient1
+                }
+            )
         }
 
         val response = resourcesSearchController.getResourceIdentifiers(
@@ -316,27 +297,21 @@ class ResourcesSearchControllerTest {
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys1|ident1")
         } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Bundle>() } returns mockk {
-                every { entry } returns listOf(
-                    mockk {
-                        every { resource } returns mockPatient1
-                    }
-                )
-            }
+            every { entry } returns listOf(
+                mockk {
+                    every { resource } returns mockPatient1
+                }
+            )
         }
 
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys2|ident1")
         } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Bundle>() } returns mockk {
-                every { entry } returns listOf(
-                    mockk {
-                        every { resource } returns mockPatient1
-                    }
-                )
-            }
+            every { entry } returns listOf(
+                mockk {
+                    every { resource } returns mockPatient1
+                }
+            )
         }
 
         val response = resourcesSearchController.getResourceIdentifiers(
@@ -371,27 +346,21 @@ class ResourcesSearchControllerTest {
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys1|ident1")
         } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Bundle>() } returns mockk {
-                every { entry } returns listOf(
-                    mockk {
-                        every { resource } returns mockPatient1
-                    }
-                )
-            }
+            every { entry } returns listOf(
+                mockk {
+                    every { resource } returns mockPatient1
+                }
+            )
         }
 
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys2|ident1")
         } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Bundle>() } returns mockk {
-                every { entry } returns listOf(
-                    mockk {
-                        every { resource } returns mockPatient1
-                    }
-                )
-            }
+            every { entry } returns listOf(
+                mockk {
+                    every { resource } returns mockPatient1
+                }
+            )
         }
 
         val response = resourcesSearchController.getResourceIdentifiers(
@@ -426,27 +395,21 @@ class ResourcesSearchControllerTest {
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys1|ident1")
         } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Bundle>() } returns mockk {
-                every { entry } returns listOf(
-                    mockk {
-                        every { resource } returns mockPatient1
-                    }
-                )
-            }
+            every { entry } returns listOf(
+                mockk {
+                    every { resource } returns mockPatient1
+                }
+            )
         }
 
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys2|ident1")
         } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Bundle>() } returns mockk {
-                every { entry } returns listOf(
-                    mockk {
-                        every { resource } returns mockPatient1
-                    }
-                )
-            }
+            every { entry } returns listOf(
+                mockk {
+                    every { resource } returns mockPatient1
+                }
+            )
         }
 
         val response = resourcesSearchController.getResourceIdentifiers(
@@ -481,27 +444,21 @@ class ResourcesSearchControllerTest {
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys1|ident1")
         } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Bundle>() } returns mockk {
-                every { entry } returns listOf(
-                    mockk {
-                        every { resource } returns mockPatient1
-                    }
-                )
-            }
+            every { entry } returns listOf(
+                mockk {
+                    every { resource } returns mockPatient1
+                }
+            )
         }
 
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys2|ident1")
         } returns mockk {
-            every { status } returns HttpStatusCode.OK
-            coEvery { body<Bundle>() } returns mockk {
-                every { entry } returns listOf(
-                    mockk {
-                        every { resource } returns mockPatient1
-                    }
-                )
-            }
+            every { entry } returns listOf(
+                mockk {
+                    every { resource } returns mockPatient1
+                }
+            )
         }
 
         val response = resourcesSearchController.getResourceIdentifiers(

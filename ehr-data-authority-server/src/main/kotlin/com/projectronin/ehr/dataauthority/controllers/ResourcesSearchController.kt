@@ -1,6 +1,7 @@
 package com.projectronin.ehr.dataauthority.controllers
 
-import com.projectronin.ehr.dataauthority.aidbox.AidboxClient
+import com.projectronin.ehr.dataauthority.change.data.services.DataStorageService
+import com.projectronin.ehr.dataauthority.change.data.services.StorageMode
 import com.projectronin.ehr.dataauthority.models.FoundResourceIdentifiers
 import com.projectronin.ehr.dataauthority.models.Identifier
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchResponse
@@ -13,7 +14,6 @@ import com.projectronin.interop.fhir.r4.resource.Location
 import com.projectronin.interop.fhir.r4.resource.Patient
 import com.projectronin.interop.fhir.r4.resource.Practitioner
 import com.projectronin.interop.fhir.r4.resource.Resource
-import io.ktor.client.call.body
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
@@ -27,7 +27,11 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class ResourcesSearchController(private val aidboxClient: AidboxClient, private val datalakeRetrieveService: DatalakeRetrieveService) {
+class ResourcesSearchController(
+    private val datalakeRetrieveService: DatalakeRetrieveService,
+    private val dataStorageService: DataStorageService,
+    private val storageMode: StorageMode
+) {
     // Aidbox responds Gone once a resource has been deleted, but we should just treat this as NotFound.
     private val notFoundStatuses = listOf(HttpStatusCode.NotFound, HttpStatusCode.Gone)
 
@@ -56,15 +60,12 @@ class ResourcesSearchController(private val aidboxClient: AidboxClient, private 
         @PathVariable("udpId") udpId: String
     ): ResponseEntity<Resource<*>> {
         val resource = try {
-            runBlocking {
-                val response = aidboxClient.getResource(resourceType, udpId)
-                response.body<Resource<*>>()
-            }
+            dataStorageService.getResource(resourceType, udpId)
         } catch (exception: Exception) {
             if (exception is HttpException && exception.status in notFoundStatuses) {
                 return ResponseEntity.notFound().build()
             } else {
-                logger.error(exception.getLogMarker(), exception) { "Exception will retrieving from Aidbox" }
+                logger.error(exception.getLogMarker(), exception) { "Exception while retrieving from $storageMode" }
                 return ResponseEntity.internalServerError().build()
             }
         }
@@ -87,14 +88,13 @@ class ResourcesSearchController(private val aidboxClient: AidboxClient, private 
             return ResponseEntity.badRequest().build()
         }
 
-        val aidboxSearches = identifiers.associateWith {
+        val resourceSearches = identifiers.associateWith {
             runBlocking {
-                val response = aidboxClient.searchForResources(resourceType.name, tenantId, it.toToken())
-                response.body<Bundle>()
+                dataStorageService.searchForResources(resourceType.name, tenantId, it.toToken())
             }
         }
 
-        val identifierSearchResponses = aidboxSearches.map {
+        val identifierSearchResponses = resourceSearches.map {
             IdentifierSearchResponse(
                 searchedIdentifier = it.key,
                 foundResources = it.value.toFoundResource(resourceType)

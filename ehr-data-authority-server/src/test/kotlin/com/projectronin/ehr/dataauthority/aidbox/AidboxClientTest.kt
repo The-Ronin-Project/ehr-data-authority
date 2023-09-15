@@ -3,9 +3,11 @@ package com.projectronin.ehr.dataauthority.aidbox
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.projectronin.ehr.dataauthority.aidbox.auth.AidboxAuthenticationBroker
+import com.projectronin.ehr.dataauthority.change.data.services.DataStorageService
 import com.projectronin.interop.common.http.exceptions.ClientAuthenticationException
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.common.http.exceptions.ServiceUnavailableException
+import com.projectronin.interop.common.jackson.JacksonManager
 import com.projectronin.interop.fhir.r4.CodeSystem
 import com.projectronin.interop.fhir.r4.datatype.Address
 import com.projectronin.interop.fhir.r4.datatype.CodeableConcept
@@ -24,13 +26,17 @@ import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.datatype.primitive.Uri
 import com.projectronin.interop.fhir.r4.datatype.primitive.asFHIR
 import com.projectronin.interop.fhir.r4.resource.AvailableTime
+import com.projectronin.interop.fhir.r4.resource.Bundle
+import com.projectronin.interop.fhir.r4.resource.BundleEntry
 import com.projectronin.interop.fhir.r4.resource.Location
 import com.projectronin.interop.fhir.r4.resource.LocationHoursOfOperation
 import com.projectronin.interop.fhir.r4.resource.LocationPosition
 import com.projectronin.interop.fhir.r4.resource.NotAvailable
+import com.projectronin.interop.fhir.r4.resource.Patient
 import com.projectronin.interop.fhir.r4.resource.Practitioner
 import com.projectronin.interop.fhir.r4.resource.PractitionerRole
 import com.projectronin.interop.fhir.r4.resource.Resource
+import com.projectronin.interop.fhir.r4.valueset.BundleType
 import com.projectronin.interop.fhir.r4.valueset.ContactPointSystem
 import com.projectronin.interop.fhir.r4.valueset.DayOfWeek
 import com.projectronin.interop.fhir.r4.valueset.LocationMode
@@ -42,7 +48,6 @@ import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.toByteArray
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.encodeURLPathPart
@@ -61,6 +66,7 @@ class AidboxClientTest {
     private val practitioner1 = Practitioner(
         id = Id("cmjones"),
         identifier = listOf(
+            Identifier(system = CodeSystem.RONIN_TENANT.uri, value = "test".asFHIR()),
             Identifier(system = CodeSystem.NPI.uri, value = "third".asFHIR())
         ),
         name = listOf(HumanName(family = "Jones".asFHIR(), given = listOf("Cordelia", "May").asFHIR()))
@@ -212,60 +218,64 @@ class AidboxClientTest {
 
     @Test
     fun `resource retrieve test`() {
-        val aidboxClient = createClient("", "$urlRest/fhir/Patient/123")
-        val actual: HttpResponse = runBlocking {
-            aidboxClient.getResource("Patient", "123")
-        }
-        assertEquals(HttpStatusCode.OK, actual.status)
+        val responseBody = Patient(
+            id = Id("123")
+        )
+        val response = JacksonManager.objectMapper.writeValueAsString(responseBody)
+        val dataStorageClient = createClient("", "$urlRest/fhir/Patient/123", responseBody = response)
+        val actual = dataStorageClient.getResource("Patient", "123")
+        assertEquals("Patient", actual.resourceType)
+        assertEquals("123", actual.id?.value)
+        assertEquals(responseBody, actual)
     }
 
     @Test
     fun `aidbox batch upsert of 2 Practitioner (RoninResource), response 200`() {
         val expectedResponseStatus = HttpStatusCode.OK
-        val aidboxClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
-        val actualResponse: HttpResponse = runBlocking {
-            aidboxClient.batchUpsert(practitioners)
+        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
+        val actualResponse = runBlocking {
+            dataStorageClient.batchUpsert(practitioners)
         }
-        assertEquals(expectedResponseStatus, actualResponse.status)
+        assertEquals(expectedResponseStatus, actualResponse)
     }
 
     @Test
     fun `aidbox batch upsert of 2 Location (R4Resource), response 200`() {
         val expectedResponseStatus = HttpStatusCode.OK
-        val aidboxClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
-        val actualResponse: HttpResponse = runBlocking {
-            aidboxClient.batchUpsert(locations)
+        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
+        val actualResponse = runBlocking {
+            dataStorageClient.batchUpsert(locations)
         }
-        assertEquals(expectedResponseStatus, actualResponse.status)
+        assertEquals(expectedResponseStatus, actualResponse)
     }
 
     @Test
     fun `aidbox batch upsert of all related FHIRResources (RoninResource and R4Resource), response 200`() {
         val expectedResponseStatus = HttpStatusCode.OK
-        val aidboxClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
-        val actualResponse: HttpResponse = runBlocking {
-            aidboxClient.batchUpsert(fullRoles)
+        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
+        val actualResponse = runBlocking {
+            dataStorageClient.batchUpsert(fullRoles)
         }
-        assertEquals(expectedResponseStatus, actualResponse.status)
+        assertEquals(expectedResponseStatus, actualResponse)
     }
 
     @Test
     fun `aidbox batch upsert of mixed, some unrelated FHIRResources (RoninResource and R4Resource), response 200`() {
         val expectedResponseStatus = HttpStatusCode.OK
-        val aidboxClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
-        val actualResponse: HttpResponse = runBlocking {
-            aidboxClient.batchUpsert(unrelatedResourceInList)
+        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
+        val actualResponse = runBlocking {
+            dataStorageClient.batchUpsert(unrelatedResourceInList)
         }
-        assertEquals(expectedResponseStatus, actualResponse.status)
+        assertEquals(expectedResponseStatus, actualResponse)
     }
 
     @Test
     fun `aidbox batch upsert of PractitionerRole with all reference targets missing, response 422`() {
         val expectedResponseStatus = HttpStatusCode.UnprocessableEntity
-        val aidboxClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
+        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
         assertThrows(ClientFailureException::class.java) {
             runBlocking {
-                aidboxClient.batchUpsert(practitionerRoles)
+                dataStorageClient.batchUpsert(practitionerRoles)
             }
         }
     }
@@ -273,10 +283,10 @@ class AidboxClientTest {
     @Test
     fun `aidbox batch upsert of PractitionerRole with only 1 reference target missing, response 422`() {
         val expectedResponseStatus = HttpStatusCode.UnprocessableEntity
-        val aidboxClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
+        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
         assertThrows(ClientFailureException::class.java) {
             runBlocking {
-                aidboxClient.batchUpsert(oneMissingTargetRoles)
+                dataStorageClient.batchUpsert(oneMissingTargetRoles)
             }
         }
     }
@@ -284,31 +294,31 @@ class AidboxClientTest {
     @Test
     fun `aidbox batch upsert of 2 Practitioner resources, response 1xx`() {
         val expectedResponseStatus = HttpStatusCode.Continue
-        val aidboxClient =
+        val dataStorageClient =
             createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
-        val actualResponse: HttpResponse = runBlocking {
-            aidboxClient.batchUpsert(practitioners)
+        val actualResponse = runBlocking {
+            dataStorageClient.batchUpsert(practitioners)
         }
-        assertEquals(expectedResponseStatus, actualResponse.status)
+        assertEquals(expectedResponseStatus, actualResponse)
     }
 
     @Test
     fun `aidbox batch upsert of 2 Practitioner resources, response 2xx`() {
         val expectedResponseStatus = HttpStatusCode.Accepted
-        val aidboxClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
-        val actualResponse: HttpResponse = runBlocking {
-            aidboxClient.batchUpsert(practitioners)
+        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
+        val actualResponse = runBlocking {
+            dataStorageClient.batchUpsert(practitioners)
         }
-        assertEquals(expectedResponseStatus, actualResponse.status)
+        assertEquals(expectedResponseStatus, actualResponse)
     }
 
     @Test
     fun `aidbox batch upsert of 2 Practitioner resources, response 4xx exception`() {
         val expectedResponseStatus = HttpStatusCode.Unauthorized
-        val aidboxClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
+        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
         assertThrows(ClientAuthenticationException::class.java) {
             runBlocking {
-                aidboxClient.batchUpsert(practitioners)
+                dataStorageClient.batchUpsert(practitioners)
             }
         }
     }
@@ -317,24 +327,46 @@ class AidboxClientTest {
     fun `aidbox batch upsert of 2 Practitioner resources, response 5xx exception`() {
         val expectedResponseStatus = HttpStatusCode.ServiceUnavailable
         assertThrows(ServiceUnavailableException::class.java) {
-            val aidboxClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
+            val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
             runBlocking {
-                aidboxClient.batchUpsert(practitioners)
+                dataStorageClient.batchUpsert(practitioners)
             }
         }
     }
 
     @Test
     fun `search works for aidbox`() {
+        val entries = mutableListOf<BundleEntry>()
+        entries.add(
+            BundleEntry(
+                resource = Patient(
+                    id = Id("Patient1"),
+                    identifier = listOf(
+                        Identifier(system = Uri("http://projectronin.com/id/mrn"), value = "123".asFHIR()),
+                        Identifier(system = Uri("http://projectronin.com/id/tenantId"), value = "test".asFHIR()),
+                        Identifier(system = Uri("system"), value = "value".asFHIR())
+                    )
+                )
+            )
+        )
+        val responseBundle = Bundle(entry = entries, type = Code(BundleType.TRANSACTION_RESPONSE.code))
+        val responseBody = JacksonManager.objectMapper.writeValueAsString(responseBundle)
         val tenantIdentifier = "${CodeSystem.RONIN_TENANT.uri.value}|test".encodeURLPathPart()
         val searchToken = "system|value"
-        val expectedUrl =
-            "$urlRest/fhir/Patient?identifier=$tenantIdentifier&identifier=${searchToken.encodeURLPathPart()}"
-        val aidboxClient = createClient("", expectedUrl)
-        val actual: HttpResponse = runBlocking {
-            aidboxClient.searchForResources("Patient", "test", searchToken)
+        val expectedUrl = "$urlRest/fhir/Patient?identifier=$tenantIdentifier&identifier=${searchToken.encodeURLPathPart()}"
+        val dataStorageClient = createClient("", expectedUrl, responseBody = responseBody)
+        val actual = runBlocking {
+            dataStorageClient.searchForResources("Patient", "test", searchToken)
         }
-        assertEquals(HttpStatusCode.OK, actual.status)
+        assertEquals(responseBundle, actual)
+        assertEquals("Bundle", actual.resourceType)
+        assertEquals(1, actual.entry.size)
+
+        val resource = actual.entry.first().resource
+        val patient = resource as Patient
+        assertEquals(3, patient.identifier.size)
+        assertEquals(1, patient.identifier.filter { it.system?.value == "system" }.size)
+        assertEquals(1, patient.identifier.filter { it.value?.value == "value" }.size)
     }
 
     @Test
@@ -342,20 +374,31 @@ class AidboxClientTest {
         val resourceType = "Patient"
         val udpId = "tenant-123456"
 
-        val aidboxClient =
+        val dataStorageClient =
             createClient(expectedUrl = "$urlRest/fhir/$resourceType/$udpId")
         val response = runBlocking {
-            aidboxClient.deleteResource(resourceType, udpId)
+            dataStorageClient.deleteResource(resourceType, udpId)
         }
-        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(HttpStatusCode.OK, response)
+    }
+
+    @Test
+    fun `delete all fails for aidbox`() {
+        val dataStorageClient =
+            createClient(expectedUrl = "$urlRest/local")
+        val response = runBlocking {
+            dataStorageClient.deleteAllResources()
+        }
+        assertEquals(HttpStatusCode.BadRequest, response)
     }
 
     private fun createClient(
         expectedBody: String = "",
         expectedUrl: String,
         baseUrl: String = urlRest,
-        responseStatus: HttpStatusCode = HttpStatusCode.OK
-    ): AidboxClient {
+        responseStatus: HttpStatusCode = HttpStatusCode.OK,
+        responseBody: String = ""
+    ): DataStorageService {
         val authenticationBroker = mockk<AidboxAuthenticationBroker> {
             every { getAuthentication() } returns mockk {
                 every { tokenType } returns "Bearer"
@@ -370,7 +413,7 @@ class AidboxClientTest {
             }
             assertEquals("Bearer Auth-String", request.headers["Authorization"])
             respond(
-                content = "",
+                content = responseBody,
                 status = responseStatus,
                 headers = headersOf(HttpHeaders.ContentType, "application/json")
             )

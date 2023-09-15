@@ -1,14 +1,12 @@
 package com.projectronin.ehr.dataauthority.change
 
-import com.projectronin.ehr.dataauthority.aidbox.AidboxClient
-import com.projectronin.ehr.dataauthority.change.data.ResourceHashesDAO
 import com.projectronin.ehr.dataauthority.change.data.model.ResourceHashesDO
+import com.projectronin.ehr.dataauthority.change.data.services.DataStorageService
+import com.projectronin.ehr.dataauthority.change.data.services.ResourceHashDAOService
 import com.projectronin.ehr.dataauthority.change.model.ChangeStatus
 import com.projectronin.ehr.dataauthority.models.ChangeType
 import com.projectronin.interop.common.reflect.copy
 import com.projectronin.interop.fhir.r4.resource.Resource
-import io.ktor.client.call.body
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.springframework.stereotype.Component
 
@@ -16,7 +14,10 @@ import org.springframework.stereotype.Component
  * The ChangeDetectionService is used to determine if resources should be considered changed since their last update into Aidbox.
  */
 @Component
-class ChangeDetectionService(private val aidboxClient: AidboxClient, private val resourceHashesDAO: ResourceHashesDAO) {
+class ChangeDetectionService(
+    private val dataStorageService: DataStorageService,
+    private val resourceHashDao: ResourceHashDAOService
+) {
     private val logger = KotlinLogging.logger { }
 
     /**
@@ -75,13 +76,13 @@ class ChangeDetectionService(private val aidboxClient: AidboxClient, private val
      * Retrieves the stored hash for the [resourceType] with [resourceId] for [tenantId].
      */
     private fun getStoredHash(tenantId: String, resourceType: String, resourceId: String): ResourceHashesDO? =
-        resourceHashesDAO.getHash(tenantId, resourceType, resourceId)
+        resourceHashDao.getHash(tenantId, resourceType, resourceId)
 
     /**
      * Gets the stored resource for the [resourceType] with [resourceId]
      */
-    private fun getStoredResource(resourceType: String, resourceId: String): Resource<*> = runBlocking {
-        aidboxClient.getResource(resourceType, resourceId).body()
+    private fun getStoredResource(resourceType: String, resourceId: String): Resource<*> {
+        return dataStorageService.getResource(resourceType, resourceId)
     }
 
     /**

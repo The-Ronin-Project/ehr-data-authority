@@ -41,6 +41,7 @@ interop-commonTestDb = { module = "com.projectronin.interop:interop-common-test-
 interop-datalake = { module = "com.projectronin.interop.publish:interop-datalake", version.ref = "interop-datalake" }
 interop-ehr-api = { module = "com.projectronin.interop.ehr:interop-ehr", version.ref = "interop-ehr" }
 interop-ehr-fhir-ronin = { module = "com.projectronin.interop.ehr:interop-fhir-ronin", version.ref = "interop-ehr" }
+interop-ehr-fhir-roninGenerators = { module = "com.projectronin.interop.ehr:interop-fhir-ronin-generators", version.ref = "interop-ehr" }
 interop-fhir = { module = "com.projectronin.interop.fhir:interop-fhir", version.ref = "interop-fhir" }
 interop-fhirGenerators = { module = "com.projectronin.interop.fhir:interop-fhir-generators", version.ref = "interop-fhir" }
 interop-kafka = { module = "com.projectronin.interop.publish:interop-kafka", version.ref = "interop-kafka" }

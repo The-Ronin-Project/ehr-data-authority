@@ -7,12 +7,10 @@ import com.projectronin.ehr.dataauthority.aidbox.auth.AidboxCredentials
 import com.projectronin.interop.common.jackson.JacksonManager
 import com.projectronin.interop.fhir.r4.resource.Resource
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
 import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.runBlocking
@@ -45,15 +43,15 @@ object AidboxClient {
 
     fun addResource(resource: Resource<*>): Resource<*> = runBlocking {
         val response = aidboxClient.batchUpsert(listOf(resource))
-        if (!response.status.isSuccess()) {
-            throw IllegalStateException("None success returned from adding resource: ${response.bodyAsText()}")
+        if (!response.isSuccess()) {
+            throw IllegalStateException("None success returned from adding resource: ${response.description}")
         }
 
         getResource(resource.resourceType, resource.id!!.value!!)
     }
 
     fun getResource(resourceType: String, id: String): Resource<*> = runBlocking {
-        aidboxClient.getResource(resourceType, id).body()
+        aidboxClient.getResource(resourceType, id)
     }
 
     fun deleteResource(resourceType: String, id: String) = runBlocking {

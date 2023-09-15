@@ -15,6 +15,7 @@ import com.projectronin.interop.fhir.r4.CodeableConcepts
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.datatype.primitive.Uri
 import com.projectronin.interop.fhir.r4.valueset.AdministrativeGender
+import com.projectronin.interop.fhir.ronin.generators.resource.rcdmPatient
 import com.projectronin.interop.fhir.util.asCode
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
@@ -31,7 +32,9 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `adds resource when new`() {
-        val patient = roninPatient("tenant-12345", "tenant")
+        val patient = rcdmPatient("tenant") {
+            id of Id("tenant-12345")
+        }
 
         val response = runBlocking { client.addResources("tenant", listOf(patient)) }
         assertEquals(1, response.succeeded.size)
@@ -59,7 +62,8 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `updates resource when changed`() {
-        val originalPatient = roninPatient("tenant-12345", "tenant") {
+        val originalPatient = rcdmPatient("tenant") {
+            id of Id("tenant-12345")
             gender of AdministrativeGender.FEMALE.asCode()
         }
         val addedPatient = AidboxClient.addResource(originalPatient)
@@ -99,7 +103,8 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `updates resource when same hash code, but changed`() {
-        val originalPatient = roninPatient("tenant-12345", "tenant") {
+        val originalPatient = rcdmPatient("tenant") {
+            id of Id("tenant-12345")
             gender of AdministrativeGender.FEMALE.asCode()
         }
         val addedPatient = AidboxClient.addResource(originalPatient)
@@ -141,7 +146,8 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `returns success when resource is unchanged`() {
-        val originalPatient = roninPatient("tenant-12345", "tenant") {
+        val originalPatient = rcdmPatient("tenant") {
+            id of Id("tenant-12345")
             gender of AdministrativeGender.FEMALE.asCode()
         }
         val addedPatient = AidboxClient.addResource(originalPatient)
@@ -178,8 +184,12 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `multi resource - pass`() {
-        val patient1 = roninPatient("tenant-12345", "tenant")
-        val patient2 = roninPatient("tenant-67890", "tenant")
+        val patient1 = rcdmPatient("tenant") {
+            id of Id("tenant-12345")
+        }
+        val patient2 = rcdmPatient("tenant") {
+            id of Id("tenant-67890")
+        }
 
         val response = runBlocking { client.addResources("tenant", listOf(patient1, patient2)) }
         assertEquals(2, response.succeeded.size)
@@ -283,7 +293,9 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
     @Test
     fun `repeat requests result in unmodified`() {
         // First we do a full new request.
-        val patient = roninPatient("tenant-12345", "tenant")
+        val patient = rcdmPatient("tenant") {
+            id of Id("tenant-12345")
+        }
 
         val response = runBlocking { client.addResources("tenant", listOf(patient)) }
         assertEquals(1, response.succeeded.size)
@@ -329,7 +341,9 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `same resource with different source is considered unmodified`() {
-        val patient = roninPatient("tenant-12345", "tenant")
+        val patient = rcdmPatient("tenant") {
+            id of Id("tenant-12345")
+        }
 
         val response = runBlocking { client.addResources("tenant", listOf(patient)) }
         assertEquals(1, response.succeeded.size)

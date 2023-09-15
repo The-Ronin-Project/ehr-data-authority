@@ -1,9 +1,9 @@
 package com.projectronin.ehr.dataauthority.controllers
 
-import com.projectronin.ehr.dataauthority.aidbox.AidboxPublishService
 import com.projectronin.ehr.dataauthority.change.ChangeDetectionService
-import com.projectronin.ehr.dataauthority.change.data.ResourceHashesDAO
 import com.projectronin.ehr.dataauthority.change.data.model.ResourceHashesDO
+import com.projectronin.ehr.dataauthority.change.data.services.ResourceHashDAOService
+import com.projectronin.ehr.dataauthority.change.data.services.StorageMode
 import com.projectronin.ehr.dataauthority.change.model.ChangeStatus
 import com.projectronin.ehr.dataauthority.extensions.resource.toKey
 import com.projectronin.ehr.dataauthority.kafka.KafkaPublisher
@@ -13,6 +13,7 @@ import com.projectronin.ehr.dataauthority.models.FailedResource
 import com.projectronin.ehr.dataauthority.models.ModificationType
 import com.projectronin.ehr.dataauthority.models.ResourceResponse
 import com.projectronin.ehr.dataauthority.models.SucceededResource
+import com.projectronin.ehr.dataauthority.publish.PublishService
 import com.projectronin.ehr.dataauthority.util.ResourceTenantMismatchUtil
 import com.projectronin.ehr.dataauthority.validation.FailedValidation
 import com.projectronin.ehr.dataauthority.validation.PassedValidation
@@ -30,13 +31,15 @@ import java.time.ZoneOffset
 
 @RestController
 class ResourcesWriteController(
-    private val aidboxPublishService: AidboxPublishService,
+    private val resourceHashDao: ResourceHashDAOService,
     private val changeDetectionService: ChangeDetectionService,
-    private val resourceHashesDAO: ResourceHashesDAO,
     private val kafkaPublisher: KafkaPublisher,
-    private val validationManager: ValidationManager
+    private val validationManager: ValidationManager,
+    private val publishService: PublishService,
+    private val storageMode: StorageMode
 ) {
     private val logger = KotlinLogging.logger { }
+    private val isLocal = storageMode == StorageMode.LOCAL
 
     @PostMapping("/tenants/{tenantId}/resources")
     @PreAuthorize("hasAuthority('SCOPE_write:resources')")
@@ -62,14 +65,17 @@ class ResourcesWriteController(
                 )
 
                 else -> {
-                    val validation = validationManager.validateResource(resource, tenantId)
-                    when (validation) {
-                        is PassedValidation -> publishResource(resource, tenantId, changeStatus)
-                        is FailedValidation -> FailedResource(
-                            resource.resourceType,
-                            resource.id!!.value!!,
-                            validation.failureMessage
-                        )
+                    if (isLocal) {
+                        publishResource(resource, tenantId, changeStatus)
+                    } else {
+                        when (val validation = validationManager.validateResource(resource, tenantId)) {
+                            is PassedValidation -> publishResource(resource, tenantId, changeStatus)
+                            is FailedValidation -> FailedResource(
+                                resource.resourceType,
+                                resource.id!!.value!!,
+                                validation.failureMessage
+                            )
+                        }
                     }
                 }
             }
@@ -85,23 +91,25 @@ class ResourcesWriteController(
         tenantId: String,
         changeStatus: ChangeStatus
     ): ResourceResponse {
-        val published = aidboxPublishService.publish(listOf(resource))
+        val published = publishService.publish(listOf(resource))
         if (!published) {
             return FailedResource(resource.resourceType, resource.id!!.value!!, "Error publishing to data store.")
         }
 
-        runCatching { kafkaPublisher.publishResource(resource, changeStatus.type) }.exceptionOrNull()?.let {
-            return FailedResource(
-                resource.resourceType,
-                resource.id!!.value!!,
-                "Failed to publish to Kafka: ${it.localizedMessage}"
-            )
+        if (!isLocal) {
+            runCatching { kafkaPublisher.publishResource(resource, changeStatus.type) }.exceptionOrNull()?.let {
+                return FailedResource(
+                    resource.resourceType,
+                    resource.id!!.value!!,
+                    "Failed to publish to Kafka: ${it.localizedMessage}"
+                )
+            }
         }
 
         val resourceHashesDO = changeStatus.toHashDO(tenantId)
         val modificationType = when (changeStatus.type) {
             ChangeType.NEW -> {
-                runCatching { resourceHashesDAO.upsertHash(resourceHashesDO) }.onFailure {
+                runCatching { resourceHashDao.upsertHash(resourceHashesDO) }.onFailure {
                     logger.error(it) { "Exception persisting new hash for $resourceHashesDO" }
                     return FailedResource(resource.resourceType, resource.id!!.value!!, "Error updating the hash store")
                 }
@@ -109,7 +117,7 @@ class ResourcesWriteController(
             }
 
             ChangeType.CHANGED -> {
-                runCatching { resourceHashesDAO.upsertHash(resourceHashesDO) }.onFailure {
+                runCatching { resourceHashDao.upsertHash(resourceHashesDO) }.onFailure {
                     logger.error(it) { "Exception persisting updated hash for $resourceHashesDO" }
                     return FailedResource(resource.resourceType, resource.id!!.value!!, "Error updating the hash store")
                 }

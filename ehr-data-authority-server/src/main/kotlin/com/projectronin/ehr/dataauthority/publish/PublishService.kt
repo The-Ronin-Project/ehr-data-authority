@@ -1,5 +1,6 @@
-package com.projectronin.ehr.dataauthority.aidbox
+package com.projectronin.ehr.dataauthority.publish
 
+import com.projectronin.ehr.dataauthority.change.data.services.DataStorageService
 import com.projectronin.interop.common.logmarkers.getLogMarker
 import com.projectronin.interop.fhir.r4.resource.Resource
 import io.ktor.http.isSuccess
@@ -12,8 +13,8 @@ import org.springframework.stereotype.Service
  * Service allowing access to push data updates to the Ronin clinical data store.
  */
 @Service
-class AidboxPublishService(
-    private val aidboxClient: AidboxClient,
+class PublishService(
+    private val dataStorageService: DataStorageService,
     @Value("\${aidbox.publishBatchSize:25}") private val batchSize: Int = 25
 ) {
     private val logger = KotlinLogging.logger { }
@@ -34,7 +35,7 @@ class AidboxPublishService(
         val processedResults = runBlocking {
             resourceCollection.chunked(batchSize).map {
                 try {
-                    aidboxClient.batchUpsert(it).status.isSuccess()
+                    dataStorageService.batchUpsert(it).isSuccess()
                 } catch (e: Exception) {
                     logger.warn(e.getLogMarker(), e) { "Failed to publish Ronin clinical data" }
                     false

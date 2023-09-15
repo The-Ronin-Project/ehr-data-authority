@@ -3,12 +3,10 @@ package com.projectronin.ehr.dataauthority.aidbox.auth
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 
 /**
  * Credentials for accessing Aidbox.
  */
-@Component
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 data class AidboxCredentials(
     @Value("\${aidbox.client.id}")

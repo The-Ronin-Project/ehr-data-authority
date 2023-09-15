@@ -9,8 +9,6 @@ import com.projectronin.interop.fhir.r4.datatype.primitive.Canonical
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.datatype.primitive.asFHIR
 import com.projectronin.interop.fhir.r4.resource.Patient
-import com.projectronin.interop.fhir.r4.resource.Resource
-import io.ktor.client.call.body
 import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -89,9 +87,7 @@ class ChangeDetectionServiceTest {
             id = Id("tenant-1234"),
             meta = Meta(profile = listOf(Canonical("profile1")))
         )
-        coEvery { aidboxClient.getResource("Patient", "tenant-1234") } returns mockk {
-            coEvery { body<Resource<*>>() } returns aidboxPatient
-        }
+        coEvery { aidboxClient.getResource("Patient", "tenant-1234") } returns aidboxPatient
 
         val statuses = service.determineChangeStatuses("tenant", mapOf(1 to patient))
 
@@ -127,9 +123,7 @@ class ChangeDetectionServiceTest {
             meta = Meta(profile = listOf(Canonical("profile1"))),
             name = listOf(HumanName(text = "Patient Name".asFHIR()))
         )
-        coEvery { aidboxClient.getResource("Patient", "tenant-1234") } returns mockk {
-            coEvery { body<Resource<*>>() } returns aidboxPatient
-        }
+        coEvery { aidboxClient.getResource("Patient", "tenant-1234") } returns aidboxPatient
 
         val statuses = service.determineChangeStatuses("tenant", mapOf(1 to patient))
 
@@ -164,9 +158,7 @@ class ChangeDetectionServiceTest {
             id = Id("tenant-1234"),
             meta = Meta(profile = listOf(Canonical("profile1")))
         )
-        coEvery { aidboxClient.getResource("Patient", "tenant-1234") } returns mockk {
-            coEvery { body<Resource<*>>() } returns aidboxPatient
-        }
+        coEvery { aidboxClient.getResource("Patient", "tenant-1234") } returns aidboxPatient
 
         val statuses = service.determineChangeStatuses("tenant", mapOf(1 to patient))
 
@@ -219,9 +211,7 @@ class ChangeDetectionServiceTest {
             id = Id("tenant-9012"),
             meta = Meta(profile = listOf(Canonical("profile1")))
         )
-        coEvery { aidboxClient.getResource("Patient", "tenant-9012") } returns mockk {
-            coEvery { body<Resource<*>>() } returns aidboxPatient
-        }
+        coEvery { aidboxClient.getResource("Patient", "tenant-9012") } returns aidboxPatient
 
         val statuses = service.determineChangeStatuses("tenant", mapOf(1 to patient1, 2 to patient2, 3 to patient3))
 

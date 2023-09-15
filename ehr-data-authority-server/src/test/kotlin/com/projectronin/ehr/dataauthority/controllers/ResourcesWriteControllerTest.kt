@@ -1,13 +1,15 @@
 package com.projectronin.ehr.dataauthority.controllers
 
-import com.projectronin.ehr.dataauthority.aidbox.AidboxPublishService
 import com.projectronin.ehr.dataauthority.change.ChangeDetectionService
 import com.projectronin.ehr.dataauthority.change.data.ResourceHashesDAO
 import com.projectronin.ehr.dataauthority.change.data.model.ResourceHashesDO
+import com.projectronin.ehr.dataauthority.change.data.services.StorageMode
 import com.projectronin.ehr.dataauthority.change.model.ChangeStatus
 import com.projectronin.ehr.dataauthority.kafka.KafkaPublisher
+import com.projectronin.ehr.dataauthority.local.LocalStorageMapHashDAO
 import com.projectronin.ehr.dataauthority.models.ChangeType
 import com.projectronin.ehr.dataauthority.models.ModificationType
+import com.projectronin.ehr.dataauthority.publish.PublishService
 import com.projectronin.ehr.dataauthority.validation.FailedValidation
 import com.projectronin.ehr.dataauthority.validation.PassedValidation
 import com.projectronin.ehr.dataauthority.validation.ValidationManager
@@ -33,19 +35,20 @@ import org.springframework.http.HttpStatus
 import java.util.UUID
 
 class ResourcesWriteControllerTest {
-    private val aidboxPublishService = mockk<AidboxPublishService>()
-    private val changeDetectionService = mockk<ChangeDetectionService>()
     private val resourceHashesDAO = mockk<ResourceHashesDAO>()
+    private val changeDetectionService = mockk<ChangeDetectionService>()
     private val kafkaPublisher = mockk<KafkaPublisher>()
     private val validationManager = mockk<ValidationManager>()
+    private val publishService = mockk<PublishService>()
 
     private val resourcesWriteController =
         ResourcesWriteController(
-            aidboxPublishService,
-            changeDetectionService,
             resourceHashesDAO,
+            changeDetectionService,
             kafkaPublisher,
-            validationManager
+            validationManager,
+            publishService,
+            StorageMode.AIDBOX
         )
     private val mockTenantId = "tenant"
     private val testTenantIdentifier = identifier {
@@ -119,7 +122,7 @@ class ResourcesWriteControllerTest {
         assertEquals("tenant-1", failure1.resourceId)
         assertEquals("Failed validation!", failure1.error)
 
-        verify { aidboxPublishService wasNot Called }
+        verify { publishService wasNot Called }
         verify { kafkaPublisher wasNot Called }
     }
 
@@ -136,7 +139,7 @@ class ResourcesWriteControllerTest {
 
         every { validationManager.validateResource(testPatient, mockTenantId) } returns PassedValidation
 
-        every { aidboxPublishService.publish(listOf(testPatient)) } returns false
+        every { publishService.publish(listOf(testPatient)) } returns false
 
         val response = resourcesWriteController.addNewResources(mockTenantId, listOf(testPatient))
         assertEquals(HttpStatus.OK, response.statusCode)
@@ -166,7 +169,7 @@ class ResourcesWriteControllerTest {
 
         every { validationManager.validateResource(testPatient, mockTenantId) } returns PassedValidation
 
-        every { aidboxPublishService.publish(listOf(testPatient)) } returns true
+        every { publishService.publish(listOf(testPatient)) } returns true
 
         every {
             kafkaPublisher.publishResource(
@@ -203,7 +206,7 @@ class ResourcesWriteControllerTest {
 
         every { validationManager.validateResource(testPatient, mockTenantId) } returns PassedValidation
 
-        every { aidboxPublishService.publish(listOf(testPatient)) } returns true
+        every { publishService.publish(listOf(testPatient)) } returns true
 
         every { kafkaPublisher.publishResource(testPatient, ChangeType.NEW) } just Runs
 
@@ -245,7 +248,7 @@ class ResourcesWriteControllerTest {
 
         every { validationManager.validateResource(testPatient, mockTenantId) } returns PassedValidation
 
-        every { aidboxPublishService.publish(listOf(testPatient)) } returns true
+        every { publishService.publish(listOf(testPatient)) } returns true
 
         every { kafkaPublisher.publishResource(testPatient, ChangeType.NEW) } just Runs
 
@@ -280,7 +283,7 @@ class ResourcesWriteControllerTest {
 
         every { validationManager.validateResource(testPatient, mockTenantId) } returns PassedValidation
 
-        every { aidboxPublishService.publish(listOf(testPatient)) } returns true
+        every { publishService.publish(listOf(testPatient)) } returns true
 
         every { kafkaPublisher.publishResource(testPatient, ChangeType.CHANGED) } just Runs
 
@@ -323,7 +326,7 @@ class ResourcesWriteControllerTest {
 
         every { validationManager.validateResource(testPatient, mockTenantId) } returns PassedValidation
 
-        every { aidboxPublishService.publish(listOf(testPatient)) } returns true
+        every { publishService.publish(listOf(testPatient)) } returns true
 
         every { kafkaPublisher.publishResource(testPatient, ChangeType.CHANGED) } just Runs
 
@@ -359,7 +362,7 @@ class ResourcesWriteControllerTest {
         every { validationManager.validateResource(testPatient, mockTenantId) } returns PassedValidation
         every { validationManager.validateResource(testObservation, mockTenantId) } returns PassedValidation
 
-        every { aidboxPublishService.publish(any()) } returns true
+        every { publishService.publish(any()) } returns true
         every { kafkaPublisher.publishResource(any(), any()) } just Runs
         every { resourceHashesDAO.upsertHash(any()) } returns mockk()
 
@@ -394,7 +397,7 @@ class ResourcesWriteControllerTest {
         every { validationManager.validateResource(testPatient, mockTenantId) } returns PassedValidation
         every { validationManager.validateResource(testObservation, mockTenantId) } returns PassedValidation
 
-        every { aidboxPublishService.publish(any()) } returnsMany listOf(true, false)
+        every { publishService.publish(any()) } returnsMany listOf(true, false)
 
         every { kafkaPublisher.publishResource(any(), any()) } just Runs
 
@@ -479,10 +482,38 @@ class ResourcesWriteControllerTest {
         assertEquals("Binary", succeeded1.resourceType)
         assertEquals("tenant-1", succeeded1.resourceId)
 
-        val succeede2 = resourceResponse.succeeded[1]
-        assertEquals("Bundle", succeede2.resourceType)
-        assertEquals("tenant-1", succeede2.resourceId)
+        val succeeded2 = resourceResponse.succeeded[1]
+        assertEquals("Bundle", succeeded2.resourceType)
+        assertEquals("tenant-1", succeeded2.resourceId)
 
+        verify { kafkaPublisher wasNot Called }
+    }
+
+    @Test
+    fun `publish skips validation and kafka if local storage client in use`() {
+        val localStorageHash = mockk<LocalStorageMapHashDAO>()
+        val localController = ResourcesWriteController(
+            resourceHashesDAO,
+            changeDetectionService,
+            kafkaPublisher,
+            validationManager,
+            publishService,
+            StorageMode.LOCAL
+        )
+        val changeStatus1 = ChangeStatus("Patient", "tenant-1", ChangeType.CHANGED, UUID.randomUUID(), 1234)
+
+        every {
+            changeDetectionService.determineChangeStatuses(
+                mockTenantId,
+                mapOf("Patient:tenant-1" to testPatient)
+            )
+        } returns mapOf("Patient:tenant-1" to changeStatus1)
+        every { publishService.publish(any()) } returns true
+        every { localStorageHash.upsertHash(any()) } returns mockk()
+
+        val response = localController.addNewResources(mockTenantId, listOf(testPatient))
+        assertEquals(HttpStatus.OK, response.statusCode)
+        verify { validationManager wasNot Called }
         verify { kafkaPublisher wasNot Called }
     }
 }

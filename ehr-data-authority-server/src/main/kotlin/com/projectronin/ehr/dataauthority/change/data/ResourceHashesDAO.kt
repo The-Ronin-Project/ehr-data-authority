@@ -2,6 +2,7 @@ package com.projectronin.ehr.dataauthority.change.data
 
 import com.projectronin.ehr.dataauthority.change.data.binding.ResourceHashesDOs
 import com.projectronin.ehr.dataauthority.change.data.model.ResourceHashesDO
+import com.projectronin.ehr.dataauthority.change.data.services.ResourceHashDAOService
 import mu.KotlinLogging
 import org.ktorm.database.Database
 import org.ktorm.dsl.and
@@ -12,6 +13,7 @@ import org.ktorm.dsl.map
 import org.ktorm.dsl.select
 import org.ktorm.dsl.where
 import org.ktorm.support.mysql.insertOrUpdate
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
@@ -22,23 +24,18 @@ import java.util.UUID
  * DAO responsible for managing resource hashes.
  */
 @Repository
-class ResourceHashesDAO(private val database: Database) {
+@Profile("default")
+class ResourceHashesDAO(private val database: Database) : ResourceHashDAOService {
     private val logger = KotlinLogging.logger { }
 
-    /**
-     * Retrieves the [ResourceHashesDO] associated with [resourceType], [resourceId] and [tenantId].
-     */
-    fun getHash(tenantId: String, resourceType: String, resourceId: String): ResourceHashesDO? {
+    override fun getHash(tenantId: String, resourceType: String, resourceId: String): ResourceHashesDO? {
         return database.from(ResourceHashesDOs).select()
             .where((ResourceHashesDOs.tenantId eq tenantId) and (ResourceHashesDOs.resourceType eq resourceType) and (ResourceHashesDOs.resourceId eq resourceId))
             .map { ResourceHashesDOs.createEntity(it) }.singleOrNull()
     }
 
-    /**
-     * Inserts or updates the [resourceHashesDO] and returns the current view from the data store.
-     */
     @Transactional
-    fun upsertHash(resourceHashesDO: ResourceHashesDO): ResourceHashesDO {
+    override fun upsertHash(resourceHashesDO: ResourceHashesDO): ResourceHashesDO {
         logger.debug { "Upserting hash: $resourceHashesDO" }
 
         val uuid = resourceHashesDO.hashId ?: UUID.randomUUID()
@@ -68,15 +65,16 @@ class ResourceHashesDAO(private val database: Database) {
         }
     }
 
-    /**
-     * Deletes the hash associated to the [resourceType] and [resourceId] for [tenantId]
-     */
     @Transactional
-    fun deleteHash(tenantId: String, resourceType: String, resourceId: String): Boolean {
+    override fun deleteHash(tenantId: String, resourceType: String, resourceId: String): Boolean {
         val recordsDeleted = database.delete(ResourceHashesDOs) {
             (ResourceHashesDOs.tenantId eq tenantId) and (ResourceHashesDOs.resourceType eq resourceType) and (ResourceHashesDOs.resourceId eq resourceId)
         }
         return recordsDeleted > 0
+    }
+
+    override fun deleteAllOfHash(): Boolean {
+        return false
     }
 
     /**

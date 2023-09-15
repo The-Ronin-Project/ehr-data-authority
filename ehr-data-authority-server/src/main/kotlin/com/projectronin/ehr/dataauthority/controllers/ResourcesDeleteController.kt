@@ -1,7 +1,8 @@
 package com.projectronin.ehr.dataauthority.controllers
 
-import com.projectronin.ehr.dataauthority.aidbox.AidboxClient
-import com.projectronin.ehr.dataauthority.change.data.ResourceHashesDAO
+import com.projectronin.ehr.dataauthority.change.data.services.DataStorageService
+import com.projectronin.ehr.dataauthority.change.data.services.ResourceHashDAOService
+import com.projectronin.ehr.dataauthority.change.data.services.StorageMode
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.springframework.http.ResponseEntity
@@ -12,12 +13,14 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class ResourcesDeleteController(
-    private val aidboxClient: AidboxClient,
-    private val resourceHashesDAO: ResourceHashesDAO
+    private val dataStorageService: DataStorageService,
+    private val resourceHashDao: ResourceHashDAOService,
+    private val storageMode: StorageMode
+
 ) {
     private val logger = KotlinLogging.logger { }
-
     private val deletableTenantIndicators = setOf("ronin", "ehrda")
+    private val isLocal = storageMode == StorageMode.LOCAL
 
     @DeleteMapping("/tenants/{tenantId}/resources/{resourceType}/{udpId}")
     @PreAuthorize("hasAuthority('SCOPE_delete:resources')")
@@ -34,16 +37,34 @@ class ResourcesDeleteController(
             return ResponseEntity.badRequest().build()
         }
 
-        runCatching { runBlocking { aidboxClient.deleteResource(resourceType, udpId) } }.onFailure {
-            logger.error(it) { "Exception received while attempting to delete $resourceType/$udpId from Aidbox" }
+        runCatching { runBlocking { dataStorageService.deleteResource(resourceType, udpId) } }.onFailure {
+            logger.error(it) { "Exception received while attempting to delete $resourceType/$udpId from $storageMode" }
             return ResponseEntity.internalServerError().build()
         }
 
-        val hashDeleted = resourceHashesDAO.deleteHash(tenantId, resourceType, udpId)
+        val hashDeleted = resourceHashDao.deleteHash(tenantId, resourceType, udpId)
         if (!hashDeleted) {
             logger.warn { "Failed to delete hash for $resourceType/$udpId" }
         }
 
         return ResponseEntity.ok().build()
+    }
+
+    @DeleteMapping("/local")
+    @PreAuthorize("hasAuthority('SCOPE_delete:resources')")
+    fun deleteAllResources(): ResponseEntity<Void> {
+        if (isLocal) {
+            runCatching { runBlocking { dataStorageService.deleteAllResources() } }.onFailure {
+                logger.error(it) { "Exception while attempting to delete all of local storage" }
+                return ResponseEntity.internalServerError().build()
+            }
+            val allOfHashDeleted = resourceHashDao.deleteAllOfHash()
+            if (!allOfHashDeleted) {
+                logger.warn { "Failed to delete full hash while deleting all resources." }
+            }
+            return ResponseEntity.ok().build()
+        }
+        logger.error { "Request to delete all resources is only allowed for local storage" }
+        return ResponseEntity.badRequest().build()
     }
 }
