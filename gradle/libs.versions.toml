@@ -18,7 +18,7 @@ kotlinx-coroutines = "1.7.3"
 kotlinx-serialization = "1.6.0"
 ktor = "2.3.4"
 ktorm = "3.6.0"
-liquibase = "4.23.1"
+liquibase = "4.23.2"
 # @pin until Spring 6
 logstash = "7.3"
 mockk = "1.13.7"
