@@ -1,7 +1,6 @@
 package com.projectronin.ehr.dataauthority.testclients
 
 import com.projectronin.fhir.r4.Resource
-import com.projectronin.interop.kafka.spring.AdminWrapper
 import com.projectronin.interop.kafka.spring.KafkaBootstrapConfig
 import com.projectronin.interop.kafka.spring.KafkaCloudConfig
 import com.projectronin.interop.kafka.spring.KafkaConfig
@@ -11,6 +10,7 @@ import com.projectronin.interop.kafka.spring.KafkaRetrieveConfig
 import com.projectronin.interop.kafka.spring.KafkaSaslConfig
 import com.projectronin.interop.kafka.spring.KafkaSaslJaasConfig
 import com.projectronin.interop.kafka.spring.KafkaSecurityConfig
+import com.projectronin.interop.kafka.testing.client.KafkaTestingClient
 import com.projectronin.kafka.RoninConsumer
 import com.projectronin.kafka.RoninProducer
 import com.projectronin.kafka.config.RoninConsumerKafkaProperties
@@ -56,7 +56,8 @@ object KafkaClient {
             )
         )
     )
-    private val adminClient = AdminWrapper(config).client
+    private val testingClient = KafkaTestingClient("localhost:9092", config)
+    private val adminClient = testingClient.adminClient
 
     private val jobsByResource = mutableMapOf<String, Job>()
     private val eventsByResource = mutableMapOf<String, MutableList<RoninEvent<*>>>()

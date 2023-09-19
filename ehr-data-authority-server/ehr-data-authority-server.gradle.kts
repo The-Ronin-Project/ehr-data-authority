@@ -62,6 +62,7 @@ dependencies {
     itImplementation(libs.interop.ehr.fhir.roninGenerators)
     itImplementation(libs.interop.validation.client)
     itImplementation(libs.interop.kafka)
+    itImplementation(libs.interop.kafka.testing.client)
     itImplementation(libs.kafka.clients)
     itImplementation(libs.ronin.kafka)
     itImplementation(libs.bundles.data.generators)

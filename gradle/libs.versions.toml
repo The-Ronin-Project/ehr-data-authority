@@ -8,7 +8,7 @@ interop-datalake = "8.4.2"
 interop-ehr = "11.0.0"
 interop-fhir = "8.9.1"
 interop-gradle = "3.2.0"
-interop-kafka = "8.4.0"
+interop-kafka = "8.4.1"
 interop-validation = "3.0.0"
 jackson = "2.15.2"
 # @pin until INT-1988 resolved
@@ -45,6 +45,7 @@ interop-ehr-fhir-roninGenerators = { module = "com.projectronin.interop.ehr:inte
 interop-fhir = { module = "com.projectronin.interop.fhir:interop-fhir", version.ref = "interop-fhir" }
 interop-fhirGenerators = { module = "com.projectronin.interop.fhir:interop-fhir-generators", version.ref = "interop-fhir" }
 interop-kafka = { module = "com.projectronin.interop.publish:interop-kafka", version.ref = "interop-kafka" }
+interop-kafka-testing-client = { module = "com.projectronin.interop.publish:interop-kafka-testing-client", version.ref = "interop-kafka" }
 interop-validation-client = { module = "com.projectronin.interop.validation:interop-validation-client", version.ref = "interop-validation" }
 jackson-dataformat-xml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml", version.ref = "jackson" }
 jackson-dataformat-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
