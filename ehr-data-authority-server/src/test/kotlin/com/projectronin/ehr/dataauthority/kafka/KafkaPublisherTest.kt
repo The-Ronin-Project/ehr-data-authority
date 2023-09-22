@@ -1,6 +1,7 @@
 package com.projectronin.ehr.dataauthority.kafka
 
 import com.projectronin.ehr.dataauthority.models.ChangeType
+import com.projectronin.ehr.dataauthority.models.kafka.EhrDAKafkaTopic
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.resource.Location
 import com.projectronin.interop.fhir.r4.resource.Patient

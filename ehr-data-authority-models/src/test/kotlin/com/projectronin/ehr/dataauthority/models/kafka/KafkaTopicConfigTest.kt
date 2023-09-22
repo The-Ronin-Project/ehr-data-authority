@@ -1,4 +1,4 @@
-package com.projectronin.ehr.dataauthority.kafka
+package com.projectronin.ehr.dataauthority.models.kafka
 
 import com.projectronin.interop.kafka.spring.KafkaConfig
 import io.mockk.every

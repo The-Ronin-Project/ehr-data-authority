@@ -2,6 +2,7 @@ package com.projectronin.ehr.dataauthority.kafka
 
 import com.google.common.base.CaseFormat
 import com.projectronin.ehr.dataauthority.models.ChangeType
+import com.projectronin.ehr.dataauthority.models.kafka.EhrDAKafkaTopic
 import com.projectronin.interop.common.jackson.JacksonManager
 import com.projectronin.interop.fhir.r4.resource.Resource
 import com.projectronin.interop.kafka.client.KafkaClient

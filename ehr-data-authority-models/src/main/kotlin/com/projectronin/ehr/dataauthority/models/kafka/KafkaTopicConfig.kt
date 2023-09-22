@@ -1,4 +1,4 @@
-package com.projectronin.ehr.dataauthority.kafka
+package com.projectronin.ehr.dataauthority.models.kafka
 
 import com.google.common.base.CaseFormat
 import com.projectronin.interop.fhir.r4.resource.Resource
