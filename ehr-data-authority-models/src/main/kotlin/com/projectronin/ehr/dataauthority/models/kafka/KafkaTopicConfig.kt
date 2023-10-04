@@ -98,6 +98,12 @@ class KafkaTopicConfig(kafkaConfig: KafkaConfig) {
         com.projectronin.fhir.r4.DocumentReference::class
     )
 
+    @Bean
+    fun medicationAdministrationTopic() = createTopic(
+        com.projectronin.interop.fhir.r4.resource.MedicationAdministration::class,
+        com.projectronin.fhir.r4.MedicationAdministration::class
+    )
+
     private fun createTopic(
         resourceClass: KClass<out Resource<*>>,
         eventClass: KClass<out EventResource>

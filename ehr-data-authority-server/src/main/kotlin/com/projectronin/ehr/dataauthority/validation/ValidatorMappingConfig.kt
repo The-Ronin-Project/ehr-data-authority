@@ -7,6 +7,7 @@ import com.projectronin.interop.fhir.r4.resource.DocumentReference
 import com.projectronin.interop.fhir.r4.resource.Encounter
 import com.projectronin.interop.fhir.r4.resource.Location
 import com.projectronin.interop.fhir.r4.resource.Medication
+import com.projectronin.interop.fhir.r4.resource.MedicationAdministration
 import com.projectronin.interop.fhir.r4.resource.MedicationRequest
 import com.projectronin.interop.fhir.r4.resource.MedicationStatement
 import com.projectronin.interop.fhir.r4.resource.Observation
@@ -21,6 +22,7 @@ import com.projectronin.interop.fhir.ronin.resource.RoninDocumentReference
 import com.projectronin.interop.fhir.ronin.resource.RoninEncounter
 import com.projectronin.interop.fhir.ronin.resource.RoninLocation
 import com.projectronin.interop.fhir.ronin.resource.RoninMedication
+import com.projectronin.interop.fhir.ronin.resource.RoninMedicationAdministration
 import com.projectronin.interop.fhir.ronin.resource.RoninMedicationRequest
 import com.projectronin.interop.fhir.ronin.resource.RoninMedicationStatement
 import com.projectronin.interop.fhir.ronin.resource.RoninObservations
@@ -88,4 +90,8 @@ class ValidatorMappingConfig {
     @Bean
     fun documentReferenceValidator(roninDocumentReference: RoninDocumentReference) =
         ValidatorMapping(DocumentReference::class, roninDocumentReference)
+
+    @Bean
+    fun medicationAdministration(roninMedicationAdministration: RoninMedicationAdministration) =
+        ValidatorMapping(MedicationAdministration::class, roninMedicationAdministration)
 }

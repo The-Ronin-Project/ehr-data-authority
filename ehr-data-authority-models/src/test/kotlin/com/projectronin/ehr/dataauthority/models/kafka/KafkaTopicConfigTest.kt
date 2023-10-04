@@ -228,4 +228,19 @@ class KafkaTopicConfigTest {
         assertEquals(com.projectronin.fhir.r4.DocumentReference::class, topic.eventClass)
         assertFalse(topic.useLatestOffset)
     }
+
+    @Test
+    fun `creates medication administration topic`() {
+        val topic = kafkaTopicConfig.medicationAdministrationTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.medication-administration.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/MedicationAdministration-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.MedicationAdministration::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.MedicationAdministration::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
+    }
 }
