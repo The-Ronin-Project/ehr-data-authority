@@ -17,9 +17,9 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.utils.unwrapCancellationException
 import io.ktor.serialization.jackson.jackson
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.testcontainers.containers.DockerComposeContainer
+import org.testcontainers.containers.wait.strategy.Wait
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.CancellationException
@@ -29,13 +29,10 @@ abstract class BaseEHRDataAuthority {
     abstract fun getDockerEnv(): MutableMap<String, String>
     abstract fun getDockerCompose(): String
 
-    val docker = DockerComposeContainer(
-        File(
-            BaseEHRDataAuthority::class.java.getResource(
-                getDockerCompose()
-            )!!.file
-        )
-    ).withEnv(getDockerEnv())
+    companion object {
+        var lastDockerCompose: String? = null
+        var docker: DockerComposeContainer<*>? = null
+    }
 
     val serverUrl = "http://localhost:8080"
     val httpClient = HttpSpringConfigTest().getHttpClient()
@@ -54,12 +51,19 @@ abstract class BaseEHRDataAuthority {
 
     @BeforeAll
     fun startDocker() {
-        docker.start()
-    }
+        val dockerCompose = getDockerCompose()
+        if (docker == null || lastDockerCompose != dockerCompose) {
+            // Stop the current docker if there is one
+            docker?.stop()
 
-    @AfterAll
-    fun stopDocker() {
-        docker.stop()
+            docker =
+                DockerComposeContainer(File(BaseEHRDataAuthority::class.java.getResource(dockerCompose)!!.file)).withEnv(
+                    getDockerEnv()
+                )
+                    .waitingFor("ehr-data-authority", Wait.forLogMessage(".*Started EHRDataAuthorityServerKt.*", 1))
+            docker!!.start()
+            lastDockerCompose = dockerCompose
+        }
     }
 }
 

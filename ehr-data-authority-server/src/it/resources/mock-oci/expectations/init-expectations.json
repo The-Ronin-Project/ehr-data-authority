@@ -2,7 +2,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/n/namespace/b/infx-bucket/o/DataNormalizationRegistry%2Fv2%2Fregistry.json"
+      "path": "/n/namespace/b/infx-shared/o/DataNormalizationRegistry%2Fv3%2Fregistry.json"
     },
     "httpResponse": {
       "statusCode": 200,
@@ -15,7 +15,30 @@
         {
           "resource_type": "Observation",
           "data_element": "Observation.code",
-          "profile_url" : "http://projectronin.io/fhir/StructureDefinition/ronin-observationBodyMassIndex",
+          "profile_url": "http://projectronin.io/fhir/StructureDefinition/ronin-observationLaboratoryResult",
+          "tenant_id": null,
+          "registry_entry_type": "value_set",
+          "version": 1,
+          "filename": "LabResultValueSet.json",
+          "source_extension_url": "http://projectronin.io/fhir/StructureDefinition/Extension/tenant-laboratoryResult",
+          "registry_uuid": "2",
+          "value_set_uuid": "something-new-and-different"
+        },
+        {
+          "resource_type": "Observation",
+          "data_element": "Observation.code",
+          "profile_url": "http://projectronin.io/fhir/StructureDefinition/ronin-observationStagingRelated",
+          "tenant_id": "tenantAgnosticRegistryKey",
+          "version": 1,
+          "filename": "EmptyValueSet.json",
+          "source_extension_url": "http://projectronin.io/fhir/StructureDefinition/Extension/tenant-stagingRelated",
+          "registry_uuid": "2",
+          "value_set_uuid": "4ffae118-778f-4df9-bd73-aece934b521b"
+        },
+        {
+          "resource_type": "Observation",
+          "data_element": "Observation.code",
+          "profile_url": "http://projectronin.io/fhir/StructureDefinition/ronin-observationBodyMassIndex",
           "tenant_id": "tenantAgnosticRegistryKey",
           "version": 1,
           "filename": "EmptyValueSet.json",
@@ -26,7 +49,7 @@
         {
           "resource_type": "Observation",
           "data_element": "Observation.code",
-          "profile_url" : "http://projectronin.io/fhir/StructureDefinition/ronin-observationBodySurfaceArea",
+          "profile_url": "http://projectronin.io/fhir/StructureDefinition/ronin-observationBodySurfaceArea",
           "tenant_id": "tenantAgnosticRegistryKey",
           "version": 1,
           "filename": "EmptyValueSet.json",
@@ -37,7 +60,7 @@
         {
           "resource_type": "Observation",
           "data_element": "Observation.code",
-          "profile_url" : "http://projectronin.io/fhir/StructureDefinition/ronin-observationBodyTemperature",
+          "profile_url": "http://projectronin.io/fhir/StructureDefinition/ronin-observationBodyTemperature",
           "tenant_id": "tenantAgnosticRegistryKey",
           "version": 1,
           "filename": "EmptyValueSet.json",
@@ -48,7 +71,7 @@
         {
           "resource_type": "Observation",
           "data_element": "Observation.code",
-          "profile_url" : "http://projectronin.io/fhir/StructureDefinition/ronin-observationBloodPressure",
+          "profile_url": "http://projectronin.io/fhir/StructureDefinition/ronin-observationBloodPressure",
           "tenant_id": "tenantAgnosticRegistryKey",
           "version": 1,
           "filename": "EmptyValueSet.json",
@@ -59,7 +82,7 @@
         {
           "resource_type": "Observation",
           "data_element": "Observation.code",
-          "profile_url" : "http://projectronin.io/fhir/StructureDefinition/ronin-observationRespiratoryRate",
+          "profile_url": "http://projectronin.io/fhir/StructureDefinition/ronin-observationRespiratoryRate",
           "tenant_id": "tenantAgnosticRegistryKey",
           "version": 1,
           "filename": "EmptyValueSet.json",
@@ -70,7 +93,7 @@
         {
           "resource_type": "Observation",
           "data_element": "Observation.code",
-          "profile_url" : "http://projectronin.io/fhir/StructureDefinition/ronin-observationHeartRate",
+          "profile_url": "http://projectronin.io/fhir/StructureDefinition/ronin-observationHeartRate",
           "tenant_id": "tenantAgnosticRegistryKey",
           "version": 1,
           "filename": "EmptyValueSet.json",
@@ -81,7 +104,7 @@
         {
           "resource_type": "Observation",
           "data_element": "Observation.code",
-          "profile_url" : "http://projectronin.io/fhir/StructureDefinition/ronin-observationPulseOximetry",
+          "profile_url": "http://projectronin.io/fhir/StructureDefinition/ronin-observationPulseOximetry",
           "tenant_id": "tenantAgnosticRegistryKey",
           "version": 1,
           "filename": "EmptyValueSet.json",
@@ -92,7 +115,7 @@
         {
           "resource_type": "Observation",
           "data_element": "Observation.code",
-          "profile_url" : "http://projectronin.io/fhir/StructureDefinition/ronin-observationRespiratoryRate",
+          "profile_url": "http://projectronin.io/fhir/StructureDefinition/ronin-observationRespiratoryRate",
           "tenant_id": "tenantAgnosticRegistryKey",
           "version": 1,
           "filename": "EmptyValueSet.json",
@@ -271,6 +294,46 @@
       }
     },
     "id": "GetRoninObservationEmptyValueSets",
+    "priority": 0,
+    "timeToLive": {
+      "unlimited": true
+    },
+    "times": {
+      "unlimited": true
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/n/.*/b/.*/o/LabResultValueSet.json"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "resourceType": "ValueSet",
+        "title": " ",
+        "id": "00741f04-67bd-4b40-8ae8-3f16c4ef01a2",
+        "version": 1,
+        "status": "draft",
+        "expansion": {
+          "timestamp": "2020-01-01 14:01:01",
+          "contains": [
+            {
+              "system": "http://loinc.org",
+              "version": "2.74",
+              "code": "770-8",
+              "display": "Neutrophils/100 leukocytes in Blood by Automated count"
+            }
+          ]
+        }
+      }
+    },
+    "id": "GetRoninObservationLabResultValueSet",
     "priority": 0,
     "timeToLive": {
       "unlimited": true

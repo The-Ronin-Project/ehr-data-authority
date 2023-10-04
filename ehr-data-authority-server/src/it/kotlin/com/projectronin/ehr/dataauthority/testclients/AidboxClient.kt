@@ -4,34 +4,13 @@ import com.projectronin.ehr.dataauthority.aidbox.AidboxClient
 import com.projectronin.ehr.dataauthority.aidbox.auth.AidboxAuthenticationBroker
 import com.projectronin.ehr.dataauthority.aidbox.auth.AidboxAuthenticationService
 import com.projectronin.ehr.dataauthority.aidbox.auth.AidboxCredentials
-import com.projectronin.interop.common.jackson.JacksonManager
+import com.projectronin.interop.common.http.spring.HttpSpringConfig
 import com.projectronin.interop.fhir.r4.resource.Resource
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.isSuccess
-import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.runBlocking
 
 object AidboxClient {
-    val httpClient = HttpClient(CIO) {
-        // If not a successful response, Ktor will throw Exceptions
-        expectSuccess = true
-
-        // Setup JSON
-        install(ContentNegotiation) {
-            jackson {
-                JacksonManager.setUpMapper(this)
-            }
-        }
-
-        // Enable logging.
-        install(Logging) {
-            level = LogLevel.NONE
-        }
-    }
+    private val httpClient = HttpSpringConfig().getHttpClient()
 
     private const val BASE_URL = "http://localhost:8888"
 

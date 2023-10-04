@@ -33,6 +33,7 @@ open class BaseEHRDataAuthorityIT : BaseEHRDataAuthority() {
         "PGDATABASE" to "devbox",
         "box_features_validation_skip_reference" to "true"
     )
+
     override fun getDockerCompose() = "/docker-compose-it.yaml"
 
     open val resources = mapOf<String, KClass<out Resource>>()

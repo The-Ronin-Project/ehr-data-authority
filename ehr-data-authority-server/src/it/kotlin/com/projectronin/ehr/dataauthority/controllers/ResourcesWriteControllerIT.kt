@@ -1,5 +1,6 @@
 package com.projectronin.ehr.dataauthority.controllers
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.projectronin.ehr.dataauthority.BaseEHRDataAuthorityIT
 import com.projectronin.ehr.dataauthority.models.ModificationType
 import com.projectronin.ehr.dataauthority.testclients.AidboxClient
@@ -8,12 +9,15 @@ import com.projectronin.ehr.dataauthority.testclients.KafkaClient
 import com.projectronin.ehr.dataauthority.testclients.ValidationClient
 import com.projectronin.fhir.r4.Patient
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
+import com.projectronin.interop.common.jackson.JacksonManager
 import com.projectronin.interop.fhir.generators.datatypes.identifier
 import com.projectronin.interop.fhir.generators.resources.patient
 import com.projectronin.interop.fhir.r4.CodeSystem
 import com.projectronin.interop.fhir.r4.CodeableConcepts
+import com.projectronin.interop.fhir.r4.datatype.Quantity
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.datatype.primitive.Uri
+import com.projectronin.interop.fhir.r4.resource.Observation
 import com.projectronin.interop.fhir.r4.valueset.AdministrativeGender
 import com.projectronin.interop.fhir.ronin.generators.resource.rcdmPatient
 import com.projectronin.interop.fhir.util.asCode
@@ -28,7 +32,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
-    override val resources = mapOf("patient" to Patient::class)
+    override val resources =
+        mapOf(
+            "patient" to Patient::class,
+            "observation" to com.projectronin.fhir.r4.Observation::class
+        )
 
     @Test
     fun `adds resource when new`() {
@@ -380,4 +388,381 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
         AidboxClient.deleteResource("Patient", "tenant-12345")
     }
+
+    @Test
+    fun `verify Observations are working properly`() {
+        val observation = JacksonManager.objectMapper.readValue<Observation>(observationJson)
+
+        val response = runBlocking { client.addResources("ggwadc8y", listOf(observation)) }
+        assertEquals(1, response.succeeded.size)
+        assertEquals(0, response.failed.size)
+
+        val success1 = response.succeeded[0]
+        assertEquals("Observation", success1.resourceType)
+        assertEquals("ggwadc8y-L-197322448", success1.resourceId)
+        assertEquals(ModificationType.CREATED, success1.modificationType)
+
+        val aidboxP = AidboxClient.getResource("Observation", "ggwadc8y-L-197322448") as Observation
+        assertEquals(observation.copy(meta = null), (aidboxP as Observation).copy(meta = null))
+        assertEquals("ggwadc8y-L-197322448", aidboxP.id!!.value)
+        assertEquals("60.0", (aidboxP.value!!.value as Quantity).value!!.value!!.toString())
+
+        val hashP = DBClient.getStoredHashValue("ggwadc8y", "Observation", "ggwadc8y-L-197322448")
+        assertEquals(observation.copy(meta = null).consistentHashCode(), hashP)
+
+        val kafkaEvents = KafkaClient.readEvents("observation")
+        assertEquals(1, kafkaEvents.size)
+        assertTrue(kafkaEvents[0].type.endsWith("observation.create"))
+
+        val validationResources = ValidationClient.getResources()
+        assertEquals(0, validationResources.size)
+
+        val response2 = runBlocking { client.addResources("ggwadc8y", listOf(observation)) }
+        assertEquals(1, response2.succeeded.size)
+        assertEquals(0, response2.failed.size)
+
+        val success2 = response2.succeeded[0]
+        assertEquals("Observation", success2.resourceType)
+        assertEquals("ggwadc8y-L-197322448", success2.resourceId)
+        assertEquals(ModificationType.UNMODIFIED, success2.modificationType)
+
+        AidboxClient.deleteResource("Observation", "ggwadc8y-L-197322448")
+    }
+
+    private val observationJson = """
+        {
+          "resourceType": "Observation",
+          "id": "ggwadc8y-L-197322448",
+          "meta": {
+            "versionId": "1",
+            "lastUpdated": "2023-08-25T18:31:28.000Z",
+            "source": "https://objectstorage.us-phoenix-1.oraclecloud.com/n/idoll6i6jmjd/b/stage-data-lake-bronze/o/raw_data_response/tenant_id=ggwadc8y/transaction_id/75b66d06-18e2-428d-afe9-c3c45aa4c0b4",
+            "profile": [
+              "http://projectronin.io/fhir/StructureDefinition/ronin-observationLaboratoryResult"
+            ]
+          },
+          "text": {
+            "status": "generated",
+            "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p><b>Observation</b></p><p><b>Patient Id</b>: 12848132</p><p><b>Status</b>: Final</p><p><b>Categories</b>: Laboratory</p><p><b>Code</b>: Neutro Auto</p><p><b>Result</b>: 60.0 %</p><p><b>Interpretation</b>: Normal</p><p><b>Effective Date</b>: Aug 15, 2023  1:15 P.M. CDT</p><p><b>Reference Range</b>: 42.0-75.0 %</p></div>"
+          },
+          "extension": [
+            {
+              "url": "http://projectronin.io/fhir/StructureDefinition/Extension/tenant-sourceObservationCode",
+              "valueCodeableConcept": {
+                "coding": [
+                  {
+                    "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/72",
+                    "code": "20136435",
+                    "display": "Neutro Auto",
+                    "userSelected": true
+                  },
+                  {
+                    "system": "http://loinc.org",
+                    "code": "770-8",
+                    "userSelected": false
+                  }
+                ],
+                "text": "Neutro Auto"
+              }
+            }
+          ],
+          "identifier": [
+            {
+              "system": "https://fhir.cerner.com/ceuuid",
+              "value": "CE87caf4b7-9397-4667-9897-702218017c9e-197322448-2023082518312800"
+            },
+            {
+              "type": {
+                "coding": [
+                  {
+                    "system": "http://projectronin.com/id/fhir",
+                    "code": "FHIR ID",
+                    "display": "FHIR Identifier"
+                  }
+                ],
+                "text": "FHIR Identifier"
+              },
+              "system": "http://projectronin.com/id/fhir",
+              "value": "L-197322448"
+            },
+            {
+              "type": {
+                "coding": [
+                  {
+                    "system": "http://projectronin.com/id/tenantId",
+                    "code": "TID",
+                    "display": "Ronin-specified Tenant Identifier"
+                  }
+                ],
+                "text": "Ronin-specified Tenant Identifier"
+              },
+              "system": "http://projectronin.com/id/tenantId",
+              "value": "ggwadc8y"
+            },
+            {
+              "type": {
+                "coding": [
+                  {
+                    "system": "http://projectronin.com/id/dataAuthorityId",
+                    "code": "DAID",
+                    "display": "Data Authority Identifier"
+                  }
+                ],
+                "text": "Data Authority Identifier"
+              },
+              "system": "http://projectronin.com/id/dataAuthorityId",
+              "value": "EHR Data Authority"
+            }
+          ],
+          "basedOn": [
+            {
+              "reference": "ServiceRequest/ggwadc8y-310456463",
+              "type": "ServiceRequest",
+              "_type": {
+                "extension": [
+                  {
+                    "url": "http://projectronin.io/fhir/StructureDefinition/Extension/ronin-dataAuthorityIdentifier",
+                    "valueIdentifier": {
+                      "type": {
+                        "coding": [
+                          {
+                            "system": "http://projectronin.com/id/dataAuthorityId",
+                            "code": "DAID",
+                            "display": "Data Authority Identifier"
+                          }
+                        ],
+                        "text": "Data Authority Identifier"
+                      },
+                      "system": "http://projectronin.com/id/dataAuthorityId",
+                      "value": "EHR Data Authority"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "status": "final",
+          "category": [
+            {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "laboratory",
+                  "display": "Laboratory",
+                  "userSelected": false
+                }
+              ],
+              "text": "Laboratory"
+            }
+          ],
+          "code": {
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "version": "2.74",
+                "code": "770-8",
+                "display": "Neutrophils/100 leukocytes in Blood by Automated count"
+              }
+            ],
+            "text": "Neutro Auto"
+          },
+          "subject": {
+            "reference": "Patient/ggwadc8y-12848132",
+            "type": "Patient",
+            "_type": {
+              "extension": [
+                {
+                  "url": "http://projectronin.io/fhir/StructureDefinition/Extension/ronin-dataAuthorityIdentifier",
+                  "valueIdentifier": {
+                    "type": {
+                      "coding": [
+                        {
+                          "system": "http://projectronin.com/id/dataAuthorityId",
+                          "code": "DAID",
+                          "display": "Data Authority Identifier"
+                        }
+                      ],
+                      "text": "Data Authority Identifier"
+                    },
+                    "system": "http://projectronin.com/id/dataAuthorityId",
+                    "value": "EHR Data Authority"
+                  }
+                }
+              ]
+            }
+          },
+          "encounter": {
+            "reference": "Encounter/ggwadc8y-97994060",
+            "type": "Encounter",
+            "_type": {
+              "extension": [
+                {
+                  "url": "http://projectronin.io/fhir/StructureDefinition/Extension/ronin-dataAuthorityIdentifier",
+                  "valueIdentifier": {
+                    "type": {
+                      "coding": [
+                        {
+                          "system": "http://projectronin.com/id/dataAuthorityId",
+                          "code": "DAID",
+                          "display": "Data Authority Identifier"
+                        }
+                      ],
+                      "text": "Data Authority Identifier"
+                    },
+                    "system": "http://projectronin.com/id/dataAuthorityId",
+                    "value": "EHR Data Authority"
+                  }
+                }
+              ]
+            }
+          },
+          "effectiveDateTime": "2023-08-15T18:15:01.000Z",
+          "issued": "2023-08-25T18:31:28.000Z",
+          "performer": [
+            {
+              "extension": [
+                {
+                  "url": "http://hl7.org/fhir/StructureDefinition/event-performerFunction",
+                  "valueCodeableConcept": {
+                    "coding": [
+                      {
+                        "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                        "code": "LA",
+                        "display": "legal authenticator"
+                      }
+                    ],
+                    "text": "legal authenticator"
+                  }
+                },
+                {
+                  "url": "http://hl7.org/fhir/StructureDefinition/event-performerFunction",
+                  "valueCodeableConcept": {
+                    "coding": [
+                      {
+                        "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                        "code": "PPRF",
+                        "display": "primary performer"
+                      }
+                    ],
+                    "text": "primary performer"
+                  }
+                }
+              ],
+              "reference": "Practitioner/ggwadc8y-12842135",
+              "type": "Practitioner",
+              "_type": {
+                "extension": [
+                  {
+                    "url": "http://projectronin.io/fhir/StructureDefinition/Extension/ronin-dataAuthorityIdentifier",
+                    "valueIdentifier": {
+                      "type": {
+                        "coding": [
+                          {
+                            "system": "http://projectronin.com/id/dataAuthorityId",
+                            "code": "DAID",
+                            "display": "Data Authority Identifier"
+                          }
+                        ],
+                        "text": "Data Authority Identifier"
+                      },
+                      "system": "http://projectronin.com/id/dataAuthorityId",
+                      "value": "EHR Data Authority"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "extension": [
+                {
+                  "url": "http://hl7.org/fhir/StructureDefinition/event-performerFunction",
+                  "valueCodeableConcept": {
+                    "coding": [
+                      {
+                        "system": "http://terminology.hl7.org/CodeSystem/v2-0912",
+                        "code": "OP",
+                        "display": "Ordering Provider"
+                      }
+                    ],
+                    "text": "Ordering Provider"
+                  }
+                }
+              ],
+              "reference": "Practitioner/ggwadc8y-763923",
+              "type": "Practitioner",
+              "_type": {
+                "extension": [
+                  {
+                    "url": "http://projectronin.io/fhir/StructureDefinition/Extension/ronin-dataAuthorityIdentifier",
+                    "valueIdentifier": {
+                      "type": {
+                        "coding": [
+                          {
+                            "system": "http://projectronin.com/id/dataAuthorityId",
+                            "code": "DAID",
+                            "display": "Data Authority Identifier"
+                          }
+                        ],
+                        "text": "Data Authority Identifier"
+                      },
+                      "system": "http://projectronin.com/id/dataAuthorityId",
+                      "value": "EHR Data Authority"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "valueQuantity": {
+            "value": 60.0,
+            "unit": "%",
+            "system": "http://unitsofmeasure.org",
+            "code": "%"
+          },
+          "interpretation": [
+            {
+              "coding": [
+                {
+                  "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/52",
+                  "code": "214",
+                  "userSelected": true
+                },
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                  "code": "N",
+                  "display": "Normal",
+                  "userSelected": false
+                }
+              ],
+              "text": "Normal"
+            }
+          ],
+          "referenceRange": [
+            {
+              "low": {
+                "value": 42.0,
+                "unit": "%",
+                "system": "http://unitsofmeasure.org",
+                "code": "%"
+              },
+              "high": {
+                "value": 75.0,
+                "unit": "%",
+                "system": "http://unitsofmeasure.org",
+                "code": "%"
+              },
+              "type": {
+                "coding": [
+                  {
+                    "system": "http://terminology.hl7.org/CodeSystem/referencerange-meaning",
+                    "code": "normal",
+                    "display": "Normal Range"
+                  }
+                ],
+                "text": "Normal Range"
+              }
+            }
+          ]
+        }
+    """.trimIndent()
 }

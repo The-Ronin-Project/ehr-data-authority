@@ -6,13 +6,18 @@ import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTyp
 import com.projectronin.ehr.dataauthority.testclients.AidboxClient
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.common.http.request
+import com.projectronin.interop.fhir.generators.datatypes.DynamicValues.quantity
 import com.projectronin.interop.fhir.generators.datatypes.identifier
 import com.projectronin.interop.fhir.generators.datatypes.name
+import com.projectronin.interop.fhir.generators.datatypes.quantity
+import com.projectronin.interop.fhir.generators.primitives.of
 import com.projectronin.interop.fhir.generators.resources.patient
 import com.projectronin.interop.fhir.r4.CodeSystem
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.resource.Binary
+import com.projectronin.interop.fhir.r4.resource.Observation
 import com.projectronin.interop.fhir.r4.resource.Patient
+import com.projectronin.interop.fhir.ronin.generators.resource.observation.rcdmObservation
 import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
@@ -25,8 +30,10 @@ import io.ktor.http.contentType
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.math.BigDecimal
 
 class ResourcesSearchControllerIT : BaseEHRDataAuthorityIT() {
     @Test
@@ -234,5 +241,56 @@ class ResourcesSearchControllerIT : BaseEHRDataAuthorityIT() {
         val binary = response as Binary
         assertEquals("Test-7788", binary.id?.value)
         assertEquals("VGhpcyB3b3Jrcw==", binary.data?.value)
+    }
+
+    @Test
+    fun `retrieval maintains precision with decimal zero`() {
+        val observation = rcdmObservation("test") {
+            id of "test-12345"
+            value of quantity(
+                quantity {
+                    value of BigDecimal("60.0")
+                }
+            )
+        }
+        AidboxClient.addResource(observation)
+
+        val response = runBlocking {
+            client.getResource("test", "Observation", "test-12345")
+        }
+        val actualObservation = response as Observation
+        assertEquals("test-12345", actualObservation.id!!.value)
+        assertEquals(
+            "60.0",
+            (actualObservation.value!!.value as com.projectronin.interop.fhir.r4.datatype.Quantity).value!!.value!!.toString()
+        )
+
+        AidboxClient.deleteResource("Observation", "test-12345")
+    }
+
+    @Disabled("Aidbox precision issue prevents this from working currently")
+    @Test
+    fun `retrieval maintains precision with trailing zeroes`() {
+        val observation = rcdmObservation("test") {
+            id of "test-12345"
+            value of quantity(
+                quantity {
+                    value of BigDecimal("0.40")
+                }
+            )
+        }
+        AidboxClient.addResource(observation)
+
+        val response = runBlocking {
+            client.getResource("test", "Observation", "test-12345")
+        }
+        val actualObservation = response as Observation
+        assertEquals("test-12345", actualObservation.id!!.value)
+        assertEquals(
+            "0.40",
+            (actualObservation.value!!.value as com.projectronin.interop.fhir.r4.datatype.Quantity).value!!.value!!.toString()
+        )
+
+        AidboxClient.deleteResource("Observation", "test-12345")
     }
 }
