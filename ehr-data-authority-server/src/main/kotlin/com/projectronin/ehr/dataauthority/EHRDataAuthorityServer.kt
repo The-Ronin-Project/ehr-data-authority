@@ -1,6 +1,8 @@
 package com.projectronin.ehr.dataauthority
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.projectronin.interop.common.http.spring.HttpSpringConfig
+import com.projectronin.interop.common.jackson.JacksonManager
 import com.projectronin.interop.datalake.spring.DatalakeSpringConfig
 import com.projectronin.interop.kafka.spring.KafkaSpringConfig
 import org.ktorm.database.Database
@@ -9,6 +11,7 @@ import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Import
+import org.springframework.context.annotation.Primary
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.EnableTransactionManagement
@@ -35,6 +38,10 @@ class EHRDataAuthorityServer {
     @Bean
     fun transactionManager(dataSource: DataSource): PlatformTransactionManager =
         DataSourceTransactionManager(dataSource)
+
+    @Primary
+    @Bean
+    fun objectMapper(): ObjectMapper = JacksonManager.objectMapper
 }
 
 fun main(args: Array<String>) {

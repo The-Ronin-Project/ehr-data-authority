@@ -10,7 +10,10 @@ import com.projectronin.ehr.dataauthority.testclients.ValidationClient
 import com.projectronin.fhir.r4.Patient
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.common.jackson.JacksonManager
+import com.projectronin.interop.fhir.generators.datatypes.DynamicValues
 import com.projectronin.interop.fhir.generators.datatypes.identifier
+import com.projectronin.interop.fhir.generators.datatypes.quantity
+import com.projectronin.interop.fhir.generators.primitives.of
 import com.projectronin.interop.fhir.generators.resources.patient
 import com.projectronin.interop.fhir.r4.CodeSystem
 import com.projectronin.interop.fhir.r4.CodeableConcepts
@@ -19,6 +22,7 @@ import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.datatype.primitive.Uri
 import com.projectronin.interop.fhir.r4.resource.Observation
 import com.projectronin.interop.fhir.r4.valueset.AdministrativeGender
+import com.projectronin.interop.fhir.ronin.generators.resource.observation.rcdmObservation
 import com.projectronin.interop.fhir.ronin.generators.resource.rcdmPatient
 import com.projectronin.interop.fhir.util.asCode
 import io.ktor.http.HttpStatusCode
@@ -30,6 +34,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.math.BigDecimal
 
 class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
     override val resources =
@@ -387,6 +392,44 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
         assertEquals(ModificationType.UNMODIFIED, success2.modificationType)
 
         AidboxClient.deleteResource("Patient", "tenant-12345")
+    }
+
+    @Test
+    fun `write maintains precision with trailing zeroes`() {
+        val observation = rcdmObservation("test") {
+            id of "test-12345"
+            value of DynamicValues.quantity(
+                quantity {
+                    value of BigDecimal("0.40")
+                }
+            )
+        }
+
+        val response = runBlocking { client.addResources("test", listOf(observation)) }
+        assertEquals(1, response.succeeded.size)
+        assertEquals(0, response.failed.size)
+
+        val success1 = response.succeeded[0]
+        assertEquals("Observation", success1.resourceType)
+        assertEquals("test-12345", success1.resourceId)
+        assertEquals(ModificationType.CREATED, success1.modificationType)
+
+        val aidboxP = AidboxClient.getResource("Observation", "test-12345") as Observation
+        assertEquals("test-12345", aidboxP.id!!.value)
+        // TODO: Blocked by Aidbox issues
+        // assertEquals("0.40", (aidboxP.value!!.value as Quantity).value!!.value!!.toString())
+
+        val kafkaEvents = KafkaClient.readEvents("observation")
+        assertEquals(1, kafkaEvents.size)
+        assertTrue(kafkaEvents[0].type.endsWith("observation.create"))
+
+        val eventedObservation = kafkaEvents[0].data as com.projectronin.fhir.r4.Observation
+        assertEquals("0.40", eventedObservation.valueQuantity?.value?.toString())
+
+        val hashP = DBClient.getStoredHashValue("test", "Observation", "test-12345")
+        assertEquals(observation.copy(meta = null).consistentHashCode(), hashP)
+
+        AidboxClient.deleteResource("Observation", "test-12345")
     }
 
     @Test

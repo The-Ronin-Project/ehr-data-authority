@@ -73,3 +73,7 @@ dependencies {
     itImplementation(libs.kotlinx.coroutines.core)
     itImplementation(libs.kotlin.logging)
 }
+
+tasks.withType<Test> {
+    maxHeapSize = "2g"
+}
