@@ -41,7 +41,7 @@ class EHRDataAuthorityServer {
 
     @Primary
     @Bean
-    fun objectMapper(): ObjectMapper = JacksonManager.objectMapper
+    fun objectMapper(): ObjectMapper = JacksonManager.nonAbsentObjectMapper
 }
 
 fun main(args: Array<String>) {

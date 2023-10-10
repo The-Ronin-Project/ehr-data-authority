@@ -234,6 +234,24 @@ class ResourcesSearchControllerIT : BaseEHRDataAuthorityIT() {
     }
 
     @Test
+    fun `search finds no resources`() {
+        val searchIdentifier = Identifier(CodeSystem.RONIN_MRN.uri.value!!, "value")
+        val response = runBlocking {
+            client.getResourceIdentifiers(
+                "Test",
+                IdentifierSearchableResourceTypes.Patient,
+                listOf(searchIdentifier)
+            )
+        }
+
+        assertEquals(1, response.size)
+        val searchResult1 = response[0]
+
+        assertEquals(searchIdentifier, searchResult1.searchedIdentifier)
+        assertEquals(0, searchResult1.foundResources.size)
+    }
+
+    @Test
     fun `ehr da support retrieval of binary`() {
         val response = runBlocking {
             client.getResource("Test", "Binary", "Test-7788")
