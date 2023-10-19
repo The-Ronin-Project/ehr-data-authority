@@ -23,7 +23,7 @@ liquibase = "4.24.0"
 # @pin until Spring 6
 logstash = "7.3"
 mockk = "1.13.8"
-mockwebserver = "4.11.0"
+mockwebserver = "4.12.0"
 mysql = "8.0.33"
 ronin-kafka = "1.1.1"
 ronin-test = "0.2.0"
