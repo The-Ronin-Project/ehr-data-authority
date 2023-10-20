@@ -15,6 +15,7 @@ import com.projectronin.interop.fhir.r4.resource.Patient
 import com.projectronin.interop.fhir.r4.resource.Practitioner
 import com.projectronin.interop.fhir.r4.resource.PractitionerRole
 import com.projectronin.interop.fhir.r4.resource.RequestGroup
+import com.projectronin.interop.fhir.r4.resource.ServiceRequest
 import com.projectronin.interop.fhir.ronin.resource.RoninAppointment
 import com.projectronin.interop.fhir.ronin.resource.RoninCarePlan
 import com.projectronin.interop.fhir.ronin.resource.RoninConditions
@@ -30,6 +31,7 @@ import com.projectronin.interop.fhir.ronin.resource.RoninPatient
 import com.projectronin.interop.fhir.ronin.resource.RoninPractitioner
 import com.projectronin.interop.fhir.ronin.resource.RoninPractitionerRole
 import com.projectronin.interop.fhir.ronin.resource.RoninRequestGroup
+import com.projectronin.interop.fhir.ronin.resource.RoninServiceRequest
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -152,6 +154,14 @@ class ValidatorMappingConfigTest {
         val validator = mockk<RoninMedicationAdministration>()
         val mapping = ValidatorMappingConfig().medicationAdministration(validator)
         assertEquals(MedicationAdministration::class, mapping.resourceClass)
+        assertEquals(validator, mapping.validator)
+    }
+
+    @Test
+    fun `creates service request mapping`() {
+        val validator = mockk<RoninServiceRequest>()
+        val mapping = ValidatorMappingConfig().serviceRequestValidator(validator)
+        assertEquals(ServiceRequest::class, mapping.resourceClass)
         assertEquals(validator, mapping.validator)
     }
 }

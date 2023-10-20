@@ -15,6 +15,7 @@ import com.projectronin.interop.fhir.r4.resource.Patient
 import com.projectronin.interop.fhir.r4.resource.Practitioner
 import com.projectronin.interop.fhir.r4.resource.PractitionerRole
 import com.projectronin.interop.fhir.r4.resource.RequestGroup
+import com.projectronin.interop.fhir.r4.resource.ServiceRequest
 import com.projectronin.interop.fhir.ronin.resource.RoninAppointment
 import com.projectronin.interop.fhir.ronin.resource.RoninCarePlan
 import com.projectronin.interop.fhir.ronin.resource.RoninConditions
@@ -30,6 +31,7 @@ import com.projectronin.interop.fhir.ronin.resource.RoninPatient
 import com.projectronin.interop.fhir.ronin.resource.RoninPractitioner
 import com.projectronin.interop.fhir.ronin.resource.RoninPractitionerRole
 import com.projectronin.interop.fhir.ronin.resource.RoninRequestGroup
+import com.projectronin.interop.fhir.ronin.resource.RoninServiceRequest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -94,4 +96,8 @@ class ValidatorMappingConfig {
     @Bean
     fun medicationAdministration(roninMedicationAdministration: RoninMedicationAdministration) =
         ValidatorMapping(MedicationAdministration::class, roninMedicationAdministration)
+
+    @Bean
+    fun serviceRequestValidator(roninServiceRequest: RoninServiceRequest) =
+        ValidatorMapping(ServiceRequest::class, roninServiceRequest)
 }

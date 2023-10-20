@@ -104,6 +104,12 @@ class KafkaTopicConfig(kafkaConfig: KafkaConfig) {
         com.projectronin.fhir.r4.MedicationAdministration::class
     )
 
+    @Bean
+    fun serviceRequestTopic() = createTopic(
+        com.projectronin.interop.fhir.r4.resource.ServiceRequest::class,
+        com.projectronin.fhir.r4.ServiceRequest::class
+    )
+
     private fun createTopic(
         resourceClass: KClass<out Resource<*>>,
         eventClass: KClass<out EventResource>
