@@ -37,7 +37,6 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.net.URLEncoder
 
 class EHRDataAuthorityClientTest {
     private val authenticationToken = "12345678"
@@ -1213,5 +1212,236 @@ class EHRDataAuthorityClientTest {
         assertEquals("Bearer $authenticationToken", request.getHeader("Authorization"))
     }
 
-    private fun encode(value: String) = URLEncoder.encode(value, "UTF-8")
+    @Test
+    fun `addResources attempts smaller batch size when payload too large`() {
+        val resourceId1 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1"
+        val resource1 = Patient(Id(value = resourceId1))
+        val resourceId2 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2"
+        val resource2 = Patient(Id(value = resourceId2))
+        val resourceId3 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3"
+        val resource3 = Patient(Id(value = resourceId3))
+        val resourceId4 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4"
+        val resource4 = Patient(Id(value = resourceId4))
+
+        val listOfResourceIds = listOf(resourceId1, resourceId2, resourceId3, resourceId4)
+        val listOfResources = listOf<Resource<*>>(resource1, resource2, resource3, resource4)
+
+        val returnedResources1 = BatchResourceResponse(
+            succeeded = listOf(
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                    modificationType = ModificationType.CREATED
+                )
+            )
+        )
+        val returnedResources2 = BatchResourceResponse(
+            succeeded = listOf(
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                    modificationType = ModificationType.CREATED
+                )
+            )
+        )
+
+        val mockWebServer = MockWebServer()
+        // Return PayloadTooLarge on the first call
+        mockWebServer.enqueue(MockResponse().setResponseCode(HttpStatusCode.PayloadTooLarge.value))
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.OK.value)
+                .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources1))
+                .setHeader("Content-Type", "application/json")
+        )
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.OK.value)
+                .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources2))
+                .setHeader("Content-Type", "application/json")
+        )
+        val url = mockWebServer.url("/test")
+        val response = runBlocking {
+            val resourceToReturn =
+                EHRDataAuthorityClient(url.toString(), client, authenticationService, addBatchSize = 4).addResources(
+                    "tenant",
+                    listOfResources
+                )
+            resourceToReturn
+        }
+
+        assertEquals(3, mockWebServer.requestCount)
+        val successIds = response.succeeded.map { it.resourceId }
+        assertEquals(listOfResourceIds, successIds)
+        assertEquals(response.succeeded.size, 4)
+    }
+
+    @Test
+    fun `addResources attempts smaller batch size when payload too large within a single batch`() {
+        val resourceId1 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1"
+        val resource1 = Patient(Id(value = resourceId1))
+        val resourceId2 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2"
+        val resource2 = Patient(Id(value = resourceId2))
+        val resourceId3 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3"
+        val resource3 = Patient(Id(value = resourceId3))
+        val resourceId4 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4"
+        val resource4 = Patient(Id(value = resourceId4))
+        val resourceId5 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5"
+        val resource5 = Patient(Id(value = resourceId5))
+        val resourceId6 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK6"
+        val resource6 = Patient(Id(value = resourceId6))
+
+        val listOfResourceIds = listOf(resourceId1, resourceId2, resourceId3, resourceId4, resourceId5, resourceId6)
+        val listOfResources = listOf<Resource<*>>(resource1, resource2, resource3, resource4, resource5, resource6)
+
+        val returnedResources1 = BatchResourceResponse(
+            succeeded = listOf(
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                    modificationType = ModificationType.CREATED
+                )
+            )
+        )
+        val returnedResources2 = BatchResourceResponse(
+            succeeded = listOf(
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                    modificationType = ModificationType.CREATED
+                )
+            )
+        )
+        val returnedResources3 = BatchResourceResponse(
+            succeeded = listOf(
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                    modificationType = ModificationType.CREATED
+                )
+            )
+        )
+        val returnedResources4 = BatchResourceResponse(
+            succeeded = listOf(
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                    modificationType = ModificationType.CREATED
+                ),
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK6",
+                    modificationType = ModificationType.CREATED
+                )
+            )
+        )
+
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.OK.value)
+                .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources1))
+                .setHeader("Content-Type", "application/json")
+        )
+        // Return PayloadTooLarge on the second call
+        mockWebServer.enqueue(MockResponse().setResponseCode(HttpStatusCode.PayloadTooLarge.value))
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.OK.value)
+                .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources2))
+                .setHeader("Content-Type", "application/json")
+        )
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.OK.value)
+                .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources3))
+                .setHeader("Content-Type", "application/json")
+        )
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.OK.value)
+                .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources4))
+                .setHeader("Content-Type", "application/json")
+        )
+        val url = mockWebServer.url("/test")
+        val response = runBlocking {
+            val resourceToReturn =
+                EHRDataAuthorityClient(url.toString(), client, authenticationService, addBatchSize = 2).addResources(
+                    "tenant",
+                    listOfResources
+                )
+            resourceToReturn
+        }
+
+        // 1. Batch size 2 - success
+        // 2. Batch size 2 - payload too large
+        // 3. Batch size 1 - success (half of #2)
+        // 4. Batch size 1 - success (half of #2)
+        // 5. Batch size 2 - success
+        assertEquals(5, mockWebServer.requestCount)
+        val successIds = response.succeeded.map { it.resourceId }
+        assertEquals(listOfResourceIds, successIds)
+        assertEquals(response.succeeded.size, 6)
+    }
+
+    @Test
+    fun `addResources returns if payload too large with batch size of 1`() {
+        val resourceId1 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1"
+        val resource1 = Patient(Id(value = resourceId1))
+        val resourceId2 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2"
+        val resource2 = Patient(Id(value = resourceId2))
+
+        val listOfResources = listOf<Resource<*>>(resource1, resource2)
+
+        val returnedResources1 = BatchResourceResponse(
+            succeeded = listOf(
+                SucceededResource(
+                    resourceType = "Patient",
+                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                    modificationType = ModificationType.CREATED
+                )
+            )
+        )
+
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(MockResponse().setResponseCode(HttpStatusCode.PayloadTooLarge.value))
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatusCode.OK.value)
+                .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources1))
+                .setHeader("Content-Type", "application/json")
+        )
+
+        val url = mockWebServer.url("/test")
+        val response = runBlocking {
+            EHRDataAuthorityClient(
+                url.toString(),
+                client,
+                authenticationService,
+                addBatchSize = 1
+            ).addResources(
+                "tenant",
+                listOfResources
+            )
+        }
+
+        assertEquals(2, mockWebServer.requestCount)
+        assertEquals(returnedResources1.succeeded, response.succeeded)
+        assertEquals(listOf(FailedResource("Patient", resourceId1, "Payload too large")), response.failed)
+    }
 }

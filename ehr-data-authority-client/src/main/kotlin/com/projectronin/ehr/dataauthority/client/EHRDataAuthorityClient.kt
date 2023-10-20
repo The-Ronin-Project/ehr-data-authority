@@ -3,6 +3,7 @@ package com.projectronin.ehr.dataauthority.client
 import com.projectronin.ehr.dataauthority.client.auth.EHRDataAuthorityAuthenticationService
 import com.projectronin.ehr.dataauthority.models.BatchResourceChangeResponse
 import com.projectronin.ehr.dataauthority.models.BatchResourceResponse
+import com.projectronin.ehr.dataauthority.models.FailedResource
 import com.projectronin.ehr.dataauthority.models.Identifier
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchResponse
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
@@ -49,10 +50,49 @@ class EHRDataAuthorityClient(
      * returns list of [BatchResourceResponse]
      */
     suspend fun addResources(tenantId: String, resources: List<Resource<*>>): BatchResourceResponse {
-        val batchResources = resources.chunked(addBatchSize).map { addResourcesByBatch(tenantId, it) }
+        val batchResources = addResourcesInBatches(tenantId, resources, addBatchSize)
         val succeeded = batchResources.flatMap { it.succeeded }
         val failed = batchResources.flatMap { it.failed }
         return BatchResourceResponse(succeeded, failed)
+    }
+
+    /**
+     * Adds the resources in batches of the provided size. If the size is too large, smaller batches may be attempted until all resources have been added.
+     */
+    private suspend fun addResourcesInBatches(
+        tenantId: String,
+        resources: List<Resource<*>>,
+        batchSize: Int
+    ): List<BatchResourceResponse> {
+        return resources.chunked(batchSize).flatMap { batch ->
+            runCatching { addResourcesByBatch(tenantId, batch) }.fold(
+                onSuccess = { listOf(it) },
+                onFailure = { e ->
+                    if (e is ClientFailureException && e.status == HttpStatusCode.PayloadTooLarge) {
+                        // The actual batch size doesn't really matter since we just care about the actual size of the batch being processed.
+                        if (batch.size == 1) {
+                            val resource = batch.first()
+                            listOf(
+                                BatchResourceResponse(
+                                    failed = listOf(
+                                        FailedResource(
+                                            resourceType = resource.resourceType,
+                                            resourceId = resource.id!!.value!!,
+                                            error = "Payload too large"
+                                        )
+                                    )
+                                )
+                            )
+                        } else {
+                            // Attempt the failed batch at half the current size
+                            addResourcesInBatches(tenantId, batch, batchSize / 2)
+                        }
+                    } else {
+                        throw e
+                    }
+                }
+            )
+        }
     }
 
     /**
