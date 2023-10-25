@@ -260,6 +260,21 @@ class KafkaTopicConfigTest {
     }
 
     @Test
+    fun `creates diagnostic report topic`() {
+        val topic = kafkaTopicConfig.diagnosticReportTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.diagnostic-report.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/DiagnosticReport-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.DiagnosticReport::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.DiagnosticReport::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
+    }
+
+    @Test
     fun `creates procedure topic`() {
         val topic = kafkaTopicConfig.procedureTopic()
 

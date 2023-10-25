@@ -111,6 +111,12 @@ class KafkaTopicConfig(kafkaConfig: KafkaConfig) {
     )
 
     @Bean
+    fun diagnosticReportTopic() = createTopic(
+        com.projectronin.interop.fhir.r4.resource.DiagnosticReport::class,
+        com.projectronin.fhir.r4.DiagnosticReport::class
+    )
+
+    @Bean
     fun procedureTopic() = createTopic(
         com.projectronin.interop.fhir.r4.resource.Procedure::class,
         com.projectronin.fhir.r4.Procedure::class

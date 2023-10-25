@@ -3,6 +3,7 @@ package com.projectronin.ehr.dataauthority.validation
 import com.projectronin.interop.fhir.r4.resource.Appointment
 import com.projectronin.interop.fhir.r4.resource.CarePlan
 import com.projectronin.interop.fhir.r4.resource.Condition
+import com.projectronin.interop.fhir.r4.resource.DiagnosticReport
 import com.projectronin.interop.fhir.r4.resource.DocumentReference
 import com.projectronin.interop.fhir.r4.resource.Encounter
 import com.projectronin.interop.fhir.r4.resource.Location
@@ -20,6 +21,7 @@ import com.projectronin.interop.fhir.r4.resource.ServiceRequest
 import com.projectronin.interop.fhir.ronin.resource.RoninAppointment
 import com.projectronin.interop.fhir.ronin.resource.RoninCarePlan
 import com.projectronin.interop.fhir.ronin.resource.RoninConditions
+import com.projectronin.interop.fhir.ronin.resource.RoninDiagnosticReports
 import com.projectronin.interop.fhir.ronin.resource.RoninDocumentReference
 import com.projectronin.interop.fhir.ronin.resource.RoninEncounter
 import com.projectronin.interop.fhir.ronin.resource.RoninLocation
@@ -164,6 +166,14 @@ class ValidatorMappingConfigTest {
         val validator = mockk<RoninServiceRequest>()
         val mapping = ValidatorMappingConfig().serviceRequestValidator(validator)
         assertEquals(ServiceRequest::class, mapping.resourceClass)
+        assertEquals(validator, mapping.validator)
+    }
+
+    @Test
+    fun `creates diagnostic report mapping`() {
+        val validator = mockk<RoninDiagnosticReports>()
+        val mapping = ValidatorMappingConfig().diagnosticReportValidator(validator)
+        assertEquals(DiagnosticReport::class, mapping.resourceClass)
         assertEquals(validator, mapping.validator)
     }
 
