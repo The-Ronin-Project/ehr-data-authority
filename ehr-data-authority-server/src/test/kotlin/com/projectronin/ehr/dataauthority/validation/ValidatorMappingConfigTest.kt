@@ -14,6 +14,7 @@ import com.projectronin.interop.fhir.r4.resource.Observation
 import com.projectronin.interop.fhir.r4.resource.Patient
 import com.projectronin.interop.fhir.r4.resource.Practitioner
 import com.projectronin.interop.fhir.r4.resource.PractitionerRole
+import com.projectronin.interop.fhir.r4.resource.Procedure
 import com.projectronin.interop.fhir.r4.resource.RequestGroup
 import com.projectronin.interop.fhir.r4.resource.ServiceRequest
 import com.projectronin.interop.fhir.ronin.resource.RoninAppointment
@@ -30,6 +31,7 @@ import com.projectronin.interop.fhir.ronin.resource.RoninObservations
 import com.projectronin.interop.fhir.ronin.resource.RoninPatient
 import com.projectronin.interop.fhir.ronin.resource.RoninPractitioner
 import com.projectronin.interop.fhir.ronin.resource.RoninPractitionerRole
+import com.projectronin.interop.fhir.ronin.resource.RoninProcedure
 import com.projectronin.interop.fhir.ronin.resource.RoninRequestGroup
 import com.projectronin.interop.fhir.ronin.resource.RoninServiceRequest
 import io.mockk.mockk
@@ -162,6 +164,14 @@ class ValidatorMappingConfigTest {
         val validator = mockk<RoninServiceRequest>()
         val mapping = ValidatorMappingConfig().serviceRequestValidator(validator)
         assertEquals(ServiceRequest::class, mapping.resourceClass)
+        assertEquals(validator, mapping.validator)
+    }
+
+    @Test
+    fun `creates procedure mapping`() {
+        val validator = mockk<RoninProcedure>()
+        val mapping = ValidatorMappingConfig().procedureValidator(validator)
+        assertEquals(Procedure::class, mapping.resourceClass)
         assertEquals(validator, mapping.validator)
     }
 }

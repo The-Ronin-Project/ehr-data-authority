@@ -258,4 +258,19 @@ class KafkaTopicConfigTest {
         assertEquals(com.projectronin.fhir.r4.ServiceRequest::class, topic.eventClass)
         assertFalse(topic.useLatestOffset)
     }
+
+    @Test
+    fun `creates procedure topic`() {
+        val topic = kafkaTopicConfig.procedureTopic()
+
+        assertEquals(system, topic.systemName)
+        assertEquals("oci.us-phoenix-1.ehr-data-authority.procedure.v1", topic.topicName)
+        assertEquals(
+            "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Procedure-v1.schema.json",
+            topic.dataSchema
+        )
+        assertEquals(com.projectronin.interop.fhir.r4.resource.Procedure::class, topic.resourceClass)
+        assertEquals(com.projectronin.fhir.r4.Procedure::class, topic.eventClass)
+        assertFalse(topic.useLatestOffset)
+    }
 }
