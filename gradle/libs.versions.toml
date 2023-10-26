@@ -101,6 +101,7 @@ interop-docker-integration = { id = "com.projectronin.interop.gradle.docker-inte
 interop-junit = { id = "com.projectronin.interop.gradle.junit", version.ref = "interop-gradle" }
 interop-server-publish = { id = "com.projectronin.interop.gradle.server-publish", version.ref = "interop-gradle" }
 interop-server-version = { id = "com.projectronin.interop.gradle.server-version", version.ref = "interop-gradle" }
+interop-sonarqube = { id = "com.projectronin.interop.gradle.sonarqube", version.ref = "interop-gradle" }
 interop-spring-boot = { id = "com.projectronin.interop.gradle.spring-boot", version.ref = "interop-gradle" }
 interop-spring-framework = { id = "com.projectronin.interop.gradle.spring", version.ref = "interop-gradle" }
 interop-version-catalog = { id = "com.projectronin.interop.gradle.version-catalog-update", version.ref = "interop-gradle" }
