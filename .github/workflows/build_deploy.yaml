@@ -2,7 +2,7 @@ name: Build and Push Image
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: [ EHR Data Authority Server Tests, Create Release ]
+    workflows: [ Tests, Create Release ]
     types: [ completed ]
     branches: [ main ]
 
