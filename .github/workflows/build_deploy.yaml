@@ -9,7 +9,7 @@ on:
 jobs:
 
   fetch-metadata:
-    runs-on: self-hosted
+    runs-on: oci-shared
     name: Fetch Project Version and other metadata
     steps:
       - uses: actions/checkout@v3
