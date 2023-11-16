@@ -9,17 +9,17 @@ interop-ehr = "12.5.0"
 interop-fhir = "8.11.0"
 interop-gradle = "3.3.0"
 interop-kafka = "8.5.2"
-interop-validation = "3.2.1"
-jackson = "2.15.3"
+interop-validation = "3.2.2"
+jackson = "2.16.0"
 # @pin until INT-1988 resolved
 kotlin = "1.8.22"
 kotlin-logging = "3.0.5"
 kotlinx-coroutines = "1.7.3"
-kotlinx-serialization = "1.6.0"
+kotlinx-serialization = "1.6.1"
 # @pin INT-2283
 ktor = "2.3.4"
 ktorm = "3.6.0"
-liquibase = "4.24.0"
+liquibase = "4.25.0"
 # @pin until Spring 6
 logstash = "7.3"
 mockk = "1.13.8"
@@ -29,7 +29,7 @@ ronin-kafka = "1.1.1"
 ronin-test = "0.2.0"
 # @pin until can move to JDK 17
 spring-boot = "2.7.13"
-testcontainers = "1.19.1"
+testcontainers = "1.19.2"
 
 [libraries]
 common-fhir-r4-models = { module = "com.projectronin.fhir:common-fhir-r4-models", version.ref = "fhir-models" }
