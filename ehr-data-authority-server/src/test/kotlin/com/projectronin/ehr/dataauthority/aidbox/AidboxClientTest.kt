@@ -3,7 +3,7 @@ package com.projectronin.ehr.dataauthority.aidbox
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.projectronin.ehr.dataauthority.aidbox.auth.AidboxAuthenticationBroker
-import com.projectronin.ehr.dataauthority.change.data.services.DataStorageService
+import com.projectronin.interop.common.auth.Authentication
 import com.projectronin.interop.common.http.exceptions.ClientAuthenticationException
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.common.http.exceptions.ServiceUnavailableException
@@ -55,14 +55,19 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.jackson.jackson
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verifySequence
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import java.util.concurrent.atomic.AtomicBoolean
 
 class AidboxClientTest {
     private val urlRest = "http://localhost/8888"
     private val urlBatchUpsert = "$urlRest/fhir"
+    private val authTokenType = "Bearer"
+    private val authAccessToken = "Auth-String"
+    private val authHeader = "$authTokenType $authAccessToken"
     private val practitioner1 = Practitioner(
         id = Id("cmjones"),
         identifier = listOf(
@@ -314,12 +319,72 @@ class AidboxClientTest {
 
     @Test
     fun `aidbox batch upsert of 2 Practitioner resources, response 4xx exception`() {
-        val expectedResponseStatus = HttpStatusCode.Unauthorized
+        val expectedResponseStatus = HttpStatusCode.Forbidden
         val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
         assertThrows(ClientAuthenticationException::class.java) {
             runBlocking {
                 dataStorageClient.batchUpsert(practitioners)
             }
+        }
+    }
+
+    @Test
+    fun `aidbox batch upsert retries on 401 three times`() {
+        val expectedResponseStatus = HttpStatusCode.Unauthorized
+        val authenticationBroker = createAuthenticationBroker()
+        val dataStorageClient = createClient(
+            expectedUrl = urlBatchUpsert,
+            responseStatus = expectedResponseStatus,
+            authenticationBroker = authenticationBroker
+        )
+        // Since we are constantly returning 401's from the mock, it will throw
+        assertThrows(ClientAuthenticationException::class.java) {
+            runBlocking {
+                dataStorageClient.batchUpsert(practitioners)
+            }
+            // if the endpoint keeps returning 401, we should have it reauthenticate
+            verifySequence {
+                authenticationBroker.reauthenticate()
+            }
+        }
+    }
+
+    @Test
+    fun `aidbox batch upsert retries on 401 with success after retry`() {
+        val invalidAuth: Authentication = mockk {
+            every { tokenType } returns authTokenType
+            every { accessToken } returns "invalid-token"
+        }
+        val validAuth: Authentication = mockk {
+            every { tokenType } returns authTokenType
+            every { accessToken } returns authAccessToken
+        }
+        val hasReauthenticated = AtomicBoolean(false)
+        val authenticationBroker = mockk<AidboxAuthenticationBroker> {
+            every { getAuthentication() } answers {
+                if (hasReauthenticated.get()) {
+                    validAuth
+                } else {
+                    invalidAuth
+                }
+            }
+            every { reauthenticate() } answers {
+                hasReauthenticated.set(true)
+                validAuth
+            }
+        }
+        val dataStorageClient = createClient(
+            expectedUrl = urlBatchUpsert,
+            authenticationBroker = authenticationBroker
+        )
+
+        runBlocking {
+            dataStorageClient.batchUpsert(practitioners)
+        }
+        verifySequence {
+            authenticationBroker.getAuthentication()
+            authenticationBroker.reauthenticate()
+            authenticationBroker.getAuthentication()
         }
     }
 
@@ -353,7 +418,8 @@ class AidboxClientTest {
         val responseBody = JacksonManager.objectMapper.writeValueAsString(responseBundle)
         val tenantIdentifier = "${CodeSystem.RONIN_TENANT.uri.value}|test".encodeURLPathPart()
         val searchToken = "system|value"
-        val expectedUrl = "$urlRest/fhir/Patient?identifier=$tenantIdentifier&identifier=${searchToken.encodeURLPathPart()}"
+        val expectedUrl =
+            "$urlRest/fhir/Patient?identifier=$tenantIdentifier&identifier=${searchToken.encodeURLPathPart()}"
         val dataStorageClient = createClient("", expectedUrl, responseBody = responseBody)
         val actual = runBlocking {
             dataStorageClient.searchForResources("Patient", "test", searchToken)
@@ -397,24 +463,22 @@ class AidboxClientTest {
         expectedUrl: String,
         baseUrl: String = urlRest,
         responseStatus: HttpStatusCode = HttpStatusCode.OK,
-        responseBody: String = ""
-    ): DataStorageService {
-        val authenticationBroker = mockk<AidboxAuthenticationBroker> {
-            every { getAuthentication() } returns mockk {
-                every { tokenType } returns "Bearer"
-                every { accessToken } returns "Auth-String"
-            }
-        }
-
+        responseBody: String = "",
+        authenticationBroker: AidboxAuthenticationBroker = createAuthenticationBroker()
+    ): AidboxClient {
         val mockEngine = MockEngine { request ->
             assertEquals(expectedUrl, request.url.toString())
             if (expectedBody != "") {
                 assertEquals(expectedBody, String(request.body.toByteArray())) // see if this is a JSON string/stream
             }
-            assertEquals("Bearer Auth-String", request.headers["Authorization"])
+            val status = if (!request.headers["Authorization"].equals(authHeader)) {
+                HttpStatusCode.Unauthorized
+            } else {
+                responseStatus
+            }
             respond(
                 content = responseBody,
-                status = responseStatus,
+                status = status,
                 headers = headersOf(HttpHeaders.ContentType, "application/json")
             )
         }
@@ -429,5 +493,18 @@ class AidboxClientTest {
         }
 
         return AidboxClient(httpClient, baseUrl, authenticationBroker)
+    }
+
+    private fun createAuthenticationBroker(): AidboxAuthenticationBroker {
+        return mockk<AidboxAuthenticationBroker> {
+            every { getAuthentication() } returns mockk {
+                every { tokenType } returns authTokenType
+                every { accessToken } returns authAccessToken
+            }
+            every { reauthenticate() } returns mockk {
+                every { tokenType } returns authTokenType
+                every { accessToken } returns authTokenType
+            }
+        }
     }
 }

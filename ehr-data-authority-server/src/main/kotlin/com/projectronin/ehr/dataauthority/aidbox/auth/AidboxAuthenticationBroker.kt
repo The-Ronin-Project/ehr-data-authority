@@ -32,4 +32,10 @@ class AidboxAuthenticationBroker(private val authenticationService: AidboxAuthen
         }
         return authentication
     }
+
+    fun reauthenticate(): Authentication {
+        logger.debug { "Invalidating cached credentials for Aidbox" }
+        this.cachedAuthentication = null
+        return this.getAuthentication()
+    }
 }
