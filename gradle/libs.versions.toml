@@ -15,7 +15,7 @@ jackson = "2.16.0"
 kotlin = "1.8.22"
 kotlin-logging = "3.0.5"
 kotlinx-coroutines = "1.7.3"
-kotlinx-serialization = "1.6.1"
+kotlinx-serialization = "1.6.2"
 # @pin INT-2283
 ktor = "2.3.4"
 ktorm = "3.6.0"
