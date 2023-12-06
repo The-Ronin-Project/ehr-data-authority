@@ -4,10 +4,14 @@ import com.projectronin.interop.common.auth.Authentication
 import com.projectronin.interop.common.http.request
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.delete
+import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
@@ -25,6 +29,7 @@ class AidboxAuthenticationService(
 ) {
     private val logger = KotlinLogging.logger { }
     private val authPath = "/auth/token"
+    private val deleteTokenPath = "/Session"
 
     /**
      * Retrieves an Authentication.
@@ -41,6 +46,24 @@ class AidboxAuthenticationService(
             }
 
             httpResponse.body<AidboxAuthentication>()
+        }
+    }
+
+    /**
+     * Deletes session related to token that has expired.
+     */
+    fun deleteAuthenticationTokenSession(authenticationToken: String): HttpStatusCode {
+        return runBlocking {
+            val deleteUrl = aidboxBaseUrl + deleteTokenPath
+            logger.debug { "Deleting session for expired token $authenticationToken" }
+            val httpResponse: HttpResponse = httpClient.request("Aidbox", deleteUrl) { url ->
+                delete(url) {
+                    headers {
+                        append(HttpHeaders.Authorization, "Bearer $authenticationToken")
+                    }
+                }
+            }
+            httpResponse.status
         }
     }
 }

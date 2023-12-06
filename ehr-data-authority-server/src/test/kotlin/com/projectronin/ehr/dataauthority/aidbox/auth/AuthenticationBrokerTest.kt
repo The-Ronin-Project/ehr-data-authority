@@ -1,6 +1,7 @@
 package com.projectronin.ehr.dataauthority.aidbox.auth
 
 import com.projectronin.interop.common.auth.Authentication
+import io.ktor.http.HttpStatusCode
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -51,7 +52,6 @@ class AuthenticationBrokerTest {
             "refresh",
             "scope"
         )
-
         val authentication = broker.getAuthentication()
         assertEquals("Bearer", authentication.tokenType)
         assertEquals("token", authentication.accessToken)
@@ -92,11 +92,12 @@ class AuthenticationBrokerTest {
     fun `loads authentication when cached has no expiration`() {
         val cachedAuthentication = mockk<Authentication> {
             every { expiresAt } returns null
+            every { accessToken } returns "token"
         }
         setCachedAuthentication(cachedAuthentication)
 
         every { authenticationService.getAuthentication() } returns AidboxAuthentication("Bearer", "token")
-
+        every { authenticationService.deleteAuthenticationTokenSession("token") } returns HttpStatusCode.OK
         val authentication = broker.getAuthentication()
         assertEquals("Bearer", authentication.tokenType)
         assertEquals("token", authentication.accessToken)
@@ -109,12 +110,17 @@ class AuthenticationBrokerTest {
     fun `loads authentication when cached has expired`() {
         val cachedAuthentication = mockk<Authentication> {
             every { expiresAt } returns Instant.now().minusSeconds(600)
+            every { accessToken } returns "token"
         }
         setCachedAuthentication(cachedAuthentication)
 
-        every { authenticationService.getAuthentication() } returns AidboxAuthentication("Bearer", "token")
-
+        every { authenticationService.getAuthentication() } returns AidboxAuthentication(
+            "Bearer",
+            "token"
+        )
+        every { authenticationService.deleteAuthenticationTokenSession("token") } returns HttpStatusCode.OK
         val authentication = broker.getAuthentication()
+
         assertEquals("Bearer", authentication.tokenType)
         assertEquals("token", authentication.accessToken)
         assertNull(authentication.expiresAt)
@@ -126,10 +132,12 @@ class AuthenticationBrokerTest {
     fun `loads authentication when cached expires within buffer`() {
         val cachedAuthentication = mockk<Authentication> {
             every { expiresAt } returns Instant.now().plusSeconds(25)
+            every { accessToken } returns "token"
         }
         setCachedAuthentication(cachedAuthentication)
 
         every { authenticationService.getAuthentication() } returns AidboxAuthentication("Bearer", "token")
+        every { authenticationService.deleteAuthenticationTokenSession("token") } returns HttpStatusCode.OK
 
         val authentication = broker.getAuthentication()
         assertEquals("Bearer", authentication.tokenType)

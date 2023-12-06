@@ -13,7 +13,8 @@ class AidboxAuthenticationBroker(private val authenticationService: AidboxAuthen
     private var cachedAuthentication: Authentication? = null
 
     /**
-     * Retrieves the current [Authentication] to use.
+     * Retrieves the current [Authentication] to use. If cached authentication is invalid/expired
+     * delete the token session before requesting fresh authentication for Aidbox
      */
     fun getAuthentication(): Authentication {
         val isCacheValid =
@@ -21,8 +22,10 @@ class AidboxAuthenticationBroker(private val authenticationService: AidboxAuthen
         if (isCacheValid) {
             logger.debug { "Returning cached authentication for Aidbox" }
             return cachedAuthentication!!
+        } else if (cachedAuthentication?.accessToken?.isNotBlank() == true) {
+            logger.debug { "Deleting token Session" }
+            authenticationService.deleteAuthenticationTokenSession(cachedAuthentication!!.accessToken)
         }
-
         logger.debug { "Requesting fresh authentication for Aidbox" }
         val authentication = authenticationService.getAuthentication()
         logger.debug { "Retrieved authentication Aidbox has expiration (${authentication.expiresAt})" }
