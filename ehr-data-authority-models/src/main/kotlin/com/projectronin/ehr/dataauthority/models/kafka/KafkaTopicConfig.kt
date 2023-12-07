@@ -15,116 +15,134 @@ class KafkaTopicConfig(kafkaConfig: KafkaConfig) {
     private val systemName = kafkaConfig.retrieve.serviceId
 
     @Bean
-    fun appointmentTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.Appointment::class,
-        com.projectronin.fhir.r4.Appointment::class
-    )
+    fun appointmentTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.Appointment::class,
+            com.projectronin.fhir.r4.Appointment::class,
+        )
 
     @Bean
-    fun conditionTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.Condition::class,
-        com.projectronin.fhir.r4.Condition::class
-    )
+    fun conditionTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.Condition::class,
+            com.projectronin.fhir.r4.Condition::class,
+        )
 
     @Bean
-    fun encounterTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.Encounter::class,
-        com.projectronin.fhir.r4.Encounter::class
-    )
+    fun encounterTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.Encounter::class,
+            com.projectronin.fhir.r4.Encounter::class,
+        )
 
     @Bean
-    fun locationTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.Location::class,
-        com.projectronin.fhir.r4.Location::class
-    )
+    fun locationTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.Location::class,
+            com.projectronin.fhir.r4.Location::class,
+        )
 
     @Bean
-    fun medicationTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.Medication::class,
-        com.projectronin.fhir.r4.Medication::class
-    )
+    fun medicationTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.Medication::class,
+            com.projectronin.fhir.r4.Medication::class,
+        )
 
     @Bean
-    fun medicationRequestTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.MedicationRequest::class,
-        com.projectronin.fhir.r4.MedicationRequest::class
-    )
+    fun medicationRequestTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.MedicationRequest::class,
+            com.projectronin.fhir.r4.MedicationRequest::class,
+        )
 
     @Bean
-    fun medicationStatementTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.MedicationStatement::class,
-        com.projectronin.fhir.r4.MedicationStatement::class
-    )
+    fun medicationStatementTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.MedicationStatement::class,
+            com.projectronin.fhir.r4.MedicationStatement::class,
+        )
 
     @Bean
-    fun observationTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.Observation::class,
-        com.projectronin.fhir.r4.Observation::class
-    )
+    fun observationTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.Observation::class,
+            com.projectronin.fhir.r4.Observation::class,
+        )
 
     @Bean
-    fun patientTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.Patient::class,
-        com.projectronin.fhir.r4.Patient::class
-    )
+    fun patientTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.Patient::class,
+            com.projectronin.fhir.r4.Patient::class,
+        )
 
     @Bean
-    fun practitionerTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.Practitioner::class,
-        com.projectronin.fhir.r4.Practitioner::class
-    )
+    fun practitionerTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.Practitioner::class,
+            com.projectronin.fhir.r4.Practitioner::class,
+        )
 
     @Bean
-    fun practitionerRoleTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.PractitionerRole::class,
-        com.projectronin.fhir.r4.PractitionerRole::class
-    )
+    fun practitionerRoleTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.PractitionerRole::class,
+            com.projectronin.fhir.r4.PractitionerRole::class,
+        )
 
     @Bean
-    fun requestGroupTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.RequestGroup::class,
-        com.projectronin.fhir.r4.RequestGroup::class
-    )
+    fun requestGroupTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.RequestGroup::class,
+            com.projectronin.fhir.r4.RequestGroup::class,
+        )
 
     @Bean
-    fun carePlanTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.CarePlan::class,
-        com.projectronin.fhir.r4.CarePlan::class
-    )
+    fun carePlanTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.CarePlan::class,
+            com.projectronin.fhir.r4.CarePlan::class,
+        )
 
     @Bean
-    fun documentReferenceTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.DocumentReference::class,
-        com.projectronin.fhir.r4.DocumentReference::class
-    )
+    fun documentReferenceTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.DocumentReference::class,
+            com.projectronin.fhir.r4.DocumentReference::class,
+        )
 
     @Bean
-    fun medicationAdministrationTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.MedicationAdministration::class,
-        com.projectronin.fhir.r4.MedicationAdministration::class
-    )
+    fun medicationAdministrationTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.MedicationAdministration::class,
+            com.projectronin.fhir.r4.MedicationAdministration::class,
+        )
 
     @Bean
-    fun serviceRequestTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.ServiceRequest::class,
-        com.projectronin.fhir.r4.ServiceRequest::class
-    )
+    fun serviceRequestTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.ServiceRequest::class,
+            com.projectronin.fhir.r4.ServiceRequest::class,
+        )
 
     @Bean
-    fun diagnosticReportTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.DiagnosticReport::class,
-        com.projectronin.fhir.r4.DiagnosticReport::class
-    )
+    fun diagnosticReportTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.DiagnosticReport::class,
+            com.projectronin.fhir.r4.DiagnosticReport::class,
+        )
 
     @Bean
-    fun procedureTopic() = createTopic(
-        com.projectronin.interop.fhir.r4.resource.Procedure::class,
-        com.projectronin.fhir.r4.Procedure::class
-    )
+    fun procedureTopic() =
+        createTopic(
+            com.projectronin.interop.fhir.r4.resource.Procedure::class,
+            com.projectronin.fhir.r4.Procedure::class,
+        )
 
     private fun createTopic(
         resourceClass: KClass<out Resource<*>>,
-        eventClass: KClass<out EventResource>
+        eventClass: KClass<out EventResource>,
     ): EhrDAKafkaTopic {
         val resourceType = eventClass.simpleName!!
         val topicName =
@@ -136,7 +154,7 @@ class KafkaTopicConfig(kafkaConfig: KafkaConfig) {
             topicName = topicName,
             dataSchema = schema,
             resourceClass = resourceClass,
-            eventClass = eventClass
+            eventClass = eventClass,
         )
     }
 }

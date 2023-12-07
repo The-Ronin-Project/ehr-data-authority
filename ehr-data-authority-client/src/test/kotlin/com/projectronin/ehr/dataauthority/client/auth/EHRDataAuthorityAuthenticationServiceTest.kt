@@ -34,12 +34,13 @@ class EHRDataAuthorityAuthenticationServiceTest {
             MockResponse()
                 .setResponseCode(HttpStatusCode.Forbidden.value)
                 .setBody("")
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
 
-        val exception = assertThrows<ClientAuthenticationException> {
-            service.getAuthentication()
-        }
+        val exception =
+            assertThrows<ClientAuthenticationException> {
+                service.getAuthentication()
+            }
         val message = exception.message!!
         assertTrue(message.contains("Received 403 Client Error when calling Auth0"))
         assertTrue(message.contains("for POST"))
@@ -56,7 +57,7 @@ class EHRDataAuthorityAuthenticationServiceTest {
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody("""{"access_token":"YouShallPass","token_type":"Bearer","expires_in":180}""")
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
 
         val authentication = service.getAuthentication()
@@ -80,7 +81,7 @@ class EHRDataAuthorityAuthenticationServiceTest {
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody("""{"access_token":"YouShallPass","token_type":"Bearer"}""")
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
 
         val authentication = service.getAuthentication()
@@ -95,7 +96,7 @@ class EHRDataAuthorityAuthenticationServiceTest {
         assertEquals("application/x-www-form-urlencoded; charset=UTF-8", request.getHeader("Content-Type"))
         assertEquals(
             "grant_type=client_credentials&client_id=$clientId&client_secret=$clientSecret",
-            request.body.readUtf8()
+            request.body.readUtf8(),
         )
     }
 }

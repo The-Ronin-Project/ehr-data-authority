@@ -8,5 +8,5 @@ data class ChangeStatus(
     val resourceId: String,
     val type: ChangeType,
     val hashId: UUID?,
-    val hash: Int
+    val hash: Int,
 )

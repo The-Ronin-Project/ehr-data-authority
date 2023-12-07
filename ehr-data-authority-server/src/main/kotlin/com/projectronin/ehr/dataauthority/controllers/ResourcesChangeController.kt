@@ -15,9 +15,8 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class ResourcesChangeController(
-    private val changeDetectionService: ChangeDetectionService
+    private val changeDetectionService: ChangeDetectionService,
 ) {
-
     /**
      * Takes a list of [resources] and determines if those have changed
      * from what is already stored
@@ -26,7 +25,7 @@ class ResourcesChangeController(
     @PreAuthorize("hasAuthority('SCOPE_search:resources')")
     fun determineIfResourcesChanged(
         @PathVariable("tenantId") tenantId: String,
-        @RequestBody resources: List<Resource<*>>
+        @RequestBody resources: List<Resource<*>>,
     ): ResponseEntity<BatchResourceChangeResponse> {
         val failedResources = ResourceTenantMismatchUtil.getMismatchResourceFailures(resources, tenantId)
         if (failedResources.isNotEmpty()) {
@@ -41,10 +40,10 @@ class ResourcesChangeController(
                     ChangeStatusResource(
                         resource.resourceType,
                         resource.id!!.value!!,
-                        changeStatusesByKey[key]!!.type
+                        changeStatusesByKey[key]!!.type,
                     )
-                }
-            )
+                },
+            ),
         )
     }
 }

@@ -25,7 +25,7 @@ class AidboxAuthenticationService(
     private val httpClient: HttpClient,
     @Value("\${aidbox.url}")
     private val aidboxBaseUrl: String,
-    private val aidboxCredentials: AidboxCredentials
+    private val aidboxCredentials: AidboxCredentials,
 ) {
     private val logger = KotlinLogging.logger { }
     private val authPath = "/auth/token"
@@ -38,12 +38,13 @@ class AidboxAuthenticationService(
         return runBlocking {
             val authUrl = aidboxBaseUrl + authPath
             logger.debug { "Retrieving authorization from $authUrl" }
-            val httpResponse: HttpResponse = httpClient.request("Aidbox", authUrl) { url ->
-                post(url) {
-                    contentType(ContentType.Application.Json)
-                    setBody(aidboxCredentials)
+            val httpResponse: HttpResponse =
+                httpClient.request("Aidbox", authUrl) { url ->
+                    post(url) {
+                        contentType(ContentType.Application.Json)
+                        setBody(aidboxCredentials)
+                    }
                 }
-            }
 
             httpResponse.body<AidboxAuthentication>()
         }
@@ -56,13 +57,14 @@ class AidboxAuthenticationService(
         return runBlocking {
             val deleteUrl = aidboxBaseUrl + deleteTokenPath
             logger.debug { "Deleting session for expired token $authenticationToken" }
-            val httpResponse: HttpResponse = httpClient.request("Aidbox", deleteUrl) { url ->
-                delete(url) {
-                    headers {
-                        append(HttpHeaders.Authorization, "Bearer $authenticationToken")
+            val httpResponse: HttpResponse =
+                httpClient.request("Aidbox", deleteUrl) { url ->
+                    delete(url) {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer $authenticationToken")
+                        }
                     }
                 }
-            }
             httpResponse.status
         }
     }

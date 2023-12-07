@@ -22,29 +22,34 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class PublishServiceTest {
-    private val collection = listOf(
-        Practitioner(
-            id = Id("cmjones"),
-            identifier = listOf(
-                Identifier(system = CodeSystem.NPI.uri, value = "third".asFHIR())
+    private val collection =
+        listOf(
+            Practitioner(
+                id = Id("cmjones"),
+                identifier =
+                    listOf(
+                        Identifier(system = CodeSystem.NPI.uri, value = "third".asFHIR()),
+                    ),
+                name =
+                    listOf(
+                        HumanName(family = "Jones".asFHIR(), given = listOf("Cordelia", "May").asFHIR()),
+                    ),
             ),
-            name = listOf(
-                HumanName(family = "Jones".asFHIR(), given = listOf("Cordelia", "May").asFHIR())
-            )
-        ),
-        Practitioner(
-            id = Id("rallyr"),
-            identifier = listOf(
-                Identifier(system = CodeSystem.NPI.uri, value = "second".asFHIR())
+            Practitioner(
+                id = Id("rallyr"),
+                identifier =
+                    listOf(
+                        Identifier(system = CodeSystem.NPI.uri, value = "second".asFHIR()),
+                    ),
+                name =
+                    listOf(
+                        HumanName(
+                            family = "Llyr".asFHIR(),
+                            given = listOf("Regan", "Anne").asFHIR(),
+                        ),
+                    ),
             ),
-            name = listOf(
-                HumanName(
-                    family = "Llyr".asFHIR(),
-                    given = listOf("Regan", "Anne").asFHIR()
-                )
-            )
         )
-    )
     private val dataStorageService = mockk<AidboxClient>()
     private val publishService = PublishService(dataStorageService, 2)
 
@@ -62,27 +67,30 @@ class PublishServiceTest {
     fun `empty list, return true`() {
         val collection = listOf<Resource<*>>()
         coEvery { dataStorageService.batchUpsert(collection) } returns mockk { HttpStatusCode.OK }
-        val actualSuccess: Boolean = runBlocking {
-            publishService.publish(collection)
-        }
+        val actualSuccess: Boolean =
+            runBlocking {
+                publishService.publish(collection)
+            }
         assertTrue(actualSuccess)
     }
 
     @Test
     fun `publish list of 2 Practitioner resources to aidbox, response 1xx (or 2xx) false`() {
         coEvery { dataStorageService.batchUpsert(collection) } returns mockk { HttpStatusCode.Continue }
-        val actualSuccess: Boolean = runBlocking {
-            publishService.publish(collection)
-        }
+        val actualSuccess: Boolean =
+            runBlocking {
+                publishService.publish(collection)
+            }
         assertFalse(actualSuccess)
     }
 
     @Test
     fun `publish list of 2 Practitioner resources to aidbox, exception 5xx (or 3xx or 4xx) false`() {
         coEvery { dataStorageService.batchUpsert(collection) } returns mockk { HttpStatusCode.ServiceUnavailable }
-        val actualSuccess: Boolean = runBlocking {
-            publishService.publish(collection)
-        }
+        val actualSuccess: Boolean =
+            runBlocking {
+                publishService.publish(collection)
+            }
         assertFalse(actualSuccess)
     }
 
@@ -98,9 +106,10 @@ class PublishServiceTest {
         coEvery { dataStorageService.batchUpsert(listOf(resource3, resource4)) } returns HttpStatusCode.OK andThen HttpStatusCode.OK
         coEvery { dataStorageService.batchUpsert(listOf(resource5)) } returns HttpStatusCode.OK
 
-        val actualSuccess: Boolean = runBlocking {
-            publishService.publish(listOf(resource1, resource2, resource3, resource4, resource5))
-        }
+        val actualSuccess: Boolean =
+            runBlocking {
+                publishService.publish(listOf(resource1, resource2, resource3, resource4, resource5))
+            }
         assertTrue(actualSuccess)
     }
 
@@ -116,9 +125,10 @@ class PublishServiceTest {
         coEvery { dataStorageService.batchUpsert(listOf(resource3, resource4)) } returns mockk { HttpStatusCode.OK }
         coEvery { dataStorageService.batchUpsert(listOf(resource5)) } returns mockk { HttpStatusCode.OK }
 
-        val actualSuccess: Boolean = runBlocking {
-            publishService.publish(listOf(resource1, resource2, resource3, resource4, resource5))
-        }
+        val actualSuccess: Boolean =
+            runBlocking {
+                publishService.publish(listOf(resource1, resource2, resource3, resource4, resource5))
+            }
         assertFalse(actualSuccess)
 
         coVerify(exactly = 1) { dataStorageService.batchUpsert(listOf(resource1, resource2)) }

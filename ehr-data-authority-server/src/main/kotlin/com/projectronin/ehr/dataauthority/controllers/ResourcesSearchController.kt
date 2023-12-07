@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController
 class ResourcesSearchController(
     private val datalakeRetrieveService: DatalakeRetrieveService,
     private val dataStorageService: DataStorageService,
-    private val storageMode: StorageMode
+    private val storageMode: StorageMode,
 ) {
     // Aidbox responds Gone once a resource has been deleted, but we should just treat this as NotFound.
     private val notFoundStatuses = listOf(HttpStatusCode.NotFound, HttpStatusCode.Gone)
@@ -40,10 +40,11 @@ class ResourcesSearchController(
     @GetMapping("/tenants/{tenantId}/resources/Binary/{udpId}")
     fun getBinaryResource(
         @PathVariable("tenantId") tenantId: String,
-        @PathVariable("udpId") udpId: String
+        @PathVariable("udpId") udpId: String,
     ): ResponseEntity<Resource<*>> {
-        val resource = datalakeRetrieveService.retrieveBinaryData(tenantId, udpId)
-            ?: return ResponseEntity.notFound().build()
+        val resource =
+            datalakeRetrieveService.retrieveBinaryData(tenantId, udpId)
+                ?: return ResponseEntity.notFound().build()
 
         if (resource.id?.value?.startsWith("$tenantId-") == false) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
@@ -57,18 +58,19 @@ class ResourcesSearchController(
     fun getResource(
         @PathVariable("tenantId") tenantId: String,
         @PathVariable("resourceType") resourceType: String,
-        @PathVariable("udpId") udpId: String
+        @PathVariable("udpId") udpId: String,
     ): ResponseEntity<Resource<*>> {
-        val resource = try {
-            dataStorageService.getResource(resourceType, udpId)
-        } catch (exception: Exception) {
-            if (exception is HttpException && exception.status in notFoundStatuses) {
-                return ResponseEntity.notFound().build()
-            } else {
-                logger.error(exception.getLogMarker(), exception) { "Exception while retrieving from $storageMode" }
-                return ResponseEntity.internalServerError().build()
+        val resource =
+            try {
+                dataStorageService.getResource(resourceType, udpId)
+            } catch (exception: Exception) {
+                if (exception is HttpException && exception.status in notFoundStatuses) {
+                    return ResponseEntity.notFound().build()
+                } else {
+                    logger.error(exception.getLogMarker(), exception) { "Exception while retrieving from $storageMode" }
+                    return ResponseEntity.internalServerError().build()
+                }
             }
-        }
 
         // the tenant ID should be in identifiers, but that would require us casting to every resource type
         if (resource.id?.value?.startsWith("$tenantId-") == false) {
@@ -82,24 +84,26 @@ class ResourcesSearchController(
     fun getResourceIdentifiers(
         @PathVariable("tenantId") tenantId: String,
         @PathVariable("resourceType") resourceType: IdentifierSearchableResourceTypes,
-        @RequestBody identifiers: Array<Identifier>
+        @RequestBody identifiers: Array<Identifier>,
     ): ResponseEntity<List<IdentifierSearchResponse>> {
         if (identifiers.isEmpty()) {
             return ResponseEntity.badRequest().build()
         }
 
-        val resourceSearches = identifiers.associateWith {
-            runBlocking {
-                dataStorageService.searchForResources(resourceType.name, tenantId, it.toToken())
+        val resourceSearches =
+            identifiers.associateWith {
+                runBlocking {
+                    dataStorageService.searchForResources(resourceType.name, tenantId, it.toToken())
+                }
             }
-        }
 
-        val identifierSearchResponses = resourceSearches.map {
-            IdentifierSearchResponse(
-                searchedIdentifier = it.key,
-                foundResources = it.value.toFoundResource(resourceType)
-            )
-        }
+        val identifierSearchResponses =
+            resourceSearches.map {
+                IdentifierSearchResponse(
+                    searchedIdentifier = it.key,
+                    foundResources = it.value.toFoundResource(resourceType),
+                )
+            }
         return ResponseEntity.ok(identifierSearchResponses)
     }
 
@@ -108,29 +112,30 @@ class ResourcesSearchController(
         return resources.map {
             FoundResourceIdentifiers(
                 udpId = it.id?.value!!,
-                identifiers = it.extractIdentifiers(resourceType)
+                identifiers = it.extractIdentifiers(resourceType),
             )
         }
     }
 
     // given a generic resource, as long as it's of the type our enums allow, grab the identifiers form them
     fun Resource<*>.extractIdentifiers(resourceType: IdentifierSearchableResourceTypes): List<Identifier> {
-        val fhirIdentifiers = when (resourceType) {
-            IdentifierSearchableResourceTypes.Patient -> {
-                this as Patient
-                this.identifier
-            }
+        val fhirIdentifiers =
+            when (resourceType) {
+                IdentifierSearchableResourceTypes.Patient -> {
+                    this as Patient
+                    this.identifier
+                }
 
-            IdentifierSearchableResourceTypes.Location -> {
-                this as Location
-                this.identifier
-            }
+                IdentifierSearchableResourceTypes.Location -> {
+                    this as Location
+                    this.identifier
+                }
 
-            IdentifierSearchableResourceTypes.Practitioner -> {
-                this as Practitioner
-                this.identifier
+                IdentifierSearchableResourceTypes.Practitioner -> {
+                    this as Practitioner
+                    this.identifier
+                }
             }
-        }
         return Identifier.fromFhirIdentifiers(fhirIdentifiers)
     }
 }

@@ -13,27 +13,30 @@ import java.time.ZoneOffset
 
 class LocalStorageMapHashTest {
     private val localStorageHash = LocalStorageMapHashDAO()
-    val practitionerHash1 = ResourceHashesDO {
-        resourceId = "1234"
-        resourceType = "Practitioner"
-        tenantId = "test1"
-        hash = 1470258
-        updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
-    }
-    private val practitionerHash2 = ResourceHashesDO {
-        resourceId = "5678"
-        resourceType = "Practitioner"
-        tenantId = "test2"
-        hash = 1470258
-        updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
-    }
-    private val practitionerHash3 = ResourceHashesDO {
-        resourceId = "9101"
-        resourceType = "Practitioner"
-        tenantId = "test3"
-        hash = 1470258
-        updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
-    }
+    val practitionerHash1 =
+        ResourceHashesDO {
+            resourceId = "1234"
+            resourceType = "Practitioner"
+            tenantId = "test1"
+            hash = 1470258
+            updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
+        }
+    private val practitionerHash2 =
+        ResourceHashesDO {
+            resourceId = "5678"
+            resourceType = "Practitioner"
+            tenantId = "test2"
+            hash = 1470258
+            updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
+        }
+    private val practitionerHash3 =
+        ResourceHashesDO {
+            resourceId = "9101"
+            resourceType = "Practitioner"
+            tenantId = "test3"
+            hash = 1470258
+            updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
+        }
 
     @BeforeEach
     fun `add data to localStorageMap`() {
@@ -60,13 +63,14 @@ class LocalStorageMapHashTest {
 
     @Test
     fun `upsertHash adds the hash`() {
-        val newHash = ResourceHashesDO {
-            resourceId = "67890"
-            resourceType = "Location"
-            tenantId = "tenant2"
-            hash = 1470258
-            updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
-        }
+        val newHash =
+            ResourceHashesDO {
+                resourceId = "67890"
+                resourceType = "Location"
+                tenantId = "tenant2"
+                hash = 1470258
+                updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
+            }
         localStorageHash.upsertHash(newHash)
         val hash = localStorageHash.getHash("tenant2", "Location", "67890")
 
@@ -92,13 +96,14 @@ class LocalStorageMapHashTest {
     @Test
     fun `upsertHash ignores repeat calls with no ID`() {
         localStorageHash.deleteAllOfHash() // clear hash map before hand
-        val newHash = ResourceHashesDO {
-            resourceId = "1234"
-            resourceType = "Practitioner"
-            tenantId = "test1"
-            hash = 1470258
-            updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
-        }
+        val newHash =
+            ResourceHashesDO {
+                resourceId = "1234"
+                resourceType = "Practitioner"
+                tenantId = "test1"
+                hash = 1470258
+                updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
+            }
 
         val hash = localStorageHash.upsertHash(newHash) // try to add hash to map again even though it already exists
 

@@ -24,18 +24,20 @@ class ResourcesSearchControllerTest {
     private val aidboxClient = mockk<AidboxClient>()
     private val datalakeRetrieveService = mockk<DatalakeRetrieveService>()
     private val storageMode = StorageMode.AIDBOX
-    private val resourcesSearchController = ResourcesSearchController(
-        datalakeRetrieveService,
-        aidboxClient,
-        storageMode
-    )
+    private val resourcesSearchController =
+        ResourcesSearchController(
+            datalakeRetrieveService,
+            aidboxClient,
+            storageMode,
+        )
 
     @Test
     fun `getResource works`() {
-        val mockPatient = mockk<Patient> {
-            every { resourceType } returns "Patient"
-            every { id!!.value } returns "tenant-1"
-        }
+        val mockPatient =
+            mockk<Patient> {
+                every { resourceType } returns "Patient"
+                every { id!!.value } returns "tenant-1"
+            }
         coEvery {
             runBlocking { aidboxClient.getResource("Patient", "tenant-1") }
         } returns mockPatient
@@ -49,10 +51,11 @@ class ResourcesSearchControllerTest {
 
     @Test
     fun `getResource fails with tenant mismatch`() {
-        val mockPatient = mockk<Patient> {
-            every { resourceType } returns "Patient"
-            every { id!!.value } returns "1"
-        }
+        val mockPatient =
+            mockk<Patient> {
+                every { resourceType } returns "Patient"
+                every { id!!.value } returns "1"
+            }
         coEvery {
             aidboxClient.getResource("Patient", "1")
         } returns mockPatient
@@ -93,61 +96,70 @@ class ResourcesSearchControllerTest {
 
     @Test
     fun `search works for location`() {
-        val mockLocation1 = mockk<Location> {
-            every { id?.value } returns "1"
-            every { identifier } returns listOf(
-                mockk {
-                    every { system?.value } returns "sys1"
-                    every { value?.value } returns "val1"
-                },
-                mockk {
-                    every { system?.value } returns "sys2"
-                    every { value?.value } returns "val2"
-                }
-            )
-        }
-        val mockLocation2 = mockk<Location> {
-            every { id?.value } returns "2"
-            every { identifier } returns listOf(
-                mockk {
-                    every { system?.value } returns "sys3"
-                    every { value?.value } returns "val3"
-                },
-                mockk {
-                    every { system?.value } returns "sys4"
-                    every { value?.value } returns "val4"
-                }
-            )
-        }
+        val mockLocation1 =
+            mockk<Location> {
+                every { id?.value } returns "1"
+                every { identifier } returns
+                    listOf(
+                        mockk {
+                            every { system?.value } returns "sys1"
+                            every { value?.value } returns "val1"
+                        },
+                        mockk {
+                            every { system?.value } returns "sys2"
+                            every { value?.value } returns "val2"
+                        },
+                    )
+            }
+        val mockLocation2 =
+            mockk<Location> {
+                every { id?.value } returns "2"
+                every { identifier } returns
+                    listOf(
+                        mockk {
+                            every { system?.value } returns "sys3"
+                            every { value?.value } returns "val3"
+                        },
+                        mockk {
+                            every { system?.value } returns "sys4"
+                            every { value?.value } returns "val4"
+                        },
+                    )
+            }
 
         coEvery {
             aidboxClient.searchForResources("Location", "tenant", "sys1|ident1")
-        } returns mockk {
-            every { entry } returns listOf(
-                mockk {
-                    every { resource } returns mockLocation1
-                }
-            )
-        }
+        } returns
+            mockk {
+                every { entry } returns
+                    listOf(
+                        mockk {
+                            every { resource } returns mockLocation1
+                        },
+                    )
+            }
 
         coEvery {
             aidboxClient.searchForResources("Location", "tenant", "sys2|ident1")
-        } returns mockk {
-            every { entry } returns listOf(
-                mockk {
-                    every { resource } returns mockLocation1
-                },
-                mockk {
-                    every { resource } returns mockLocation2
-                }
-            )
-        }
+        } returns
+            mockk {
+                every { entry } returns
+                    listOf(
+                        mockk {
+                            every { resource } returns mockLocation1
+                        },
+                        mockk {
+                            every { resource } returns mockLocation2
+                        },
+                    )
+            }
 
-        val response = resourcesSearchController.getResourceIdentifiers(
-            "tenant",
-            IdentifierSearchableResourceTypes.Location,
-            arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
-        )
+        val response =
+            resourcesSearchController.getResourceIdentifiers(
+                "tenant",
+                IdentifierSearchableResourceTypes.Location,
+                arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1")),
+            )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
 
@@ -159,45 +171,51 @@ class ResourcesSearchControllerTest {
 
     @Test
     fun `search throws error when called with malformed identifier parameter`() {
-        val response = resourcesSearchController.getResourceIdentifiers(
-            "tenant",
-            IdentifierSearchableResourceTypes.Location,
-            arrayOf()
-        )
+        val response =
+            resourcesSearchController.getResourceIdentifiers(
+                "tenant",
+                IdentifierSearchableResourceTypes.Location,
+                arrayOf(),
+            )
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
     }
 
     @Test
     fun `search works for practitioner`() {
-        val mockPractitioner = mockk<Practitioner> {
-            every { id?.value } returns "1"
-            every { identifier } returns listOf(
-                mockk {
-                    every { system?.value } returns "sys1"
-                    every { value?.value } returns "val1"
-                },
-                mockk {
-                    every { system?.value } returns "sys2"
-                    every { value?.value } returns "val2"
-                }
-            )
-        }
+        val mockPractitioner =
+            mockk<Practitioner> {
+                every { id?.value } returns "1"
+                every { identifier } returns
+                    listOf(
+                        mockk {
+                            every { system?.value } returns "sys1"
+                            every { value?.value } returns "val1"
+                        },
+                        mockk {
+                            every { system?.value } returns "sys2"
+                            every { value?.value } returns "val2"
+                        },
+                    )
+            }
 
         coEvery {
             aidboxClient.searchForResources("Practitioner", "tenant", "sys1|ident1")
-        } returns mockk {
-            every { entry } returns listOf(
-                mockk {
-                    every { resource } returns mockPractitioner
-                }
-            )
-        }
+        } returns
+            mockk {
+                every { entry } returns
+                    listOf(
+                        mockk {
+                            every { resource } returns mockPractitioner
+                        },
+                    )
+            }
 
-        val response = resourcesSearchController.getResourceIdentifiers(
-            "tenant",
-            IdentifierSearchableResourceTypes.Practitioner,
-            arrayOf(Identifier("sys1", "ident1"))
-        )
+        val response =
+            resourcesSearchController.getResourceIdentifiers(
+                "tenant",
+                IdentifierSearchableResourceTypes.Practitioner,
+                arrayOf(Identifier("sys1", "ident1")),
+            )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
 
@@ -207,70 +225,80 @@ class ResourcesSearchControllerTest {
 
     @Test
     fun `search doesn't work for resource without a UDP ID`() {
-        val mockPractitioner = mockk<Practitioner> {
-            every { id } returns null
-        }
+        val mockPractitioner =
+            mockk<Practitioner> {
+                every { id } returns null
+            }
 
         coEvery {
             aidboxClient.searchForResources("Practitioner", "tenant", "sys1|ident1")
-        } returns mockk {
-            every { entry } returns listOf(
-                mockk {
-                    every { resource } returns mockPractitioner
-                }
-            )
-        }
+        } returns
+            mockk {
+                every { entry } returns
+                    listOf(
+                        mockk {
+                            every { resource } returns mockPractitioner
+                        },
+                    )
+            }
 
         assertThrows<NullPointerException> {
             resourcesSearchController.getResourceIdentifiers(
                 "tenant",
                 IdentifierSearchableResourceTypes.Practitioner,
-                arrayOf(Identifier("sys1", "ident1"))
+                arrayOf(Identifier("sys1", "ident1")),
             )
         }
     }
 
     @Test
     fun `search works for patient`() {
-        val mockPatient1 = mockk<Patient> {
-            every { id?.value } returns "1"
-            every { identifier } returns listOf(
-                mockk {
-                    every { system?.value } returns "sys1"
-                    every { value?.value } returns "val1"
-                },
-                mockk {
-                    every { system?.value } returns "sys2"
-                    every { value?.value } returns "val2"
-                }
-            )
-        }
+        val mockPatient1 =
+            mockk<Patient> {
+                every { id?.value } returns "1"
+                every { identifier } returns
+                    listOf(
+                        mockk {
+                            every { system?.value } returns "sys1"
+                            every { value?.value } returns "val1"
+                        },
+                        mockk {
+                            every { system?.value } returns "sys2"
+                            every { value?.value } returns "val2"
+                        },
+                    )
+            }
 
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys1|ident1")
-        } returns mockk {
-            every { entry } returns listOf(
-                mockk {
-                    every { resource } returns mockPatient1
-                }
-            )
-        }
+        } returns
+            mockk {
+                every { entry } returns
+                    listOf(
+                        mockk {
+                            every { resource } returns mockPatient1
+                        },
+                    )
+            }
 
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys2|ident1")
-        } returns mockk {
-            every { entry } returns listOf(
-                mockk {
-                    every { resource } returns mockPatient1
-                }
-            )
-        }
+        } returns
+            mockk {
+                every { entry } returns
+                    listOf(
+                        mockk {
+                            every { resource } returns mockPatient1
+                        },
+                    )
+            }
 
-        val response = resourcesSearchController.getResourceIdentifiers(
-            "tenant",
-            IdentifierSearchableResourceTypes.Patient,
-            arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
-        )
+        val response =
+            resourcesSearchController.getResourceIdentifiers(
+                "tenant",
+                IdentifierSearchableResourceTypes.Patient,
+                arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1")),
+            )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
 
@@ -280,45 +308,52 @@ class ResourcesSearchControllerTest {
 
     @Test
     fun `search ignores identifiers missing system`() {
-        val mockPatient1 = mockk<Patient> {
-            every { id?.value } returns "1"
-            every { identifier } returns listOf(
-                mockk {
-                    every { system } returns null
-                    every { value?.value } returns "val1"
-                },
-                mockk {
-                    every { system?.value } returns "sys2"
-                    every { value?.value } returns "val2"
-                }
-            )
-        }
+        val mockPatient1 =
+            mockk<Patient> {
+                every { id?.value } returns "1"
+                every { identifier } returns
+                    listOf(
+                        mockk {
+                            every { system } returns null
+                            every { value?.value } returns "val1"
+                        },
+                        mockk {
+                            every { system?.value } returns "sys2"
+                            every { value?.value } returns "val2"
+                        },
+                    )
+            }
 
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys1|ident1")
-        } returns mockk {
-            every { entry } returns listOf(
-                mockk {
-                    every { resource } returns mockPatient1
-                }
-            )
-        }
+        } returns
+            mockk {
+                every { entry } returns
+                    listOf(
+                        mockk {
+                            every { resource } returns mockPatient1
+                        },
+                    )
+            }
 
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys2|ident1")
-        } returns mockk {
-            every { entry } returns listOf(
-                mockk {
-                    every { resource } returns mockPatient1
-                }
-            )
-        }
+        } returns
+            mockk {
+                every { entry } returns
+                    listOf(
+                        mockk {
+                            every { resource } returns mockPatient1
+                        },
+                    )
+            }
 
-        val response = resourcesSearchController.getResourceIdentifiers(
-            "tenant",
-            IdentifierSearchableResourceTypes.Patient,
-            arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
-        )
+        val response =
+            resourcesSearchController.getResourceIdentifiers(
+                "tenant",
+                IdentifierSearchableResourceTypes.Patient,
+                arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1")),
+            )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
 
@@ -329,45 +364,52 @@ class ResourcesSearchControllerTest {
 
     @Test
     fun `search ignores identifiers missing system value`() {
-        val mockPatient1 = mockk<Patient> {
-            every { id?.value } returns "1"
-            every { identifier } returns listOf(
-                mockk {
-                    every { system?.value } returns null
-                    every { value?.value } returns "val1"
-                },
-                mockk {
-                    every { system?.value } returns "sys2"
-                    every { value?.value } returns "val2"
-                }
-            )
-        }
+        val mockPatient1 =
+            mockk<Patient> {
+                every { id?.value } returns "1"
+                every { identifier } returns
+                    listOf(
+                        mockk {
+                            every { system?.value } returns null
+                            every { value?.value } returns "val1"
+                        },
+                        mockk {
+                            every { system?.value } returns "sys2"
+                            every { value?.value } returns "val2"
+                        },
+                    )
+            }
 
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys1|ident1")
-        } returns mockk {
-            every { entry } returns listOf(
-                mockk {
-                    every { resource } returns mockPatient1
-                }
-            )
-        }
+        } returns
+            mockk {
+                every { entry } returns
+                    listOf(
+                        mockk {
+                            every { resource } returns mockPatient1
+                        },
+                    )
+            }
 
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys2|ident1")
-        } returns mockk {
-            every { entry } returns listOf(
-                mockk {
-                    every { resource } returns mockPatient1
-                }
-            )
-        }
+        } returns
+            mockk {
+                every { entry } returns
+                    listOf(
+                        mockk {
+                            every { resource } returns mockPatient1
+                        },
+                    )
+            }
 
-        val response = resourcesSearchController.getResourceIdentifiers(
-            "tenant",
-            IdentifierSearchableResourceTypes.Patient,
-            arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
-        )
+        val response =
+            resourcesSearchController.getResourceIdentifiers(
+                "tenant",
+                IdentifierSearchableResourceTypes.Patient,
+                arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1")),
+            )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
 
@@ -378,45 +420,52 @@ class ResourcesSearchControllerTest {
 
     @Test
     fun `search ignores identifiers missing value`() {
-        val mockPatient1 = mockk<Patient> {
-            every { id?.value } returns "1"
-            every { identifier } returns listOf(
-                mockk {
-                    every { system?.value } returns "sys1"
-                    every { value } returns null
-                },
-                mockk {
-                    every { system?.value } returns "sys2"
-                    every { value?.value } returns "val2"
-                }
-            )
-        }
+        val mockPatient1 =
+            mockk<Patient> {
+                every { id?.value } returns "1"
+                every { identifier } returns
+                    listOf(
+                        mockk {
+                            every { system?.value } returns "sys1"
+                            every { value } returns null
+                        },
+                        mockk {
+                            every { system?.value } returns "sys2"
+                            every { value?.value } returns "val2"
+                        },
+                    )
+            }
 
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys1|ident1")
-        } returns mockk {
-            every { entry } returns listOf(
-                mockk {
-                    every { resource } returns mockPatient1
-                }
-            )
-        }
+        } returns
+            mockk {
+                every { entry } returns
+                    listOf(
+                        mockk {
+                            every { resource } returns mockPatient1
+                        },
+                    )
+            }
 
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys2|ident1")
-        } returns mockk {
-            every { entry } returns listOf(
-                mockk {
-                    every { resource } returns mockPatient1
-                }
-            )
-        }
+        } returns
+            mockk {
+                every { entry } returns
+                    listOf(
+                        mockk {
+                            every { resource } returns mockPatient1
+                        },
+                    )
+            }
 
-        val response = resourcesSearchController.getResourceIdentifiers(
-            "tenant",
-            IdentifierSearchableResourceTypes.Patient,
-            arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
-        )
+        val response =
+            resourcesSearchController.getResourceIdentifiers(
+                "tenant",
+                IdentifierSearchableResourceTypes.Patient,
+                arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1")),
+            )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
 
@@ -427,45 +476,52 @@ class ResourcesSearchControllerTest {
 
     @Test
     fun `search ignores identifiers missing value value`() {
-        val mockPatient1 = mockk<Patient> {
-            every { id?.value } returns "1"
-            every { identifier } returns listOf(
-                mockk {
-                    every { system?.value } returns "sys1"
-                    every { value?.value } returns null
-                },
-                mockk {
-                    every { system?.value } returns "sys2"
-                    every { value?.value } returns "val2"
-                }
-            )
-        }
+        val mockPatient1 =
+            mockk<Patient> {
+                every { id?.value } returns "1"
+                every { identifier } returns
+                    listOf(
+                        mockk {
+                            every { system?.value } returns "sys1"
+                            every { value?.value } returns null
+                        },
+                        mockk {
+                            every { system?.value } returns "sys2"
+                            every { value?.value } returns "val2"
+                        },
+                    )
+            }
 
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys1|ident1")
-        } returns mockk {
-            every { entry } returns listOf(
-                mockk {
-                    every { resource } returns mockPatient1
-                }
-            )
-        }
+        } returns
+            mockk {
+                every { entry } returns
+                    listOf(
+                        mockk {
+                            every { resource } returns mockPatient1
+                        },
+                    )
+            }
 
         coEvery {
             aidboxClient.searchForResources("Patient", "tenant", "sys2|ident1")
-        } returns mockk {
-            every { entry } returns listOf(
-                mockk {
-                    every { resource } returns mockPatient1
-                }
-            )
-        }
+        } returns
+            mockk {
+                every { entry } returns
+                    listOf(
+                        mockk {
+                            every { resource } returns mockPatient1
+                        },
+                    )
+            }
 
-        val response = resourcesSearchController.getResourceIdentifiers(
-            "tenant",
-            IdentifierSearchableResourceTypes.Patient,
-            arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1"))
-        )
+        val response =
+            resourcesSearchController.getResourceIdentifiers(
+                "tenant",
+                IdentifierSearchableResourceTypes.Patient,
+                arrayOf(Identifier("sys1", "ident1"), Identifier("sys2", "ident1")),
+            )
         assertEquals(HttpStatus.OK, response.statusCode)
         val body = response.body!!
 
@@ -478,9 +534,10 @@ class ResourcesSearchControllerTest {
     fun `getBinaryResource resource works`() {
         val tenantId = "tenant"
         val udpId = "tenant-1"
-        val binary = mockk<Binary> {
-            every { id!!.value } returns udpId
-        }
+        val binary =
+            mockk<Binary> {
+                every { id!!.value } returns udpId
+            }
         every {
             datalakeRetrieveService.retrieveBinaryData(tenantId, udpId)
         } returns binary
@@ -495,9 +552,10 @@ class ResourcesSearchControllerTest {
     fun `getBinaryResource fails with tenant mismatch`() {
         val tenantId = "tenant"
         val udpId = "tenant-1"
-        val binary = mockk<Binary> {
-            every { id!!.value } returns "1"
-        }
+        val binary =
+            mockk<Binary> {
+                every { id!!.value } returns "1"
+            }
         every {
             datalakeRetrieveService.retrieveBinaryData(tenantId, udpId)
         } returns binary

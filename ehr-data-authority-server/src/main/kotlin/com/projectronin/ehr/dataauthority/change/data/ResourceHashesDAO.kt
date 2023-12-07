@@ -28,9 +28,17 @@ import java.util.UUID
 class ResourceHashesDAO(private val database: Database) : ResourceHashDAOService {
     private val logger = KotlinLogging.logger { }
 
-    override fun getHash(tenantId: String, resourceType: String, resourceId: String): ResourceHashesDO? {
+    override fun getHash(
+        tenantId: String,
+        resourceType: String,
+        resourceId: String,
+    ): ResourceHashesDO? {
         return database.from(ResourceHashesDOs).select()
-            .where((ResourceHashesDOs.tenantId eq tenantId) and (ResourceHashesDOs.resourceType eq resourceType) and (ResourceHashesDOs.resourceId eq resourceId))
+            .where(
+                (ResourceHashesDOs.tenantId eq tenantId) and
+                    (ResourceHashesDOs.resourceType eq resourceType) and
+                    (ResourceHashesDOs.resourceId eq resourceId),
+            )
             .map { ResourceHashesDOs.createEntity(it) }.singleOrNull()
     }
 
@@ -60,16 +68,23 @@ class ResourceHashesDAO(private val database: Database) : ResourceHashDAOService
             getHash(
                 resourceHashesDO.tenantId,
                 resourceHashesDO.resourceType,
-                resourceHashesDO.resourceId
+                resourceHashesDO.resourceId,
             )!!
         }
     }
 
     @Transactional
-    override fun deleteHash(tenantId: String, resourceType: String, resourceId: String): Boolean {
-        val recordsDeleted = database.delete(ResourceHashesDOs) {
-            (ResourceHashesDOs.tenantId eq tenantId) and (ResourceHashesDOs.resourceType eq resourceType) and (ResourceHashesDOs.resourceId eq resourceId)
-        }
+    override fun deleteHash(
+        tenantId: String,
+        resourceType: String,
+        resourceId: String,
+    ): Boolean {
+        val recordsDeleted =
+            database.delete(ResourceHashesDOs) {
+                (ResourceHashesDOs.tenantId eq tenantId) and
+                    (ResourceHashesDOs.resourceType eq resourceType) and
+                    (ResourceHashesDOs.resourceId eq resourceId)
+            }
         return recordsDeleted > 0
     }
 

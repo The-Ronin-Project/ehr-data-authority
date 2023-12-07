@@ -73,16 +73,17 @@ class ResourceHashesDAOTest {
     @DataSet(value = ["/dbunit/hashes/NoHashes.yaml"], cleanAfter = true)
     @ExpectedDataSet(
         value = ["/dbunit/hashes/ExpectedHashesAfterInsert.yaml"],
-        ignoreCols = ["hash_id", "update_dt_tm"]
+        ignoreCols = ["hash_id", "update_dt_tm"],
     )
     fun `upsertHash adds the hash`() {
-        val newHash = ResourceHashesDO {
-            resourceId = "67890"
-            resourceType = "Location"
-            tenantId = "tenant2"
-            hash = 1470258
-            updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
-        }
+        val newHash =
+            ResourceHashesDO {
+                resourceId = "67890"
+                resourceType = "Location"
+                tenantId = "tenant2"
+                hash = 1470258
+                updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
+            }
 
         val dao = ResourceHashesDAO(KtormHelper.database())
         val hash = dao.upsertHash(newHash)
@@ -101,14 +102,15 @@ class ResourceHashesDAOTest {
     fun `upsertHash updates the hash value`() {
         val dao = ResourceHashesDAO(KtormHelper.database())
 
-        val updatedHash = ResourceHashesDO {
-            hashId = UUID.fromString("b4e8e80a-297a-4b19-bd59-4b8072db9cc4")
-            resourceId = "12345"
-            resourceType = "Patient"
-            tenantId = "tenant1"
-            hash = 1234567890
-            updateDateTime = OffsetDateTime.now(ZoneOffset.UTC)
-        }
+        val updatedHash =
+            ResourceHashesDO {
+                hashId = UUID.fromString("b4e8e80a-297a-4b19-bd59-4b8072db9cc4")
+                resourceId = "12345"
+                resourceType = "Patient"
+                tenantId = "tenant1"
+                hash = 1234567890
+                updateDateTime = OffsetDateTime.now(ZoneOffset.UTC)
+            }
 
         val hash = dao.upsertHash(updatedHash)
         assertEquals(UUID.fromString("b4e8e80a-297a-4b19-bd59-4b8072db9cc4"), hash.hashId)
@@ -121,7 +123,7 @@ class ResourceHashesDAOTest {
         val now = OffsetDateTime.now(ZoneOffset.UTC)
         assertTrue(
             hash.updateDateTime!!.isAfter(originalDateTime) &&
-                (hash.updateDateTime!!.isBefore(now) || hash.equals(now))
+                (hash.updateDateTime!!.isBefore(now) || hash.equals(now)),
         )
     }
 
@@ -129,16 +131,17 @@ class ResourceHashesDAOTest {
     @DataSet(value = ["/dbunit/hashes/NoHashes.yaml"], cleanAfter = true)
     @ExpectedDataSet(
         value = ["/dbunit/hashes/ExpectedHashesAfterInsert.yaml"],
-        ignoreCols = ["hash_id", "update_dt_tm"]
+        ignoreCols = ["hash_id", "update_dt_tm"],
     )
     fun `upsertHash ignores repeat calls with no ID`() {
-        val newHash = ResourceHashesDO {
-            resourceId = "67890"
-            resourceType = "Location"
-            tenantId = "tenant2"
-            hash = 1470258
-            updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
-        }
+        val newHash =
+            ResourceHashesDO {
+                resourceId = "67890"
+                resourceType = "Location"
+                tenantId = "tenant2"
+                hash = 1470258
+                updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
+            }
 
         val dao = ResourceHashesDAO(KtormHelper.database())
         val hash = dao.upsertHash(newHash)
@@ -163,16 +166,17 @@ class ResourceHashesDAOTest {
     @ExpectedDataSet(
         value = ["/dbunit/hashes/ExpectedHashesAfterInsertWithSimilarResource.yaml"],
         ignoreCols = ["hash_id", "update_dt_tm"],
-        orderBy = ["resource_type"]
+        orderBy = ["resource_type"],
     )
     fun `upsertHash adds the hash when the same tenant and resource ID but different resource type`() {
-        val newHash = ResourceHashesDO {
-            resourceId = "12345"
-            resourceType = "Practitioner"
-            tenantId = "tenant1"
-            hash = 1470258
-            updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
-        }
+        val newHash =
+            ResourceHashesDO {
+                resourceId = "12345"
+                resourceType = "Practitioner"
+                tenantId = "tenant1"
+                hash = 1470258
+                updateDateTime = OffsetDateTime.of(2023, 4, 10, 15, 23, 0, 0, ZoneOffset.UTC)
+            }
 
         val dao = ResourceHashesDAO(KtormHelper.database())
         val hash = dao.upsertHash(newHash)

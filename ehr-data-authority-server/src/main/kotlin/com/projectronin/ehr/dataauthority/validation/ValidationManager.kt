@@ -22,9 +22,13 @@ class ValidationManager(private val validationClient: ValidationClient, validato
      * or [FailedValidation].
      */
     @Suppress("UNCHECKED_CAST")
-    fun <T : Resource<T>> validateResource(resource: Resource<T>, tenantId: String): ValidationResponse {
-        val validator = validatorsByResource[resource::class] as? ProfileValidator<T>
-            ?: return FailedValidation("No validator found for resource ${resource::class.simpleName}")
+    fun <T : Resource<T>> validateResource(
+        resource: Resource<T>,
+        tenantId: String,
+    ): ValidationResponse {
+        val validator =
+            validatorsByResource[resource::class] as? ProfileValidator<T>
+                ?: return FailedValidation("No validator found for resource ${resource::class.simpleName}")
 
         val validation = validator.validate(resource as T)
         if (validation.hasIssues()) {

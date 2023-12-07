@@ -14,11 +14,14 @@ import com.projectronin.interop.fhir.r4.valueset.HttpVerb
  * @param aidboxURLRest The root URL for Aidbox FHIR REST calls.
  * @param resources The FHIR resources for the bundle.
  */
-fun makeBundleForBatchUpsert(aidboxURLRest: String, resources: List<Resource<*>>): Bundle {
+fun makeBundleForBatchUpsert(
+    aidboxURLRest: String,
+    resources: List<Resource<*>>,
+): Bundle {
     return Bundle(
         id = null,
         type = Code(BundleType.TRANSACTION.code),
-        entry = resources.map { makeBundleEntry(aidboxURLRest, HttpVerb.PUT, it) }
+        entry = resources.map { makeBundleEntry(aidboxURLRest, HttpVerb.PUT, it) },
     )
 }
 
@@ -28,11 +31,15 @@ fun makeBundleForBatchUpsert(aidboxURLRest: String, resources: List<Resource<*>>
  * @param method The HTTP verb for the entry, i.e. PUT, DELETE, etc.
  * @param resource The FHIR resource for the entry. The id and resourceType values must be present.
  */
-fun makeBundleEntry(aidboxURLRest: String, method: HttpVerb, resource: Resource<*>): BundleEntry {
+fun makeBundleEntry(
+    aidboxURLRest: String,
+    method: HttpVerb,
+    resource: Resource<*>,
+): BundleEntry {
     val fullReference = "/${resource.resourceType}/${resource.id?.value}"
     return BundleEntry(
         fullUrl = Uri("$aidboxURLRest$fullReference"),
         request = BundleRequest(method = Code(method.code), url = Uri(fullReference)),
-        resource = resource
+        resource = resource,
     )
 }

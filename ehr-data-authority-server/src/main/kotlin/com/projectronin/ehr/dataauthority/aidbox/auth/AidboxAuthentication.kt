@@ -14,7 +14,7 @@ data class AidboxAuthentication(
     override val accessToken: String,
     private val expiresIn: Long? = null,
     override val refreshToken: String? = null,
-    override val scope: String? = null
+    override val scope: String? = null,
 ) : Authentication {
     override val expiresAt: Instant? = expiresIn?.let { Instant.now().plusSeconds(expiresIn) }
 

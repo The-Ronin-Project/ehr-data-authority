@@ -11,110 +11,128 @@ import org.junit.jupiter.api.Test
 class ResourceTenantMismatchUtilTest {
     private val mockTenantId = "tenant"
     private val mismatchedTenantId = "mismatchedTenant"
-    private val testTenantIdentifier = identifier {
-        system of CodeSystem.RONIN_TENANT.uri
-        value of mockTenantId
-    }
-    private val mismatchedTestTenantIdentifier = identifier {
-        system of CodeSystem.RONIN_TENANT.uri
-        value of mismatchedTenantId
-    }
+    private val testTenantIdentifier =
+        identifier {
+            system of CodeSystem.RONIN_TENANT.uri
+            value of mockTenantId
+        }
+    private val mismatchedTestTenantIdentifier =
+        identifier {
+            system of CodeSystem.RONIN_TENANT.uri
+            value of mismatchedTenantId
+        }
 
     // these should eventually be rcdm generators
-    private val testPatient = patient {
-        id of Id("$mockTenantId-1")
-        identifier of listOf(testTenantIdentifier)
-    }
-    private val testPatient2 = patient {
-        id of Id("$mockTenantId-2")
-        identifier of listOf(testTenantIdentifier)
-    }
-    private val testPatient3 = patient {
-        id of Id("$mockTenantId-3")
-        identifier of listOf(testTenantIdentifier)
-    }
-    private val testObservation = observation {
-        id of Id("$mockTenantId-2")
-        identifier of listOf(testTenantIdentifier)
-    }
+    private val testPatient =
+        patient {
+            id of Id("$mockTenantId-1")
+            identifier of listOf(testTenantIdentifier)
+        }
+    private val testPatient2 =
+        patient {
+            id of Id("$mockTenantId-2")
+            identifier of listOf(testTenantIdentifier)
+        }
+    private val testPatient3 =
+        patient {
+            id of Id("$mockTenantId-3")
+            identifier of listOf(testTenantIdentifier)
+        }
+    private val testObservation =
+        observation {
+            id of Id("$mockTenantId-2")
+            identifier of listOf(testTenantIdentifier)
+        }
 
-    private val mismatchedTestPatient = patient {
-        id of Id("$mismatchedTenantId-3")
-        identifier of listOf(mismatchedTestTenantIdentifier)
-    }
+    private val mismatchedTestPatient =
+        patient {
+            id of Id("$mismatchedTenantId-3")
+            identifier of listOf(mismatchedTestTenantIdentifier)
+        }
 
-    private val mismatchedTestPatient2 = patient {
-        id of Id("$mismatchedTenantId-4")
-        identifier of listOf(mismatchedTestTenantIdentifier)
-    }
+    private val mismatchedTestPatient2 =
+        patient {
+            id of Id("$mismatchedTenantId-4")
+            identifier of listOf(mismatchedTestTenantIdentifier)
+        }
 
-    private val mismatchedTestObservation = observation {
-        id of Id("$mismatchedTenantId-1")
-        identifier of listOf(mismatchedTestTenantIdentifier)
-    }
+    private val mismatchedTestObservation =
+        observation {
+            id of Id("$mismatchedTenantId-1")
+            identifier of listOf(mismatchedTestTenantIdentifier)
+        }
 
-    private val TestPatientWithIncorrectIdentifier = patient {
-        id of Id("$mockTenantId-9")
-        identifier of listOf(mismatchedTestTenantIdentifier)
-    }
+    private val testPatientWithIncorrectIdentifier =
+        patient {
+            id of Id("$mockTenantId-9")
+            identifier of listOf(mismatchedTestTenantIdentifier)
+        }
 
     private val singleResourceList = listOf(testPatient)
-    private val multiResourceList = listOf(
-        testPatient,
-        testPatient2,
-        testPatient3
-    )
-    private val multiResourceListWithUniqueTypes = listOf(
-        testPatient,
-        testPatient2,
-        testPatient3,
-        testObservation
-    )
+    private val multiResourceList =
+        listOf(
+            testPatient,
+            testPatient2,
+            testPatient3,
+        )
+    private val multiResourceListWithUniqueTypes =
+        listOf(
+            testPatient,
+            testPatient2,
+            testPatient3,
+            testObservation,
+        )
     private val singleMismatchedResourceList = listOf(mismatchedTestPatient)
-    private val multiMismatchedResourceList = listOf(
-        mismatchedTestPatient,
-        mismatchedTestPatient2
-    )
-    private val multiMismatchResourceListWithUniqueTypes = listOf(
-        mismatchedTestPatient,
-        mismatchedTestPatient2,
-        mismatchedTestObservation
-    )
-    private val singleResourceWithIncorrectIdentifier = listOf(TestPatientWithIncorrectIdentifier)
+    private val multiMismatchedResourceList =
+        listOf(
+            mismatchedTestPatient,
+            mismatchedTestPatient2,
+        )
+    private val multiMismatchResourceListWithUniqueTypes =
+        listOf(
+            mismatchedTestPatient,
+            mismatchedTestPatient2,
+            mismatchedTestObservation,
+        )
+    private val singleResourceWithIncorrectIdentifier = listOf(testPatientWithIncorrectIdentifier)
 
     @Test
     fun `no mismatches are found with single resource`() {
-        val result = ResourceTenantMismatchUtil.getMismatchResourceFailures(
-            singleResourceList,
-            mockTenantId
-        )
+        val result =
+            ResourceTenantMismatchUtil.getMismatchResourceFailures(
+                singleResourceList,
+                mockTenantId,
+            )
         assertEquals(0, result.size)
     }
 
     @Test
     fun `no mismatches are found with multiple resources of a single type`() {
-        val result = ResourceTenantMismatchUtil.getMismatchResourceFailures(
-            multiResourceList,
-            mockTenantId
-        )
+        val result =
+            ResourceTenantMismatchUtil.getMismatchResourceFailures(
+                multiResourceList,
+                mockTenantId,
+            )
         assertEquals(0, result.size)
     }
 
     @Test
     fun `no mismatches are found with multiple resources of multiple types`() {
-        val result = ResourceTenantMismatchUtil.getMismatchResourceFailures(
-            multiResourceListWithUniqueTypes,
-            mockTenantId
-        )
+        val result =
+            ResourceTenantMismatchUtil.getMismatchResourceFailures(
+                multiResourceListWithUniqueTypes,
+                mockTenantId,
+            )
         assertEquals(0, result.size)
     }
 
     @Test
     fun `mismatch found with single resource`() {
-        val result = ResourceTenantMismatchUtil.getMismatchResourceFailures(
-            singleMismatchedResourceList,
-            mockTenantId
-        )
+        val result =
+            ResourceTenantMismatchUtil.getMismatchResourceFailures(
+                singleMismatchedResourceList,
+                mockTenantId,
+            )
         assertEquals(1, result.size)
 
         val failure = result[0]
@@ -125,10 +143,11 @@ class ResourceTenantMismatchUtilTest {
 
     @Test
     fun `mismatches found with multiple resources of a single type`() {
-        val result = ResourceTenantMismatchUtil.getMismatchResourceFailures(
-            multiMismatchedResourceList,
-            mockTenantId
-        )
+        val result =
+            ResourceTenantMismatchUtil.getMismatchResourceFailures(
+                multiMismatchedResourceList,
+                mockTenantId,
+            )
         assertEquals(2, result.size)
 
         val failure1 = result[0]
@@ -144,10 +163,11 @@ class ResourceTenantMismatchUtilTest {
 
     @Test
     fun `mismatches found with multiple resources of a multiple types`() {
-        val result = ResourceTenantMismatchUtil.getMismatchResourceFailures(
-            multiMismatchResourceListWithUniqueTypes,
-            mockTenantId
-        )
+        val result =
+            ResourceTenantMismatchUtil.getMismatchResourceFailures(
+                multiMismatchResourceListWithUniqueTypes,
+                mockTenantId,
+            )
         assertEquals(3, result.size)
 
         val failure1 = result[0]
@@ -168,10 +188,11 @@ class ResourceTenantMismatchUtilTest {
 
     @Test
     fun `mismatch found with matched and mismatched resources of a single type`() {
-        val result = ResourceTenantMismatchUtil.getMismatchResourceFailures(
-            singleResourceList + singleMismatchedResourceList,
-            mockTenantId
-        )
+        val result =
+            ResourceTenantMismatchUtil.getMismatchResourceFailures(
+                singleResourceList + singleMismatchedResourceList,
+                mockTenantId,
+            )
         assertEquals(1, result.size)
 
         val failure = result[0]
@@ -182,10 +203,11 @@ class ResourceTenantMismatchUtilTest {
 
     @Test
     fun `mismatch found with matched and mismatched resources of a multiple types`() {
-        val result = ResourceTenantMismatchUtil.getMismatchResourceFailures(
-            multiResourceListWithUniqueTypes + multiMismatchResourceListWithUniqueTypes,
-            mockTenantId
-        )
+        val result =
+            ResourceTenantMismatchUtil.getMismatchResourceFailures(
+                multiResourceListWithUniqueTypes + multiMismatchResourceListWithUniqueTypes,
+                mockTenantId,
+            )
         assertEquals(3, result.size)
 
         val failure1 = result[0]
@@ -212,10 +234,11 @@ class ResourceTenantMismatchUtilTest {
 
     @Test
     fun `odd identifier`() {
-        val result = ResourceTenantMismatchUtil.getMismatchResourceFailures(
-            singleResourceWithIncorrectIdentifier,
-            mockTenantId
-        )
+        val result =
+            ResourceTenantMismatchUtil.getMismatchResourceFailures(
+                singleResourceWithIncorrectIdentifier,
+                mockTenantId,
+            )
         assertEquals(1, result.size)
 
         val failure1 = result[0]

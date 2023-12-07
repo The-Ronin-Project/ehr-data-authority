@@ -15,8 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 class ResourcesDeleteController(
     private val dataStorageService: DataStorageService,
     private val resourceHashDao: ResourceHashDAOService,
-    private val storageMode: StorageMode
-
+    private val storageMode: StorageMode,
 ) {
     private val logger = KotlinLogging.logger { }
     private val deletableTenantIndicators = setOf("ronin", "ehrda")
@@ -27,7 +26,7 @@ class ResourcesDeleteController(
     fun deleteResource(
         @PathVariable("tenantId") tenantId: String,
         @PathVariable("resourceType") resourceType: String,
-        @PathVariable("udpId") udpId: String
+        @PathVariable("udpId") udpId: String,
     ): ResponseEntity<Void> {
         if (deletableTenantIndicators.none { tenantId.contains(it) }) {
             logger.debug { "Attempted to delete from $tenantId, which is not an approved tenant for deletions" }

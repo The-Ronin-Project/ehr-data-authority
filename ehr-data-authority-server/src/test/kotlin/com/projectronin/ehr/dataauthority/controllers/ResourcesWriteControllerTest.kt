@@ -48,23 +48,26 @@ class ResourcesWriteControllerTest {
             kafkaPublisher,
             validationManager,
             publishService,
-            StorageMode.AIDBOX
+            StorageMode.AIDBOX,
         )
     private val mockTenantId = "tenant"
-    private val testTenantIdentifier = identifier {
-        system of CodeSystem.RONIN_TENANT.uri
-        value of mockTenantId
-    }
+    private val testTenantIdentifier =
+        identifier {
+            system of CodeSystem.RONIN_TENANT.uri
+            value of mockTenantId
+        }
 
     // these should eventually be rcdm generators
-    private val testPatient = patient {
-        id of Id("$mockTenantId-1")
-        identifier of listOf(testTenantIdentifier)
-    }
-    private val testObservation = observation {
-        id of Id("$mockTenantId-2")
-        identifier of listOf(testTenantIdentifier)
-    }
+    private val testPatient =
+        patient {
+            id of Id("$mockTenantId-1")
+            identifier of listOf(testTenantIdentifier)
+        }
+    private val testObservation =
+        observation {
+            id of Id("$mockTenantId-2")
+            identifier of listOf(testTenantIdentifier)
+        }
 
     @Test
     fun `unchanged resource returns a success`() {
@@ -73,7 +76,7 @@ class ResourcesWriteControllerTest {
         every {
             changeDetectionService.determineChangeStatuses(
                 mockTenantId,
-                mapOf("Patient:tenant-1" to testPatient)
+                mapOf("Patient:tenant-1" to testPatient),
             )
         } returns mapOf("Patient:tenant-1" to changeStatus1)
 
@@ -99,14 +102,14 @@ class ResourcesWriteControllerTest {
         every {
             changeDetectionService.determineChangeStatuses(
                 mockTenantId,
-                mapOf("Patient:tenant-1" to testPatient)
+                mapOf("Patient:tenant-1" to testPatient),
             )
         } returns mapOf("Patient:tenant-1" to changeStatus1)
 
         every {
             validationManager.validateResource(
                 testPatient,
-                mockTenantId
+                mockTenantId,
             )
         } returns FailedValidation("Failed validation!")
 
@@ -133,7 +136,7 @@ class ResourcesWriteControllerTest {
         every {
             changeDetectionService.determineChangeStatuses(
                 mockTenantId,
-                mapOf("Patient:tenant-1" to testPatient)
+                mapOf("Patient:tenant-1" to testPatient),
             )
         } returns mapOf("Patient:tenant-1" to changeStatus1)
 
@@ -163,7 +166,7 @@ class ResourcesWriteControllerTest {
         every {
             changeDetectionService.determineChangeStatuses(
                 mockTenantId,
-                mapOf("Patient:tenant-1" to testPatient)
+                mapOf("Patient:tenant-1" to testPatient),
             )
         } returns mapOf("Patient:tenant-1" to changeStatus1)
 
@@ -174,7 +177,7 @@ class ResourcesWriteControllerTest {
         every {
             kafkaPublisher.publishResource(
                 testPatient,
-                ChangeType.CHANGED
+                ChangeType.CHANGED,
             )
         } throws IllegalStateException("FAILURE")
 
@@ -200,7 +203,7 @@ class ResourcesWriteControllerTest {
         every {
             changeDetectionService.determineChangeStatuses(
                 mockTenantId,
-                mapOf("Patient:tenant-1" to testPatient)
+                mapOf("Patient:tenant-1" to testPatient),
             )
         } returns mapOf("Patient:tenant-1" to changeStatus1)
 
@@ -242,7 +245,7 @@ class ResourcesWriteControllerTest {
         every {
             changeDetectionService.determineChangeStatuses(
                 mockTenantId,
-                mapOf("Patient:tenant-1" to testPatient)
+                mapOf("Patient:tenant-1" to testPatient),
             )
         } returns mapOf("Patient:tenant-1" to changeStatus1)
 
@@ -277,7 +280,7 @@ class ResourcesWriteControllerTest {
         every {
             changeDetectionService.determineChangeStatuses(
                 mockTenantId,
-                mapOf("Patient:tenant-1" to testPatient)
+                mapOf("Patient:tenant-1" to testPatient),
             )
         } returns mapOf("Patient:tenant-1" to changeStatus1)
 
@@ -320,7 +323,7 @@ class ResourcesWriteControllerTest {
         every {
             changeDetectionService.determineChangeStatuses(
                 mockTenantId,
-                mapOf("Patient:tenant-1" to testPatient)
+                mapOf("Patient:tenant-1" to testPatient),
             )
         } returns mapOf("Patient:tenant-1" to changeStatus1)
 
@@ -355,7 +358,7 @@ class ResourcesWriteControllerTest {
         every {
             changeDetectionService.determineChangeStatuses(
                 mockTenantId,
-                mapOf("Patient:tenant-1" to testPatient, "Observation:tenant-2" to testObservation)
+                mapOf("Patient:tenant-1" to testPatient, "Observation:tenant-2" to testObservation),
             )
         } returns mapOf("Patient:tenant-1" to changeStatus1, "Observation:tenant-2" to changeStatus2)
 
@@ -390,7 +393,7 @@ class ResourcesWriteControllerTest {
         every {
             changeDetectionService.determineChangeStatuses(
                 mockTenantId,
-                mapOf("Patient:tenant-1" to testPatient, "Observation:tenant-2" to testObservation)
+                mapOf("Patient:tenant-1" to testPatient, "Observation:tenant-2" to testObservation),
             )
         } returns mapOf("Patient:tenant-1" to changeStatus1, "Observation:tenant-2" to changeStatus2)
 
@@ -421,12 +424,14 @@ class ResourcesWriteControllerTest {
 
     @Test
     fun `mismatched resources fail`() {
-        val badPatient1 = patient {
-            id of Id("123")
-        }
-        val badPatient2 = patient {
-            id of Id("tenant-123")
-        }
+        val badPatient1 =
+            patient {
+                id of Id("123")
+            }
+        val badPatient2 =
+            patient {
+                id of Id("tenant-123")
+            }
         val response = resourcesWriteController.addNewResources(mockTenantId, listOf(badPatient1, badPatient2))
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
 
@@ -463,13 +468,14 @@ class ResourcesWriteControllerTest {
                 mockTenantId,
                 mapOf(
                     "Binary:tenant-1" to testBinary,
-                    "Bundle:tenant-1" to testBundle
-                )
+                    "Bundle:tenant-1" to testBundle,
+                ),
             )
-        } returns mapOf(
-            "Binary:tenant-1" to changeStatus1,
-            "Bundle:tenant-1" to changeStatus2
-        )
+        } returns
+            mapOf(
+                "Binary:tenant-1" to changeStatus1,
+                "Bundle:tenant-1" to changeStatus2,
+            )
 
         val response = resourcesWriteController.addNewResources(mockTenantId, listOf(testBinary, testBundle))
         assertEquals(HttpStatus.OK, response.statusCode)
@@ -492,20 +498,21 @@ class ResourcesWriteControllerTest {
     @Test
     fun `publish skips validation and kafka if local storage client in use`() {
         val localStorageHash = mockk<LocalStorageMapHashDAO>()
-        val localController = ResourcesWriteController(
-            resourceHashesDAO,
-            changeDetectionService,
-            kafkaPublisher,
-            validationManager,
-            publishService,
-            StorageMode.LOCAL
-        )
+        val localController =
+            ResourcesWriteController(
+                resourceHashesDAO,
+                changeDetectionService,
+                kafkaPublisher,
+                validationManager,
+                publishService,
+                StorageMode.LOCAL,
+            )
         val changeStatus1 = ChangeStatus("Patient", "tenant-1", ChangeType.CHANGED, UUID.randomUUID(), 1234)
 
         every {
             changeDetectionService.determineChangeStatuses(
                 mockTenantId,
-                mapOf("Patient:tenant-1" to testPatient)
+                mapOf("Patient:tenant-1" to testPatient),
             )
         } returns mapOf("Patient:tenant-1" to changeStatus1)
         every { publishService.publish(any()) } returns true

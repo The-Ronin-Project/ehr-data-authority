@@ -8,26 +8,33 @@ import kotlin.reflect.full.memberProperties
 
 class ResourceTenantMismatchUtil {
     companion object {
-        fun getMismatchResourceFailures(resources: List<Resource<*>>, tenantId: String): List<FailedResource> {
+        fun getMismatchResourceFailures(
+            resources: List<Resource<*>>,
+            tenantId: String,
+        ): List<FailedResource> {
             return resources.mapNotNull { resource ->
                 checkResourcesAgainstTenant(resource, tenantId)?.let {
                     FailedResource(
                         resource.resourceType,
                         resource.id!!.value!!,
-                        it
+                        it,
                     )
                 }
             }
         }
 
-        private fun checkResourcesAgainstTenant(resource: Resource<*>, tenantId: String): String? {
+        private fun checkResourcesAgainstTenant(
+            resource: Resource<*>,
+            tenantId: String,
+        ): String? {
             if (resource.id?.value?.startsWith(tenantId) != true) {
                 return "Resource ID does not match given tenant $tenantId"
             }
             val properties = resource.javaClass.kotlin.memberProperties
-            val identifierProperty = properties.singleOrNull {
-                it.name == "identifier"
-            } ?: return null
+            val identifierProperty =
+                properties.singleOrNull {
+                    it.name == "identifier"
+                } ?: return null
             // the null here is a weird case, where we have a property called 'identifier'
             // but it's not a list of identifier classes, something like a bundle would get through
             val identifiers = identifierProperty.get(resource) as? List<Identifier> ?: return null

@@ -36,7 +36,7 @@ class ResourcesWriteController(
     private val kafkaPublisher: KafkaPublisher,
     private val validationManager: ValidationManager,
     private val publishService: PublishService,
-    private val storageMode: StorageMode
+    private val storageMode: StorageMode,
 ) {
     private val logger = KotlinLogging.logger { }
     private val isLocal = storageMode == StorageMode.LOCAL
@@ -45,7 +45,7 @@ class ResourcesWriteController(
     @PreAuthorize("hasAuthority('SCOPE_write:resources')")
     fun addNewResources(
         @PathVariable("tenantId") tenantId: String,
-        @RequestBody resources: List<Resource<*>>
+        @RequestBody resources: List<Resource<*>>,
     ): ResponseEntity<BatchResourceResponse> {
         val failedResources = ResourceTenantMismatchUtil.getMismatchResourceFailures(resources, tenantId)
         if (failedResources.isNotEmpty()) {
@@ -55,31 +55,34 @@ class ResourcesWriteController(
         val resourcesByKey = resources.associateBy { it.toKey() }
         val changeStatusesByKey = changeDetectionService.determineChangeStatuses(tenantId, resourcesByKey)
 
-        val responses = resourcesByKey.map { (key, resource) ->
-            val changeStatus = changeStatusesByKey[key]!!
-            when (changeStatus.type) {
-                ChangeType.UNCHANGED -> SucceededResource(
-                    resource.resourceType,
-                    resource.id!!.value!!,
-                    ModificationType.UNMODIFIED
-                )
+        val responses =
+            resourcesByKey.map { (key, resource) ->
+                val changeStatus = changeStatusesByKey[key]!!
+                when (changeStatus.type) {
+                    ChangeType.UNCHANGED ->
+                        SucceededResource(
+                            resource.resourceType,
+                            resource.id!!.value!!,
+                            ModificationType.UNMODIFIED,
+                        )
 
-                else -> {
-                    if (isLocal) {
-                        publishResource(resource, tenantId, changeStatus)
-                    } else {
-                        when (val validation = validationManager.validateResource(resource, tenantId)) {
-                            is PassedValidation -> publishResource(resource, tenantId, changeStatus)
-                            is FailedValidation -> FailedResource(
-                                resource.resourceType,
-                                resource.id!!.value!!,
-                                validation.failureMessage
-                            )
+                    else -> {
+                        if (isLocal) {
+                            publishResource(resource, tenantId, changeStatus)
+                        } else {
+                            when (val validation = validationManager.validateResource(resource, tenantId)) {
+                                is PassedValidation -> publishResource(resource, tenantId, changeStatus)
+                                is FailedValidation ->
+                                    FailedResource(
+                                        resource.resourceType,
+                                        resource.id!!.value!!,
+                                        validation.failureMessage,
+                                    )
+                            }
                         }
                     }
                 }
             }
-        }
 
         val succeeded = responses.filterIsInstance<SucceededResource>()
         val failed = responses.filterIsInstance<FailedResource>()
@@ -89,7 +92,7 @@ class ResourcesWriteController(
     private fun publishResource(
         resource: Resource<*>,
         tenantId: String,
-        changeStatus: ChangeStatus
+        changeStatus: ChangeStatus,
     ): ResourceResponse {
         val published = publishService.publish(listOf(resource))
         if (!published) {
@@ -101,31 +104,32 @@ class ResourcesWriteController(
                 return FailedResource(
                     resource.resourceType,
                     resource.id!!.value!!,
-                    "Failed to publish to Kafka: ${it.localizedMessage}"
+                    "Failed to publish to Kafka: ${it.localizedMessage}",
                 )
             }
         }
 
         val resourceHashesDO = changeStatus.toHashDO(tenantId)
-        val modificationType = when (changeStatus.type) {
-            ChangeType.NEW -> {
-                runCatching { resourceHashDao.upsertHash(resourceHashesDO) }.onFailure {
-                    logger.error(it) { "Exception persisting new hash for $resourceHashesDO" }
-                    return FailedResource(resource.resourceType, resource.id!!.value!!, "Error updating the hash store")
+        val modificationType =
+            when (changeStatus.type) {
+                ChangeType.NEW -> {
+                    runCatching { resourceHashDao.upsertHash(resourceHashesDO) }.onFailure {
+                        logger.error(it) { "Exception persisting new hash for $resourceHashesDO" }
+                        return FailedResource(resource.resourceType, resource.id!!.value!!, "Error updating the hash store")
+                    }
+                    ModificationType.CREATED
                 }
-                ModificationType.CREATED
-            }
 
-            ChangeType.CHANGED -> {
-                runCatching { resourceHashDao.upsertHash(resourceHashesDO) }.onFailure {
-                    logger.error(it) { "Exception persisting updated hash for $resourceHashesDO" }
-                    return FailedResource(resource.resourceType, resource.id!!.value!!, "Error updating the hash store")
+                ChangeType.CHANGED -> {
+                    runCatching { resourceHashDao.upsertHash(resourceHashesDO) }.onFailure {
+                        logger.error(it) { "Exception persisting updated hash for $resourceHashesDO" }
+                        return FailedResource(resource.resourceType, resource.id!!.value!!, "Error updating the hash store")
+                    }
+                    ModificationType.UPDATED
                 }
-                ModificationType.UPDATED
-            }
 
-            else -> throw IllegalStateException("Only new or changed statuses are allowed to be published")
-        }
+                else -> throw IllegalStateException("Only new or changed statuses are allowed to be published")
+            }
 
         return SucceededResource(resource.resourceType, resource.id!!.value!!, modificationType)
     }

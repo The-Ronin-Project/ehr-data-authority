@@ -21,32 +21,37 @@ class ResourcesChangeControllerTest {
 
     private val resourcesChangeController =
         ResourcesChangeController(
-            changeDetectionService
+            changeDetectionService,
         )
 
     private val mockTenantId = "tenant"
-    private val testTenantIdentifier = identifier {
-        system of CodeSystem.RONIN_TENANT.uri
-        value of mockTenantId
-    }
+    private val testTenantIdentifier =
+        identifier {
+            system of CodeSystem.RONIN_TENANT.uri
+            value of mockTenantId
+        }
 
     // these should eventually be rcdm generators
-    private val testPatient = patient {
-        id of Id("$mockTenantId-1")
-        identifier of listOf(testTenantIdentifier)
-    }
-    private val testPatient2 = patient {
-        id of Id("$mockTenantId-2")
-        identifier of listOf(testTenantIdentifier)
-    }
-    private val testPatient3 = patient {
-        id of Id("$mockTenantId-3")
-        identifier of listOf(testTenantIdentifier)
-    }
-    private val testObservation = observation {
-        id of Id("$mockTenantId-2")
-        identifier of listOf(testTenantIdentifier)
-    }
+    private val testPatient =
+        patient {
+            id of Id("$mockTenantId-1")
+            identifier of listOf(testTenantIdentifier)
+        }
+    private val testPatient2 =
+        patient {
+            id of Id("$mockTenantId-2")
+            identifier of listOf(testTenantIdentifier)
+        }
+    private val testPatient3 =
+        patient {
+            id of Id("$mockTenantId-3")
+            identifier of listOf(testTenantIdentifier)
+        }
+    private val testObservation =
+        observation {
+            id of Id("$mockTenantId-2")
+            identifier of listOf(testTenantIdentifier)
+        }
 
     @Test
     fun `unchanged resource returns a success`() {
@@ -55,7 +60,7 @@ class ResourcesChangeControllerTest {
         every {
             changeDetectionService.determineChangeStatuses(
                 mockTenantId,
-                mapOf("Patient:tenant-1" to testPatient)
+                mapOf("Patient:tenant-1" to testPatient),
             )
         } returns mapOf("Patient:tenant-1" to changeStatus)
 
@@ -79,7 +84,7 @@ class ResourcesChangeControllerTest {
         every {
             changeDetectionService.determineChangeStatuses(
                 mockTenantId,
-                mapOf("Patient:tenant-1" to testPatient)
+                mapOf("Patient:tenant-1" to testPatient),
             )
         } returns mapOf("Patient:tenant-1" to changeStatus)
 
@@ -103,7 +108,7 @@ class ResourcesChangeControllerTest {
         every {
             changeDetectionService.determineChangeStatuses(
                 mockTenantId,
-                mapOf("Patient:tenant-1" to testPatient)
+                mapOf("Patient:tenant-1" to testPatient),
             )
         } returns mapOf("Patient:tenant-1" to changeStatus)
 
@@ -132,14 +137,15 @@ class ResourcesChangeControllerTest {
                 mapOf(
                     "Patient:tenant-1" to testPatient,
                     "Patient:tenant-2" to testPatient2,
-                    "Patient:tenant-3" to testPatient3
-                )
+                    "Patient:tenant-3" to testPatient3,
+                ),
             )
-        } returns mapOf(
-            "Patient:tenant-1" to changeStatus1,
-            "Patient:tenant-2" to changeStatus2,
-            "Patient:tenant-3" to changeStatus3
-        )
+        } returns
+            mapOf(
+                "Patient:tenant-1" to changeStatus1,
+                "Patient:tenant-2" to changeStatus2,
+                "Patient:tenant-3" to changeStatus3,
+            )
 
         val response = resourcesChangeController.determineIfResourcesChanged(mockTenantId, listOf(testPatient, testPatient2, testPatient3))
         Assertions.assertEquals(HttpStatus.OK, response.statusCode)
@@ -175,13 +181,14 @@ class ResourcesChangeControllerTest {
                 mockTenantId,
                 mapOf(
                     "Patient:tenant-1" to testPatient,
-                    "Observation:tenant-2" to testObservation
-                )
+                    "Observation:tenant-2" to testObservation,
+                ),
             )
-        } returns mapOf(
-            "Patient:tenant-1" to changeStatus1,
-            "Observation:tenant-2" to changeStatus2
-        )
+        } returns
+            mapOf(
+                "Patient:tenant-1" to changeStatus1,
+                "Observation:tenant-2" to changeStatus2,
+            )
 
         val response = resourcesChangeController.determineIfResourcesChanged(mockTenantId, listOf(testPatient, testObservation))
         Assertions.assertEquals(HttpStatus.OK, response.statusCode)
@@ -204,9 +211,10 @@ class ResourcesChangeControllerTest {
 
     @Test
     fun `single mismatched resource fails`() {
-        val badPatient = patient {
-            id of Id("123")
-        }
+        val badPatient =
+            patient {
+                id of Id("123")
+            }
         val response = resourcesChangeController.determineIfResourcesChanged(mockTenantId, listOf(badPatient))
 
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
@@ -223,12 +231,14 @@ class ResourcesChangeControllerTest {
 
     @Test
     fun `multiple mismatched resources fail`() {
-        val badPatient1 = patient {
-            id of Id("123")
-        }
-        val badPatient2 = patient {
-            id of Id("tenant-123")
-        }
+        val badPatient1 =
+            patient {
+                id of Id("123")
+            }
+        val badPatient2 =
+            patient {
+                id of Id("tenant-123")
+            }
 
         val response = resourcesChangeController.determineIfResourcesChanged(mockTenantId, listOf(badPatient1, badPatient2))
 
@@ -251,12 +261,14 @@ class ResourcesChangeControllerTest {
 
     @Test
     fun `mismatch resource and matched resource of different types fails`() {
-        val badPatient1 = patient {
-            id of Id("123")
-        }
-        val badObservation = observation {
-            id of Id("tenant-123")
-        }
+        val badPatient1 =
+            patient {
+                id of Id("123")
+            }
+        val badObservation =
+            observation {
+                id of Id("tenant-123")
+            }
 
         val response = resourcesChangeController.determineIfResourcesChanged(mockTenantId, listOf(badPatient1, badObservation))
 
@@ -279,9 +291,10 @@ class ResourcesChangeControllerTest {
 
     @Test
     fun `mismatched resource with matched resource fails`() {
-        val badPatient = patient {
-            id of Id("123")
-        }
+        val badPatient =
+            patient {
+                id of Id("123")
+            }
 
         val response = resourcesChangeController.determineIfResourcesChanged(mockTenantId, listOf(badPatient, testPatient))
 
@@ -299,9 +312,10 @@ class ResourcesChangeControllerTest {
 
     @Test
     fun `mismatched resource with matched resource fails - reverse order`() {
-        val badPatient = patient {
-            id of Id("123")
-        }
+        val badPatient =
+            patient {
+                id of Id("123")
+            }
 
         val response = resourcesChangeController.determineIfResourcesChanged(mockTenantId, listOf(testPatient, badPatient))
 
@@ -340,15 +354,16 @@ class ResourcesChangeControllerTest {
 
     @Test
     fun `empty resources return success`() {
-        val resourcesByKey = emptyList<Patient>().associateBy {
-            it.let {
-                "$it.resourceType:${it.id!!.value}"
+        val resourcesByKey =
+            emptyList<Patient>().associateBy {
+                it.let {
+                    "$it.resourceType:${it.id!!.value}"
+                }
             }
-        }
         every {
             changeDetectionService.determineChangeStatuses(
                 mockTenantId,
-                resourcesByKey
+                resourcesByKey,
             )
         } returns mapOf()
 

@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service
 @Service
 class PublishService(
     private val dataStorageService: DataStorageService,
-    @Value("\${aidbox.publishBatchSize:25}") private val batchSize: Int = 25
+    @Value("\${aidbox.publishBatchSize:25}") private val batchSize: Int = 25,
 ) {
     private val logger = KotlinLogging.logger { }
 
@@ -32,16 +32,17 @@ class PublishService(
             return true
         }
 
-        val processedResults = runBlocking {
-            resourceCollection.chunked(batchSize).map {
-                try {
-                    dataStorageService.batchUpsert(it).isSuccess()
-                } catch (e: Exception) {
-                    logger.warn(e.getLogMarker(), e) { "Failed to publish Ronin clinical data" }
-                    false
+        val processedResults =
+            runBlocking {
+                resourceCollection.chunked(batchSize).map {
+                    try {
+                        dataStorageService.batchUpsert(it).isSuccess()
+                    } catch (e: Exception) {
+                        logger.warn(e.getLogMarker(), e) { "Failed to publish Ronin clinical data" }
+                        false
+                    }
                 }
             }
-        }
         return processedResults.all { it }
     }
 }

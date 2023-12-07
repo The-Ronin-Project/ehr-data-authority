@@ -8,25 +8,29 @@ import org.junit.jupiter.api.Test
 class BatchResourceChangeResponseTest {
     @Test
     fun `can serialize and deserialize`() {
-        val response = BatchResourceChangeResponse(
-            succeeded = listOf(
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "tenant-1234",
-                    changeType = ChangeType.CHANGED
-                )
-            ),
-            failed = listOf(
-                FailedResource(
-                    resourceType = "Practitioner",
-                    resourceId = "tenant-5678",
-                    error = "Error encountered"
-                )
+        val response =
+            BatchResourceChangeResponse(
+                succeeded =
+                    listOf(
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "tenant-1234",
+                            changeType = ChangeType.CHANGED,
+                        ),
+                    ),
+                failed =
+                    listOf(
+                        FailedResource(
+                            resourceType = "Practitioner",
+                            resourceId = "tenant-5678",
+                            error = "Error encountered",
+                        ),
+                    ),
             )
-        )
         val json = JacksonManager.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response)
 
-        val expectedJson = """
+        val expectedJson =
+            """
             {
               "succeeded" : [ {
                 "resourceType" : "Patient",
@@ -39,7 +43,7 @@ class BatchResourceChangeResponseTest {
                 "error" : "Error encountered"
               } ]
             }
-        """.trimIndent()
+            """.trimIndent()
         Assertions.assertEquals(expectedJson, json)
 
         val deserialized = JacksonManager.objectMapper.readValue<BatchResourceChangeResponse>(json)
@@ -55,29 +59,33 @@ class BatchResourceChangeResponseTest {
 
     @Test
     fun `adding failed only creates empty list for succeeded`() {
-        val response = BatchResourceChangeResponse(
-            failed = listOf(
-                FailedResource(
-                    resourceType = "Practitioner",
-                    resourceId = "tenant-5678",
-                    error = "Error encountered"
-                )
+        val response =
+            BatchResourceChangeResponse(
+                failed =
+                    listOf(
+                        FailedResource(
+                            resourceType = "Practitioner",
+                            resourceId = "tenant-5678",
+                            error = "Error encountered",
+                        ),
+                    ),
             )
-        )
         Assertions.assertEquals(emptyList<ChangeStatusResource>(), response.succeeded)
     }
 
     @Test
     fun `adding succeeded only creates empty list for failed`() {
-        val response = BatchResourceChangeResponse(
-            succeeded = listOf(
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "tenant-1234",
-                    changeType = ChangeType.CHANGED
-                )
+        val response =
+            BatchResourceChangeResponse(
+                succeeded =
+                    listOf(
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "tenant-1234",
+                            changeType = ChangeType.CHANGED,
+                        ),
+                    ),
             )
-        )
         Assertions.assertEquals(emptyList<FailedResource>(), response.failed)
     }
 }

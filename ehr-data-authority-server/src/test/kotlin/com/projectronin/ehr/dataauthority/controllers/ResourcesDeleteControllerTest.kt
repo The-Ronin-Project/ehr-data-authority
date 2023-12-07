@@ -21,11 +21,12 @@ class ResourcesDeleteControllerTest {
     private val resourceHashesDAO = mockk<ResourceHashesDAO>()
     private val localStorageClient = mockk<LocalStorageClient>()
     private val localStorageMapHashDAO = mockk<LocalStorageMapHashDAO>()
-    private val localStorageController = ResourcesDeleteController(
-        localStorageClient,
-        localStorageMapHashDAO,
-        StorageMode.LOCAL
-    )
+    private val localStorageController =
+        ResourcesDeleteController(
+            localStorageClient,
+            localStorageMapHashDAO,
+            StorageMode.LOCAL,
+        )
     private val controller = ResourcesDeleteController(aidboxClient, resourceHashesDAO, StorageMode.AIDBOX)
 
     @Test

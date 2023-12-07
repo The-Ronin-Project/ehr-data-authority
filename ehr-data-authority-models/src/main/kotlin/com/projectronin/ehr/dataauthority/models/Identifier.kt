@@ -7,7 +7,7 @@ import com.projectronin.interop.fhir.r4.datatype.Identifier as FhirIdentifier
  */
 data class Identifier(
     val system: String,
-    val value: String
+    val value: String,
 ) {
     companion object {
         fun fromToken(token: String): Identifier {

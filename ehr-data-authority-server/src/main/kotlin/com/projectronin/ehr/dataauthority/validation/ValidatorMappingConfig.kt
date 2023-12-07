@@ -42,24 +42,19 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class ValidatorMappingConfig {
     @Bean
-    fun appointmentValidator(roninAppointment: RoninAppointment) =
-        ValidatorMapping(Appointment::class, roninAppointment)
+    fun appointmentValidator(roninAppointment: RoninAppointment) = ValidatorMapping(Appointment::class, roninAppointment)
 
     @Bean
-    fun conditionValidator(roninConditions: RoninConditions) =
-        ValidatorMapping(Condition::class, roninConditions)
+    fun conditionValidator(roninConditions: RoninConditions) = ValidatorMapping(Condition::class, roninConditions)
 
     @Bean
-    fun encounterValidator(roninEncounter: RoninEncounter) =
-        ValidatorMapping(Encounter::class, roninEncounter)
+    fun encounterValidator(roninEncounter: RoninEncounter) = ValidatorMapping(Encounter::class, roninEncounter)
 
     @Bean
-    fun locationValidator(roninLocation: RoninLocation) =
-        ValidatorMapping(Location::class, roninLocation)
+    fun locationValidator(roninLocation: RoninLocation) = ValidatorMapping(Location::class, roninLocation)
 
     @Bean
-    fun medicationValidator(roninMedication: RoninMedication) =
-        ValidatorMapping(Medication::class, roninMedication)
+    fun medicationValidator(roninMedication: RoninMedication) = ValidatorMapping(Medication::class, roninMedication)
 
     @Bean
     fun medicationRequestValidator(roninMedicationRequest: RoninMedicationRequest) =
@@ -70,28 +65,23 @@ class ValidatorMappingConfig {
         ValidatorMapping(MedicationStatement::class, roninMedicationStatement)
 
     @Bean
-    fun observationValidator(roninObservations: RoninObservations) =
-        ValidatorMapping(Observation::class, roninObservations)
+    fun observationValidator(roninObservations: RoninObservations) = ValidatorMapping(Observation::class, roninObservations)
 
     @Bean
-    fun patientValidator(roninPatient: RoninPatient) =
-        ValidatorMapping(Patient::class, roninPatient)
+    fun patientValidator(roninPatient: RoninPatient) = ValidatorMapping(Patient::class, roninPatient)
 
     @Bean
-    fun practitionerValidator(roninPractitioner: RoninPractitioner) =
-        ValidatorMapping(Practitioner::class, roninPractitioner)
+    fun practitionerValidator(roninPractitioner: RoninPractitioner) = ValidatorMapping(Practitioner::class, roninPractitioner)
 
     @Bean
     fun practitionerRoleValidator(roninPractitionerRole: RoninPractitionerRole) =
         ValidatorMapping(PractitionerRole::class, roninPractitionerRole)
 
     @Bean
-    fun requestGroupValidator(roninRequestGroup: RoninRequestGroup) =
-        ValidatorMapping(RequestGroup::class, roninRequestGroup)
+    fun requestGroupValidator(roninRequestGroup: RoninRequestGroup) = ValidatorMapping(RequestGroup::class, roninRequestGroup)
 
     @Bean
-    fun carePlanValidator(roninCarePlan: RoninCarePlan) =
-        ValidatorMapping(CarePlan::class, roninCarePlan)
+    fun carePlanValidator(roninCarePlan: RoninCarePlan) = ValidatorMapping(CarePlan::class, roninCarePlan)
 
     @Bean
     fun documentReferenceValidator(roninDocumentReference: RoninDocumentReference) =
@@ -102,14 +92,12 @@ class ValidatorMappingConfig {
         ValidatorMapping(MedicationAdministration::class, roninMedicationAdministration)
 
     @Bean
-    fun serviceRequestValidator(roninServiceRequest: RoninServiceRequest) =
-        ValidatorMapping(ServiceRequest::class, roninServiceRequest)
+    fun serviceRequestValidator(roninServiceRequest: RoninServiceRequest) = ValidatorMapping(ServiceRequest::class, roninServiceRequest)
 
     @Bean
     fun diagnosticReportValidator(roninDiagnosticReport: RoninDiagnosticReports) =
         ValidatorMapping(DiagnosticReport::class, roninDiagnosticReport)
 
     @Bean
-    fun procedureValidator(roninProcedure: RoninProcedure) =
-        ValidatorMapping(Procedure::class, roninProcedure)
+    fun procedureValidator(roninProcedure: RoninProcedure) = ValidatorMapping(Procedure::class, roninProcedure)
 }

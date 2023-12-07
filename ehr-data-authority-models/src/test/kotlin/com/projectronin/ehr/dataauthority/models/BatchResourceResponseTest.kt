@@ -8,25 +8,29 @@ import org.junit.jupiter.api.Test
 class BatchResourceResponseTest {
     @Test
     fun `can serialize and deserialize`() {
-        val response = BatchResourceResponse(
-            succeeded = listOf(
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "tenant-1234",
-                    modificationType = ModificationType.CREATED
-                )
-            ),
-            failed = listOf(
-                FailedResource(
-                    resourceType = "Practitioner",
-                    resourceId = "tenant-5678",
-                    error = "Error encountered"
-                )
+        val response =
+            BatchResourceResponse(
+                succeeded =
+                    listOf(
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "tenant-1234",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                    ),
+                failed =
+                    listOf(
+                        FailedResource(
+                            resourceType = "Practitioner",
+                            resourceId = "tenant-5678",
+                            error = "Error encountered",
+                        ),
+                    ),
             )
-        )
         val json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response)
 
-        val expectedJson = """
+        val expectedJson =
+            """
             {
               "succeeded" : [ {
                 "resourceType" : "Patient",
@@ -39,7 +43,7 @@ class BatchResourceResponseTest {
                 "error" : "Error encountered"
               } ]
             }
-        """.trimIndent()
+            """.trimIndent()
         assertEquals(expectedJson, json)
 
         val deserialized = objectMapper.readValue<BatchResourceResponse>(json)

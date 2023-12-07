@@ -6,5 +6,5 @@ import kotlin.reflect.KClass
 
 data class ValidatorMapping<T : Resource<T>>(
     val resourceClass: KClass<in T>,
-    val validator: ProfileValidator<out T>
+    val validator: ProfileValidator<out T>,
 )

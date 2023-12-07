@@ -17,7 +17,8 @@ import java.util.concurrent.ConcurrentSkipListMap
  */
 @Profile("local")
 class LocalStorageClient : DataStorageService {
-    var localStorageMap: ConcurrentSkipListMap<String, MutableMap<String, Resource<*>>> = ConcurrentSkipListMap<String, MutableMap<String, Resource<*>>>()
+    var localStorageMap: ConcurrentSkipListMap<String, MutableMap<String, Resource<*>>> =
+        ConcurrentSkipListMap<String, MutableMap<String, Resource<*>>>()
 
     override suspend fun batchUpsert(resourceCollection: List<Resource<*>>): HttpStatusCode {
         resourceCollection.forEach {
@@ -27,7 +28,10 @@ class LocalStorageClient : DataStorageService {
         return HttpStatusCode.OK
     }
 
-    override fun getResource(resourceType: String, resourceFHIRID: String): Resource<*> {
+    override fun getResource(
+        resourceType: String,
+        resourceFHIRID: String,
+    ): Resource<*> {
         val resource = localStorageMap.get(resourceType)?.get(resourceFHIRID)
         return resource ?: throw ClientFailureException(HttpStatusCode.NotFound, "Local Server")
     }
@@ -35,7 +39,7 @@ class LocalStorageClient : DataStorageService {
     override suspend fun searchForResources(
         resourceType: String,
         tenantId: String,
-        identifierToken: String
+        identifierToken: String,
     ): Bundle {
         val resourcesFound = mutableListOf<Resource<*>>()
         val resources = localStorageMap[resourceType]?.values
@@ -52,12 +56,16 @@ class LocalStorageClient : DataStorageService {
             }
         }
         return Bundle(
-            type = Code(BundleType.TRANSACTION_RESPONSE.code), // type is required
-            entry = resourcesFound.map { BundleEntry(resource = it) }
+            // type is required
+            type = Code(BundleType.TRANSACTION_RESPONSE.code),
+            entry = resourcesFound.map { BundleEntry(resource = it) },
         )
     }
 
-    override suspend fun deleteResource(resourceType: String, udpId: String): HttpStatusCode {
+    override suspend fun deleteResource(
+        resourceType: String,
+        udpId: String,
+    ): HttpStatusCode {
         localStorageMap[resourceType]?.remove(udpId)
         return HttpStatusCode.OK
     }

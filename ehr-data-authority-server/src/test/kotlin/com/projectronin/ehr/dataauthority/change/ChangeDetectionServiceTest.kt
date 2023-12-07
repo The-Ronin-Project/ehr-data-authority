@@ -48,10 +48,11 @@ class ChangeDetectionServiceTest {
     @Test
     fun `resource with hash different than stored hash`() {
         val hashUuid = UUID.randomUUID()
-        every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns mockk {
-            every { hashId } returns hashUuid
-            every { hash } returns 1234456
-        }
+        every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns
+            mockk {
+                every { hashId } returns hashUuid
+                every { hash } returns 1234456
+            }
 
         val patient = Patient(id = Id("tenant-1234"))
         val statuses = service.determineChangeStatuses("tenant", mapOf(1 to patient))
@@ -71,22 +72,25 @@ class ChangeDetectionServiceTest {
 
     @Test
     fun `resource with matching hash and matching normalized form`() {
-        val patient = Patient(
-            id = Id("tenant-1234"),
-            meta = Meta(profile = listOf(Canonical("profile1")))
-        )
+        val patient =
+            Patient(
+                id = Id("tenant-1234"),
+                meta = Meta(profile = listOf(Canonical("profile1"))),
+            )
         val comparedPatient = patient.copy(meta = null)
 
         val hashUuid = UUID.randomUUID()
-        every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns mockk {
-            every { hashId } returns hashUuid
-            every { hash } returns comparedPatient.consistentHashCode()
-        }
+        every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns
+            mockk {
+                every { hashId } returns hashUuid
+                every { hash } returns comparedPatient.consistentHashCode()
+            }
 
-        val aidboxPatient = Patient(
-            id = Id("tenant-1234"),
-            meta = Meta(profile = listOf(Canonical("profile1")))
-        )
+        val aidboxPatient =
+            Patient(
+                id = Id("tenant-1234"),
+                meta = Meta(profile = listOf(Canonical("profile1"))),
+            )
         coEvery { aidboxClient.getResource("Patient", "tenant-1234") } returns aidboxPatient
 
         val statuses = service.determineChangeStatuses("tenant", mapOf(1 to patient))
@@ -106,23 +110,26 @@ class ChangeDetectionServiceTest {
 
     @Test
     fun `resource with matching hash and non-matching normalized form`() {
-        val patient = Patient(
-            id = Id("tenant-1234"),
-            meta = Meta(profile = listOf(Canonical("profile1")))
-        )
+        val patient =
+            Patient(
+                id = Id("tenant-1234"),
+                meta = Meta(profile = listOf(Canonical("profile1"))),
+            )
         val comparedPatient = patient.copy(meta = null)
 
         val hashUuid = UUID.randomUUID()
-        every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns mockk {
-            every { hashId } returns hashUuid
-            every { hash } returns comparedPatient.consistentHashCode()
-        }
+        every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns
+            mockk {
+                every { hashId } returns hashUuid
+                every { hash } returns comparedPatient.consistentHashCode()
+            }
 
-        val aidboxPatient = Patient(
-            id = Id("tenant-1234"),
-            meta = Meta(profile = listOf(Canonical("profile1"))),
-            name = listOf(HumanName(text = "Patient Name".asFHIR()))
-        )
+        val aidboxPatient =
+            Patient(
+                id = Id("tenant-1234"),
+                meta = Meta(profile = listOf(Canonical("profile1"))),
+                name = listOf(HumanName(text = "Patient Name".asFHIR())),
+            )
         coEvery { aidboxClient.getResource("Patient", "tenant-1234") } returns aidboxPatient
 
         val statuses = service.determineChangeStatuses("tenant", mapOf(1 to patient))
@@ -142,22 +149,25 @@ class ChangeDetectionServiceTest {
 
     @Test
     fun `resource with matching hash and different profile is considered changed`() {
-        val patient = Patient(
-            id = Id("tenant-1234"),
-            meta = Meta(profile = listOf(Canonical("profile2")))
-        )
+        val patient =
+            Patient(
+                id = Id("tenant-1234"),
+                meta = Meta(profile = listOf(Canonical("profile2"))),
+            )
         val comparedPatient = patient.copy(meta = null)
 
         val hashUuid = UUID.randomUUID()
-        every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns mockk {
-            every { hashId } returns hashUuid
-            every { hash } returns comparedPatient.consistentHashCode()
-        }
+        every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns
+            mockk {
+                every { hashId } returns hashUuid
+                every { hash } returns comparedPatient.consistentHashCode()
+            }
 
-        val aidboxPatient = Patient(
-            id = Id("tenant-1234"),
-            meta = Meta(profile = listOf(Canonical("profile1")))
-        )
+        val aidboxPatient =
+            Patient(
+                id = Id("tenant-1234"),
+                meta = Meta(profile = listOf(Canonical("profile1"))),
+            )
         coEvery { aidboxClient.getResource("Patient", "tenant-1234") } returns aidboxPatient
 
         val statuses = service.determineChangeStatuses("tenant", mapOf(1 to patient))
@@ -177,40 +187,46 @@ class ChangeDetectionServiceTest {
 
     @Test
     fun `multiple resources with different matching types`() {
-        val patient1 = Patient(
-            id = Id("tenant-1234"),
-            meta = Meta(profile = listOf(Canonical("profile1")))
-        )
+        val patient1 =
+            Patient(
+                id = Id("tenant-1234"),
+                meta = Meta(profile = listOf(Canonical("profile1"))),
+            )
         val comparedPatient1 = patient1.copy(meta = null)
-        val patient2 = Patient(
-            id = Id("tenant-5678"),
-            meta = Meta(profile = listOf(Canonical("profile1")))
-        )
+        val patient2 =
+            Patient(
+                id = Id("tenant-5678"),
+                meta = Meta(profile = listOf(Canonical("profile1"))),
+            )
         val comparedPatient2 = patient2.copy(meta = null)
-        val patient3 = Patient(
-            id = Id("tenant-9012"),
-            meta = Meta(profile = listOf(Canonical("profile1")))
-        )
+        val patient3 =
+            Patient(
+                id = Id("tenant-9012"),
+                meta = Meta(profile = listOf(Canonical("profile1"))),
+            )
         val comparedPatient3 = patient3.copy(meta = null)
 
         every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-1234") } returns null
 
         val hashUuid2 = UUID.randomUUID()
-        every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-5678") } returns mockk {
-            every { hashId } returns hashUuid2
-            every { hash } returns 1234456
-        }
+        every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-5678") } returns
+            mockk {
+                every { hashId } returns hashUuid2
+                every { hash } returns 1234456
+            }
 
         val hashUuid3 = UUID.randomUUID()
-        every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-9012") } returns mockk {
-            every { hashId } returns hashUuid3
-            every { hash } returns comparedPatient3.consistentHashCode()
-        }
+        every { resourceHashesDAO.getHash("tenant", "Patient", "tenant-9012") } returns
+            mockk {
+                every { hashId } returns hashUuid3
+                every { hash } returns comparedPatient3.consistentHashCode()
+            }
 
-        val aidboxPatient = Patient(
-            id = Id("tenant-9012"),
-            meta = Meta(profile = listOf(Canonical("profile1")))
-        )
+        val aidboxPatient =
+            Patient(
+                id = Id("tenant-9012"),
+                meta = Meta(profile = listOf(Canonical("profile1"))),
+            )
         coEvery { aidboxClient.getResource("Patient", "tenant-9012") } returns aidboxPatient
 
         val statuses = service.determineChangeStatuses("tenant", mapOf(1 to patient1, 2 to patient2, 3 to patient3))

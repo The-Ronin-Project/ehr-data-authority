@@ -23,10 +23,11 @@ class IdentifierTest {
 
     @Test
     fun `identifier can be made from fhir identifiers`() {
-        val fhirIdent = mockk<FhirIdentifier> {
-            every { system?.value } returns "sys"
-            every { value?.value } returns "val"
-        }
+        val fhirIdent =
+            mockk<FhirIdentifier> {
+                every { system?.value } returns "sys"
+                every { value?.value } returns "val"
+            }
         val idents = Identifier.fromFhirIdentifiers(listOf(fhirIdent))
         val ident = idents.first()
         assertEquals(1, idents.size)
@@ -36,37 +37,41 @@ class IdentifierTest {
 
     @Test
     fun `identifier ignores null fhir identifier system`() {
-        val fhirIdent = mockk<FhirIdentifier> {
-            every { system } returns null
-            every { value?.value } returns "val"
-        }
+        val fhirIdent =
+            mockk<FhirIdentifier> {
+                every { system } returns null
+                every { value?.value } returns "val"
+            }
         assertEquals(emptyList<Identifier>(), Identifier.fromFhirIdentifiers(listOf(fhirIdent)))
     }
 
     @Test
     fun `identifier ignores null fhir identifier system value`() {
-        val fhirIdent = mockk<FhirIdentifier> {
-            every { system?.value } returns null
-            every { value?.value } returns "val"
-        }
+        val fhirIdent =
+            mockk<FhirIdentifier> {
+                every { system?.value } returns null
+                every { value?.value } returns "val"
+            }
         assertEquals(emptyList<Identifier>(), Identifier.fromFhirIdentifiers(listOf(fhirIdent)))
     }
 
     @Test
     fun `identifier ignores null fhir identifier value`() {
-        val fhirIdent = mockk<FhirIdentifier> {
-            every { system?.value } returns "sys"
-            every { value } returns null
-        }
+        val fhirIdent =
+            mockk<FhirIdentifier> {
+                every { system?.value } returns "sys"
+                every { value } returns null
+            }
         assertEquals(emptyList<Identifier>(), Identifier.fromFhirIdentifiers(listOf(fhirIdent)))
     }
 
     @Test
     fun `identifier ignores null fhir identifier value value`() {
-        val fhirIdent = mockk<FhirIdentifier> {
-            every { system?.value } returns "sys"
-            every { value?.value } returns null
-        }
+        val fhirIdent =
+            mockk<FhirIdentifier> {
+                every { system?.value } returns "sys"
+                every { value?.value } returns null
+            }
         assertEquals(emptyList<Identifier>(), Identifier.fromFhirIdentifiers(listOf(fhirIdent)))
     }
 

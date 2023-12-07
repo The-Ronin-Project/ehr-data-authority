@@ -39,11 +39,12 @@ class ValidationManagerTest {
 
     @Test
     fun `validation has non-error issues`() {
-        val validation = mockk<Validation> {
-            every { hasIssues() } returns true
-            every { hasErrors() } returns false
-            every { issues() } returns emptyList()
-        }
+        val validation =
+            mockk<Validation> {
+                every { hasIssues() } returns true
+                every { hasErrors() } returns false
+                every { issues() } returns emptyList()
+            }
 
         val patient = mockk<Patient>()
         every { patientValidator.validate(patient) } returns validation
@@ -57,12 +58,13 @@ class ValidationManagerTest {
 
     @Test
     fun `validation has errors`() {
-        val validation = mockk<Validation> {
-            every { hasIssues() } returns true
-            every { hasErrors() } returns true
-            every { issues() } returns emptyList()
-            every { getErrorString() } returns "the errors"
-        }
+        val validation =
+            mockk<Validation> {
+                every { hasIssues() } returns true
+                every { hasErrors() } returns true
+                every { issues() } returns emptyList()
+                every { getErrorString() } returns "the errors"
+            }
 
         val patient = mockk<Patient>()
         every { patient.resourceType } returns "Patient"
@@ -79,11 +81,12 @@ class ValidationManagerTest {
 
     @Test
     fun `validation has no issues`() {
-        val validation = mockk<Validation> {
-            every { hasIssues() } returns false
-            every { hasErrors() } returns false
-            every { issues() } returns emptyList()
-        }
+        val validation =
+            mockk<Validation> {
+                every { hasIssues() } returns false
+                every { hasErrors() } returns false
+                every { issues() } returns emptyList()
+            }
 
         val location = mockk<Location>()
         every { location.resourceType } returns "Location"

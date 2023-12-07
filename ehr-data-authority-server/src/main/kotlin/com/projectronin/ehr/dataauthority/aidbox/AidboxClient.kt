@@ -32,16 +32,17 @@ class AidboxClient(
     private val httpClient: HttpClient,
     @Value("\${aidbox.url}")
     private val aidboxURLRest: String,
-    private val authenticationBroker: AidboxAuthenticationBroker
+    private val authenticationBroker: AidboxAuthenticationBroker,
 ) : DataStorageService {
     private val logger = KotlinLogging.logger { }
 
     override suspend fun batchUpsert(resourceCollection: List<Resource<*>>): HttpStatusCode {
         val arrayLength = resourceCollection.size
-        val showArray = when (arrayLength) {
-            1 -> "resource"
-            else -> "resources"
-        }
+        val showArray =
+            when (arrayLength) {
+                1 -> "resource"
+                else -> "resources"
+            }
         logger.debug { "Aidbox batch upsert of $arrayLength $showArray" }
         val bundle = makeBundleForBatchUpsert(aidboxURLRest, resourceCollection)
         return runBlocking {
@@ -52,7 +53,7 @@ class AidboxClient(
                         headers {
                             append(
                                 HttpHeaders.Authorization,
-                                "${authentication.tokenType} ${authentication.accessToken}"
+                                "${authentication.tokenType} ${authentication.accessToken}",
                             )
                             append("aidbox-validation-skip", "reference")
                         }
@@ -67,7 +68,10 @@ class AidboxClient(
         }
     }
 
-    override fun getResource(resourceType: String, resourceFHIRID: String): Resource<*> {
+    override fun getResource(
+        resourceType: String,
+        resourceFHIRID: String,
+    ): Resource<*> {
         return runBlocking {
             val call: suspend () -> HttpResponse = {
                 val authentication = authenticationBroker.getAuthentication()
@@ -76,7 +80,7 @@ class AidboxClient(
                         headers {
                             append(
                                 HttpHeaders.Authorization,
-                                "${authentication.tokenType} ${authentication.accessToken}"
+                                "${authentication.tokenType} ${authentication.accessToken}",
                             )
                         }
                         contentType(ContentType.Application.Json)
@@ -89,7 +93,11 @@ class AidboxClient(
         }
     }
 
-    override suspend fun searchForResources(resourceType: String, tenantId: String, identifierToken: String): Bundle {
+    override suspend fun searchForResources(
+        resourceType: String,
+        tenantId: String,
+        identifierToken: String,
+    ): Bundle {
         val tenantIdentifier = "${CodeSystem.RONIN_TENANT.uri.value}|$tenantId".encodeURLPathPart()
         val encodedIdentifierToken = identifierToken.encodeURLPathPart()
         return runBlocking {
@@ -97,13 +105,13 @@ class AidboxClient(
                 val authentication = authenticationBroker.getAuthentication()
                 httpClient.request(
                     "Aidbox",
-                    "$aidboxURLRest/fhir/$resourceType?identifier=$tenantIdentifier&identifier=$encodedIdentifierToken"
+                    "$aidboxURLRest/fhir/$resourceType?identifier=$tenantIdentifier&identifier=$encodedIdentifierToken",
                 ) { url ->
                     get(url) {
                         headers {
                             append(
                                 HttpHeaders.Authorization,
-                                "${authentication.tokenType} ${authentication.accessToken}"
+                                "${authentication.tokenType} ${authentication.accessToken}",
                             )
                         }
                         contentType(ContentType.Application.Json)
@@ -116,7 +124,10 @@ class AidboxClient(
         }
     }
 
-    override suspend fun deleteResource(resourceType: String, udpId: String): HttpStatusCode {
+    override suspend fun deleteResource(
+        resourceType: String,
+        udpId: String,
+    ): HttpStatusCode {
         return runBlocking {
             val call: suspend () -> HttpResponse = {
                 val authentication = authenticationBroker.getAuthentication()
@@ -125,7 +136,7 @@ class AidboxClient(
                         headers {
                             append(
                                 HttpHeaders.Authorization,
-                                "${authentication.tokenType} ${authentication.accessToken}"
+                                "${authentication.tokenType} ${authentication.accessToken}",
                             )
                         }
                     }
@@ -136,7 +147,10 @@ class AidboxClient(
         }
     }
 
-    private suspend fun performWithAuthRetry(supplier: suspend () -> HttpResponse, retries: Int = 1): HttpResponse {
+    private suspend fun performWithAuthRetry(
+        supplier: suspend () -> HttpResponse,
+        retries: Int = 1,
+    ): HttpResponse {
         return try {
             supplier.invoke()
         } catch (e: ClientAuthenticationException) {

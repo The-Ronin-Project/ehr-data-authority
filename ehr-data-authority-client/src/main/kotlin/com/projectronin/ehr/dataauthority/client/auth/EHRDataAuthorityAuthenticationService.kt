@@ -35,33 +35,36 @@ class EHRDataAuthorityAuthenticationService(
     @Value("\${ehrda.auth.client.secret}")
     private val authClientSecret: String,
     @Value("\${ehrda.auth.auth0:true}")
-    private val useAuth0: Boolean
+    private val useAuth0: Boolean,
 ) : BrokeredAuthenticator() {
-    override fun reloadAuthentication(): Authentication = if (useAuth0) {
-        retrieveAuth0Authentication()
-    } else {
-        retrieveFormBasedAuthentication()
-    }
+    override fun reloadAuthentication(): Authentication =
+        if (useAuth0) {
+            retrieveAuth0Authentication()
+        } else {
+            retrieveFormBasedAuthentication()
+        }
 
     /**
      * Uses Auth0 to retrieve authentication.
      */
-    private fun retrieveAuth0Authentication(): Authentication = runBlocking {
-        val payload = Auth0Payload(authClientId, authClientSecret, audience)
-        val httpResponse: HttpResponse = client.post(authTokenUrl) {
-            contentType(ContentType.Application.Json)
-            setBody(payload)
+    private fun retrieveAuth0Authentication(): Authentication =
+        runBlocking {
+            val payload = Auth0Payload(authClientId, authClientSecret, audience)
+            val httpResponse: HttpResponse =
+                client.post(authTokenUrl) {
+                    contentType(ContentType.Application.Json)
+                    setBody(payload)
+                }
+            httpResponse.throwExceptionFromHttpStatus("Auth0", "POST $authTokenUrl")
+            httpResponse.body<Auth0Authentication>()
         }
-        httpResponse.throwExceptionFromHttpStatus("Auth0", "POST $authTokenUrl")
-        httpResponse.body<Auth0Authentication>()
-    }
 
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
     private data class Auth0Payload(
         val clientId: String,
         val clientSecret: String,
         val audience: String,
-        val grantType: String = "client_credentials"
+        val grantType: String = "client_credentials",
     )
 
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
@@ -70,7 +73,7 @@ class EHRDataAuthorityAuthenticationService(
         override val tokenType: String,
         override val scope: String? = null,
         private val expiresIn: Long? = null,
-        override val refreshToken: String? = null
+        override val refreshToken: String? = null,
     ) : Authentication {
         override val expiresAt: Instant? = expiresIn?.let { Instant.now().plusSeconds(expiresIn) }
 
@@ -81,18 +84,21 @@ class EHRDataAuthorityAuthenticationService(
     /**
      * Uses a more traditional form-based authentication.
      */
-    private fun retrieveFormBasedAuthentication(): Authentication = runBlocking {
-        val json: JsonNode = client.submitForm(
-            url = authTokenUrl,
-            formParameters = Parameters.build {
-                append("grant_type", "client_credentials")
-                append("client_id", authClientId)
-                append("client_secret", authClientSecret)
-            }
-        ).body()
-        val accessToken = json.get("access_token").asText()
-        FormBasedAuthentication(accessToken)
-    }
+    private fun retrieveFormBasedAuthentication(): Authentication =
+        runBlocking {
+            val json: JsonNode =
+                client.submitForm(
+                    url = authTokenUrl,
+                    formParameters =
+                        Parameters.build {
+                            append("grant_type", "client_credentials")
+                            append("client_id", authClientId)
+                            append("client_secret", authClientSecret)
+                        },
+                ).body()
+            val accessToken = json.get("access_token").asText()
+            FormBasedAuthentication(accessToken)
+        }
 
     data class FormBasedAuthentication(override val accessToken: String) : Authentication {
         override val tokenType: String = "Bearer"

@@ -14,7 +14,11 @@ import java.util.UUID
 class LocalStorageMapHashDAO : ResourceHashDAOService {
     private var localStorageHash: MutableMap<Triple<String, String, String>, Int> = mutableMapOf()
 
-    override fun getHash(tenantId: String, resourceType: String, resourceId: String): ResourceHashesDO? {
+    override fun getHash(
+        tenantId: String,
+        resourceType: String,
+        resourceId: String,
+    ): ResourceHashesDO? {
         val hashFound = localStorageHash[Triple(tenantId, resourceType, resourceId)]
 
         return hashFound?.let {
@@ -36,7 +40,11 @@ class LocalStorageMapHashDAO : ResourceHashDAOService {
         return resourceHashesDO
     }
 
-    override fun deleteHash(tenantId: String, resourceType: String, resourceId: String): Boolean {
+    override fun deleteHash(
+        tenantId: String,
+        resourceType: String,
+        resourceId: String,
+    ): Boolean {
         return localStorageHash.keys.remove(Triple(tenantId, resourceType, resourceId))
     }
 

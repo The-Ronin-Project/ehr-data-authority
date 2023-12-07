@@ -27,11 +27,12 @@ class AuthenticationServiceTest {
     fun `minimal authentication returned`() {
         val expectedBody =
             """{"client_id":"client-id","client_secret":"client-secret","grant_type":"client_credentials"}"""
-        val responseContent = """{
+        val responseContent =
+            """{
             |  "token_type" : "Bearer",
             |  "access_token": "abcd1234"
             |}
-        """.trimMargin()
+            """.trimMargin()
 
         val httpClient = makeClient(expectedBody, responseContent, HttpStatusCode.OK, authUrl)
         val service = AidboxAuthenticationService(httpClient, baseUrl, AidboxCredentials("client-id", "client-secret"))
@@ -47,14 +48,15 @@ class AuthenticationServiceTest {
     fun `full authentication returned`() {
         val expectedBody =
             """{"client_id":"client-id","client_secret":"client-secret","grant_type":"client_credentials"}"""
-        val responseContent = """{
+        val responseContent =
+            """{
             |  "token_type" : "Bearer",
             |  "access_token": "abcd1234",
             |  "expires_in": 3600,
             |  "scope": "local",
             |  "refresh_token": "efgh5678"
             |}
-        """.trimMargin()
+            """.trimMargin()
 
         val httpClient = makeClient(expectedBody, responseContent, HttpStatusCode.OK, authUrl)
         val service = AidboxAuthenticationService(httpClient, baseUrl, AidboxCredentials("client-id", "client-secret"))
@@ -88,7 +90,12 @@ class AuthenticationServiceTest {
         assertEquals(200, deleteSession.value)
     }
 
-    private fun makeClient(expectedBody: String, responseContent: String, status: HttpStatusCode, url: String): HttpClient =
+    private fun makeClient(
+        expectedBody: String,
+        responseContent: String,
+        status: HttpStatusCode,
+        url: String,
+    ): HttpClient =
         HttpClient(
             MockEngine { request ->
                 assertEquals(url, request.url.toString())
@@ -96,9 +103,9 @@ class AuthenticationServiceTest {
                 respond(
                     content = responseContent,
                     status = status,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
+                    headers = headersOf(HttpHeaders.ContentType, "application/json"),
                 )
-            }
+            },
         ) {
             install(ContentNegotiation) {
                 jackson {

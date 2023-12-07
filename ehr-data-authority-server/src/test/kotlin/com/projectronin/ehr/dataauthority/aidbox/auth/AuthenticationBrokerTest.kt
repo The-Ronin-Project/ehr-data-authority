@@ -45,13 +45,14 @@ class AuthenticationBrokerTest {
 
     @Test
     fun `loads fully specified authentication when not cached`() {
-        every { authenticationService.getAuthentication() } returns AidboxAuthentication(
-            "Bearer",
-            "token",
-            360,
-            "refresh",
-            "scope"
-        )
+        every { authenticationService.getAuthentication() } returns
+            AidboxAuthentication(
+                "Bearer",
+                "token",
+                360,
+                "refresh",
+                "scope",
+            )
         val authentication = broker.getAuthentication()
         assertEquals("Bearer", authentication.tokenType)
         assertEquals("token", authentication.accessToken)
@@ -90,10 +91,11 @@ class AuthenticationBrokerTest {
 
     @Test
     fun `loads authentication when cached has no expiration`() {
-        val cachedAuthentication = mockk<Authentication> {
-            every { expiresAt } returns null
-            every { accessToken } returns "token"
-        }
+        val cachedAuthentication =
+            mockk<Authentication> {
+                every { expiresAt } returns null
+                every { accessToken } returns "token"
+            }
         setCachedAuthentication(cachedAuthentication)
 
         every { authenticationService.getAuthentication() } returns AidboxAuthentication("Bearer", "token")
@@ -108,16 +110,18 @@ class AuthenticationBrokerTest {
 
     @Test
     fun `loads authentication when cached has expired`() {
-        val cachedAuthentication = mockk<Authentication> {
-            every { expiresAt } returns Instant.now().minusSeconds(600)
-            every { accessToken } returns "token"
-        }
+        val cachedAuthentication =
+            mockk<Authentication> {
+                every { expiresAt } returns Instant.now().minusSeconds(600)
+                every { accessToken } returns "token"
+            }
         setCachedAuthentication(cachedAuthentication)
 
-        every { authenticationService.getAuthentication() } returns AidboxAuthentication(
-            "Bearer",
-            "token"
-        )
+        every { authenticationService.getAuthentication() } returns
+            AidboxAuthentication(
+                "Bearer",
+                "token",
+            )
         every { authenticationService.deleteAuthenticationTokenSession("token") } returns HttpStatusCode.OK
         val authentication = broker.getAuthentication()
 
@@ -130,10 +134,11 @@ class AuthenticationBrokerTest {
 
     @Test
     fun `loads authentication when cached expires within buffer`() {
-        val cachedAuthentication = mockk<Authentication> {
-            every { expiresAt } returns Instant.now().plusSeconds(25)
-            every { accessToken } returns "token"
-        }
+        val cachedAuthentication =
+            mockk<Authentication> {
+                every { expiresAt } returns Instant.now().plusSeconds(25)
+                every { accessToken } returns "token"
+            }
         setCachedAuthentication(cachedAuthentication)
 
         every { authenticationService.getAuthentication() } returns AidboxAuthentication("Bearer", "token")
@@ -149,13 +154,14 @@ class AuthenticationBrokerTest {
 
     @Test
     fun `returns cached authentication when still valid`() {
-        val cachedAuthentication = mockk<Authentication> {
-            every { expiresAt } returns Instant.now().plusSeconds(600)
-            every { tokenType } returns "Basic"
-            every { accessToken } returns "cached_token"
-            every { scope } returns null
-            every { refreshToken } returns null
-        }
+        val cachedAuthentication =
+            mockk<Authentication> {
+                every { expiresAt } returns Instant.now().plusSeconds(600)
+                every { tokenType } returns "Basic"
+                every { accessToken } returns "cached_token"
+                every { scope } returns null
+                every { refreshToken } returns null
+            }
         setCachedAuthentication(cachedAuthentication)
 
         val authentication = broker.getAuthentication()
@@ -167,6 +173,6 @@ class AuthenticationBrokerTest {
     }
 
     private fun getCachedAuthentication() = cachedAuthorizationProperty.getter.call(broker)
-    private fun setCachedAuthentication(authentication: Authentication?) =
-        cachedAuthorizationProperty.setter.call(broker, authentication)
+
+    private fun setCachedAuthentication(authentication: Authentication?) = cachedAuthorizationProperty.setter.call(broker, authentication)
 }

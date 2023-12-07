@@ -35,12 +35,13 @@ class SecurityConfig {
 
     @Bean
     fun jwtDecoder(): JwtDecoder {
-        val validator = DelegatingOAuth2TokenValidator(
-            listOf(
-                JwtValidators.createDefaultWithIssuer(issuer),
-                JwtClaimValidator<Collection<String>>(JwtClaimNames.AUD) { aud -> audience in aud }
+        val validator =
+            DelegatingOAuth2TokenValidator(
+                listOf(
+                    JwtValidators.createDefaultWithIssuer(issuer),
+                    JwtClaimValidator<Collection<String>>(JwtClaimNames.AUD) { aud -> audience in aud },
+                ),
             )
-        )
 
         // Build the JWT Decoder
         val jwtDecoder = JwtDecoders.fromOidcIssuerLocation<NimbusJwtDecoder>(issuer)

@@ -12,11 +12,12 @@ class KafkaTopicConfigTest {
     private val region = "us-phoenix-1"
     private val system = "ehr-data-authority"
 
-    private val kafkaConfig = mockk<KafkaConfig> {
-        every { cloud.vendor } returns vendor
-        every { cloud.region } returns region
-        every { retrieve.serviceId } returns system
-    }
+    private val kafkaConfig =
+        mockk<KafkaConfig> {
+            every { cloud.vendor } returns vendor
+            every { cloud.region } returns region
+            every { retrieve.serviceId } returns system
+        }
 
     private val kafkaTopicConfig = KafkaTopicConfig(kafkaConfig)
 
@@ -28,7 +29,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.appointment.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Appointment-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Appointment::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Appointment::class, topic.eventClass)
@@ -43,7 +44,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.condition.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Condition-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Condition::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Condition::class, topic.eventClass)
@@ -58,7 +59,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.location.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Location-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Location::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Location::class, topic.eventClass)
@@ -73,7 +74,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.patient.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Patient-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Patient::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Patient::class, topic.eventClass)
@@ -88,7 +89,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.practitioner.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Practitioner-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Practitioner::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Practitioner::class, topic.eventClass)
@@ -103,7 +104,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.practitioner-role.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/PractitionerRole-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.PractitionerRole::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.PractitionerRole::class, topic.eventClass)
@@ -118,7 +119,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.encounter.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Encounter-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Encounter::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Encounter::class, topic.eventClass)
@@ -133,7 +134,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.medication.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Medication-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Medication::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Medication::class, topic.eventClass)
@@ -148,7 +149,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.medication-request.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/MedicationRequest-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.MedicationRequest::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.MedicationRequest::class, topic.eventClass)
@@ -163,7 +164,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.medication-statement.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/MedicationStatement-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.MedicationStatement::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.MedicationStatement::class, topic.eventClass)
@@ -178,7 +179,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.observation.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Observation-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Observation::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Observation::class, topic.eventClass)
@@ -192,7 +193,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.request-group.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/RequestGroup-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.RequestGroup::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.RequestGroup::class, topic.eventClass)
@@ -207,7 +208,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.care-plan.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/CarePlan-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.CarePlan::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.CarePlan::class, topic.eventClass)
@@ -222,7 +223,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.document-reference.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/DocumentReference-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.DocumentReference::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.DocumentReference::class, topic.eventClass)
@@ -237,7 +238,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.medication-administration.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/MedicationAdministration-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.MedicationAdministration::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.MedicationAdministration::class, topic.eventClass)
@@ -252,7 +253,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.service-request.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/ServiceRequest-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.ServiceRequest::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.ServiceRequest::class, topic.eventClass)
@@ -267,7 +268,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.diagnostic-report.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/DiagnosticReport-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.DiagnosticReport::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.DiagnosticReport::class, topic.eventClass)
@@ -282,7 +283,7 @@ class KafkaTopicConfigTest {
         assertEquals("oci.us-phoenix-1.ehr-data-authority.procedure.v1", topic.topicName)
         assertEquals(
             "https://github.com/projectronin/ronin-fhir-models/blob/main/common-fhir-r4-models/v1/Procedure-v1.schema.json",
-            topic.dataSchema
+            topic.dataSchema,
         )
         assertEquals(com.projectronin.interop.fhir.r4.resource.Procedure::class, topic.resourceClass)
         assertEquals(com.projectronin.fhir.r4.Procedure::class, topic.eventClass)

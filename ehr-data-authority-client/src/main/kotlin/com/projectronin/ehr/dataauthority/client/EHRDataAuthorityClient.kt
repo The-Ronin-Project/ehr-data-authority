@@ -39,7 +39,7 @@ class EHRDataAuthorityClient(
     @Value("\${ehrda.batch.identifiers:50}")
     private val identifiersBatchSize: Int = 50,
     @Value("\${ehrda.batch.add:20}")
-    private val addBatchSize: Int = 20
+    private val addBatchSize: Int = 20,
 ) {
     private val serverName = "EHR Data Authority"
     val notFoundStatuses = listOf(HttpStatusCode.NotFound, HttpStatusCode.Gone)
@@ -49,7 +49,10 @@ class EHRDataAuthorityClient(
      * then sends to [addResourcesByBatch] to post the resources
      * returns list of [BatchResourceResponse]
      */
-    suspend fun addResources(tenantId: String, resources: List<Resource<*>>): BatchResourceResponse {
+    suspend fun addResources(
+        tenantId: String,
+        resources: List<Resource<*>>,
+    ): BatchResourceResponse {
         val batchResources = addResourcesInBatches(tenantId, resources, addBatchSize)
         val succeeded = batchResources.flatMap { it.succeeded }
         val failed = batchResources.flatMap { it.failed }
@@ -62,7 +65,7 @@ class EHRDataAuthorityClient(
     private suspend fun addResourcesInBatches(
         tenantId: String,
         resources: List<Resource<*>>,
-        batchSize: Int
+        batchSize: Int,
     ): List<BatchResourceResponse> {
         return resources.chunked(batchSize).flatMap { batch ->
             runCatching { addResourcesByBatch(tenantId, batch) }.fold(
@@ -74,14 +77,15 @@ class EHRDataAuthorityClient(
                             val resource = batch.first()
                             listOf(
                                 BatchResourceResponse(
-                                    failed = listOf(
-                                        FailedResource(
-                                            resourceType = resource.resourceType,
-                                            resourceId = resource.id!!.value!!,
-                                            error = "Payload too large"
-                                        )
-                                    )
-                                )
+                                    failed =
+                                        listOf(
+                                            FailedResource(
+                                                resourceType = resource.resourceType,
+                                                resourceId = resource.id!!.value!!,
+                                                error = "Payload too large",
+                                            ),
+                                        ),
+                                ),
                             )
                         } else {
                             // Attempt the failed batch at half the current size
@@ -90,7 +94,7 @@ class EHRDataAuthorityClient(
                     } else {
                         throw e
                     }
-                }
+                },
             )
         }
     }
@@ -98,39 +102,48 @@ class EHRDataAuthorityClient(
     /**
      * Posts a batch/chunk of resources.
      */
-    private suspend fun addResourcesByBatch(tenantId: String, resources: List<Resource<*>>): BatchResourceResponse {
+    private suspend fun addResourcesByBatch(
+        tenantId: String,
+        resources: List<Resource<*>>,
+    ): BatchResourceResponse {
         val resourceUrl = "$hostUrl/tenants/$tenantId/resources"
         val authentication = authenticationService.getAuthentication()
-        val response: HttpResponse = client.request(serverName, resourceUrl) { url ->
-            post(url) {
-                headers {
-                    append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+        val response: HttpResponse =
+            client.request(serverName, resourceUrl) { url ->
+                post(url) {
+                    headers {
+                        append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+                    }
+                    accept(ContentType.Application.Json)
+                    contentType(ContentType.Application.Json)
+                    setBody(resources)
                 }
-                accept(ContentType.Application.Json)
-                contentType(ContentType.Application.Json)
-                setBody(resources)
             }
-        }
         return response.body()
     }
 
     /**
      * Retrieves the resource with [resourceType] and [udpId] for [tenantId].
      */
-    suspend fun getResource(tenantId: String, resourceType: String, udpId: String): Resource<*>? {
+    suspend fun getResource(
+        tenantId: String,
+        resourceType: String,
+        udpId: String,
+    ): Resource<*>? {
         return runCatching<Resource<*>?> {
             val resourceUrl = "$hostUrl/tenants/$tenantId/resources/$resourceType/$udpId"
             val authentication = authenticationService.getAuthentication()
 
-            val response: HttpResponse = client.request(serverName, resourceUrl) { url ->
-                get(url) {
-                    headers {
-                        append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+            val response: HttpResponse =
+                client.request(serverName, resourceUrl) { url ->
+                    get(url) {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+                        }
+                        accept(ContentType.Application.Json)
+                        contentType(ContentType.Application.Json)
                     }
-                    accept(ContentType.Application.Json)
-                    contentType(ContentType.Application.Json)
                 }
-            }
             response.body()
         }.fold(
             onSuccess = { it },
@@ -140,7 +153,7 @@ class EHRDataAuthorityClient(
                 } else {
                     throw it
                 }
-            }
+            },
         )
     }
 
@@ -150,7 +163,7 @@ class EHRDataAuthorityClient(
     final inline fun <reified T : Resource<T>> getResourceAs(
         tenantId: String,
         resourceType: String,
-        udpId: String
+        udpId: String,
     ): T? =
         runBlocking {
             getResource(tenantId, resourceType, udpId) as? T
@@ -162,21 +175,22 @@ class EHRDataAuthorityClient(
     suspend fun getResourceIdentifiers(
         tenantId: String,
         resourceType: IdentifierSearchableResourceTypes,
-        identifiers: List<Identifier>
+        identifiers: List<Identifier>,
     ): List<IdentifierSearchResponse> {
         val resourceUrl = "$hostUrl/tenants/$tenantId/resources/${resourceType.name}/identifiers"
         return identifiers.chunked(identifiersBatchSize).flatMap { batch ->
             val authentication = authenticationService.getAuthentication()
-            val response: HttpResponse = client.request(serverName, resourceUrl) { requestUrl ->
-                post(requestUrl) {
-                    headers {
-                        append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+            val response: HttpResponse =
+                client.request(serverName, resourceUrl) { requestUrl ->
+                    post(requestUrl) {
+                        headers {
+                            append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+                        }
+                        accept(ContentType.Application.Json)
+                        contentType(ContentType.Application.Json)
+                        setBody(batch)
                     }
-                    accept(ContentType.Application.Json)
-                    contentType(ContentType.Application.Json)
-                    setBody(batch)
                 }
-            }
             response.body<List<IdentifierSearchResponse>>()
         }
     }
@@ -186,7 +200,11 @@ class EHRDataAuthorityClient(
      * tenants. Any non-testing tenant that is attempted to be deleted from will result in a 400. If this request was
      * unsuccessful, any exception returned by the EHR Data Authority will be thrown.
      */
-    suspend fun deleteResource(tenantId: String, resourceType: String, udpId: String) {
+    suspend fun deleteResource(
+        tenantId: String,
+        resourceType: String,
+        udpId: String,
+    ) {
         val resourceUrl = "$hostUrl/tenants/$tenantId/resources/$resourceType/$udpId"
         val authentication = authenticationService.getAuthentication()
         client.request(serverName, resourceUrl) { url ->
@@ -201,7 +219,10 @@ class EHRDataAuthorityClient(
     /**
      * Returns the change status of given [resources] compared against the existing stored resources.
      */
-    suspend fun getResourcesChangeStatus(tenantId: String, resources: List<Resource<*>>): BatchResourceChangeResponse {
+    suspend fun getResourcesChangeStatus(
+        tenantId: String,
+        resources: List<Resource<*>>,
+    ): BatchResourceChangeResponse {
         val batchResources = resources.chunked(25).map { getResourcesChangeByBatch(tenantId, it) }
         val succeeded = batchResources.flatMap { it.succeeded }
         val failed = batchResources.flatMap { it.failed }
@@ -213,20 +234,21 @@ class EHRDataAuthorityClient(
      */
     private suspend fun getResourcesChangeByBatch(
         tenantId: String,
-        resources: List<Resource<*>>
+        resources: List<Resource<*>>,
     ): BatchResourceChangeResponse {
         val resourceUrl = "$hostUrl/tenants/$tenantId/resources/changeStatus"
         val authentication = authenticationService.getAuthentication()
-        val response: HttpResponse = client.request(serverName, resourceUrl) { url ->
-            post(url) {
-                headers {
-                    append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+        val response: HttpResponse =
+            client.request(serverName, resourceUrl) { url ->
+                post(url) {
+                    headers {
+                        append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+                    }
+                    accept(ContentType.Application.Json)
+                    contentType(ContentType.Application.Json)
+                    setBody(resources)
                 }
-                accept(ContentType.Application.Json)
-                contentType(ContentType.Application.Json)
-                setBody(resources)
             }
-        }
         return response.body()
     }
 }

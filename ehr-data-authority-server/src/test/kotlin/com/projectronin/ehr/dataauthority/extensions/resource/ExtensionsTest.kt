@@ -9,9 +9,10 @@ import org.junit.jupiter.api.assertThrows
 class ExtensionsTest {
     @Test
     fun `toKey returns expected key`() {
-        val patient = patient {
-            id of Id("patId")
-        }
+        val patient =
+            patient {
+                id of Id("patId")
+            }
 
         val actualKey = patient.toKey()
         assertEquals("Patient:patId", actualKey)

@@ -25,8 +25,8 @@ import javax.sql.DataSource
         "com.projectronin.ehr",
         "com.projectronin.interop.fhir.ronin",
         "com.projectronin.interop.validation",
-        "com.projectronin.interop.ehr"
-    ]
+        "com.projectronin.interop.ehr",
+    ],
 )
 @Import(KafkaSpringConfig::class, HttpSpringConfig::class, DatalakeSpringConfig::class)
 @SpringBootApplication
@@ -36,8 +36,7 @@ class EHRDataAuthorityServer {
     fun database(dataSource: DataSource): Database = Database.connectWithSpringSupport(dataSource)
 
     @Bean
-    fun transactionManager(dataSource: DataSource): PlatformTransactionManager =
-        DataSourceTransactionManager(dataSource)
+    fun transactionManager(dataSource: DataSource): PlatformTransactionManager = DataSourceTransactionManager(dataSource)
 
     @Primary
     @Bean

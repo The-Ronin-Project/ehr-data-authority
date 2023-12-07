@@ -25,7 +25,7 @@ class AidboxConfiguration {
         @Value("\${aidbox.client.id}")
         clientId: String,
         @Value("\${aidbox.client.secret}")
-        clientSecret: String
+        clientSecret: String,
     ): AidboxCredentials {
         return AidboxCredentials(clientId, clientSecret)
     }
@@ -35,15 +35,13 @@ class AidboxConfiguration {
         httpClient: HttpClient,
         @Value("\${aidbox.url}")
         aidboxURLRest: String,
-        aidboxCredentials: AidboxCredentials
+        aidboxCredentials: AidboxCredentials,
     ): AidboxAuthenticationService {
         return AidboxAuthenticationService(httpClient, aidboxURLRest, aidboxCredentials)
     }
 
     @Bean
-    fun aidboxAuthenticationBroker(
-        aidboxAuthenticationService: AidboxAuthenticationService
-    ): AidboxAuthenticationBroker {
+    fun aidboxAuthenticationBroker(aidboxAuthenticationService: AidboxAuthenticationService): AidboxAuthenticationBroker {
         return AidboxAuthenticationBroker(aidboxAuthenticationService)
     }
 
@@ -52,15 +50,13 @@ class AidboxConfiguration {
         httpClient: HttpClient,
         @Value("\${aidbox.url}")
         aidboxURLRest: String,
-        authenticationBroker: AidboxAuthenticationBroker
+        authenticationBroker: AidboxAuthenticationBroker,
     ): DataStorageService {
         return AidboxClient(httpClient, aidboxURLRest, authenticationBroker)
     }
 
     @Bean
-    fun resourceHashDao(
-        database: Database
-    ): ResourceHashDAOService {
+    fun resourceHashDao(database: Database): ResourceHashDAOService {
         return ResourceHashesDAO(database)
     }
 

@@ -8,21 +8,25 @@ import org.junit.jupiter.api.Test
 class IdentifierSearchResponseTest {
     @Test
     fun `can serialize and deserialize`() {
-        val response = IdentifierSearchResponse(
-            searchedIdentifier = Identifier(system = "system", value = "value"),
-            foundResources = listOf(
-                FoundResourceIdentifiers(
-                    udpId = "tenant-12345",
-                    identifiers = listOf(
-                        Identifier(system = "system", value = "value"),
-                        Identifier(system = "system2", value = "value2")
-                    )
-                )
+        val response =
+            IdentifierSearchResponse(
+                searchedIdentifier = Identifier(system = "system", value = "value"),
+                foundResources =
+                    listOf(
+                        FoundResourceIdentifiers(
+                            udpId = "tenant-12345",
+                            identifiers =
+                                listOf(
+                                    Identifier(system = "system", value = "value"),
+                                    Identifier(system = "system2", value = "value2"),
+                                ),
+                        ),
+                    ),
             )
-        )
         val json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response)
 
-        val expectedJson = """
+        val expectedJson =
+            """
             {
               "searchedIdentifier" : {
                 "system" : "system",
@@ -39,7 +43,7 @@ class IdentifierSearchResponseTest {
                 } ]
               } ]
             }
-        """.trimIndent()
+            """.trimIndent()
         assertEquals(expectedJson, json)
 
         val deserialized = objectMapper.readValue<IdentifierSearchResponse>(json)

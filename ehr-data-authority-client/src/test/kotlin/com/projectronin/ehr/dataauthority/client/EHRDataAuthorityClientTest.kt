@@ -40,49 +40,57 @@ import org.junit.jupiter.api.assertThrows
 
 class EHRDataAuthorityClientTest {
     private val authenticationToken = "12345678"
-    private val authenticationService = mockk<EHRDataAuthorityAuthenticationService> {
-        every { getAuthentication() } returns mockk {
-            every { accessToken } returns authenticationToken
+    private val authenticationService =
+        mockk<EHRDataAuthorityAuthenticationService> {
+            every { getAuthentication() } returns
+                mockk {
+                    every { accessToken } returns authenticationToken
+                }
         }
-    }
-    private val client: HttpClient = HttpClient(OkHttp) {
-        install(ContentNegotiation) {
-            jackson {
-                JacksonManager.setUpMapper(this)
+    private val client: HttpClient =
+        HttpClient(OkHttp) {
+            install(ContentNegotiation) {
+                jackson {
+                    JacksonManager.setUpMapper(this)
+                }
             }
+            install(ContentLengthSupplier)
         }
-        install(ContentLengthSupplier)
-    }
 
     @Test
     fun `addResources works with one resource being sent`() {
         val resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAKE"
-        val resource = listOf<Resource<*>>(
-            Patient(id = Id(value = resourceId))
-        )
-        val resourceReturn = BatchResourceResponse(
-            succeeded = listOf(
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAKE",
-                    modificationType = ModificationType.CREATED
-                )
+        val resource =
+            listOf<Resource<*>>(
+                Patient(id = Id(value = resourceId)),
             )
-        )
+        val resourceReturn =
+            BatchResourceResponse(
+                succeeded =
+                    listOf(
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAKE",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                    ),
+            )
 
         val mockWebServer = MockWebServer()
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(resourceReturn))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
-        val response = runBlocking {
-            val resourceToReturn = EHRDataAuthorityClient(url.toString(), client, authenticationService)
-                .addResources("tenant", resource)
-            resourceToReturn
-        }
+        val response =
+            runBlocking {
+                val resourceToReturn =
+                    EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                        .addResources("tenant", resource)
+                resourceToReturn
+            }
         assertEquals(resource[0].id?.value, response.succeeded[0].resourceId)
         assertEquals(resource[0].resourceType, response.succeeded[0].resourceType)
         assertEquals(response.succeeded[0].modificationType, ModificationType.CREATED)
@@ -104,47 +112,50 @@ class EHRDataAuthorityClientTest {
 
         val listOfResourceIds = listOf(resourceId1, resourceId2, resourceId3, resourceId4)
         val listOfResources = listOf<Resource<*>>(resource1, resource2, resource3, resource4)
-        val returnedResources = BatchResourceResponse(
-            succeeded = listOf(
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    modificationType = ModificationType.CREATED
-                )
+        val returnedResources =
+            BatchResourceResponse(
+                succeeded =
+                    listOf(
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                    ),
             )
-        )
 
         val mockWebServer = MockWebServer()
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
-        val response = runBlocking {
-            val resourceToReturn =
-                EHRDataAuthorityClient(url.toString(), client, authenticationService).addResources(
-                    "tenant",
-                    listOfResources
-                )
-            resourceToReturn
-        }
+        val response =
+            runBlocking {
+                val resourceToReturn =
+                    EHRDataAuthorityClient(url.toString(), client, authenticationService).addResources(
+                        "tenant",
+                        listOfResources,
+                    )
+                resourceToReturn
+            }
 
         val request = mockWebServer.takeRequest()
         val responseIds = mutableListOf<String>()
@@ -167,48 +178,52 @@ class EHRDataAuthorityClientTest {
         val resource4 = Patient(Id(value = resourceId4))
 
         val listOfResources = listOf<Resource<*>>(resource1, resource2, resource3, resource4)
-        val returnedResources = BatchResourceResponse(
-            succeeded = listOf(
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    modificationType = ModificationType.CREATED
-                )
-            ),
-            failed = listOf(
-                FailedResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    error = "Error publishing to data store"
-                ),
-                FailedResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    error = "Error publishing to data store"
-                )
+        val returnedResources =
+            BatchResourceResponse(
+                succeeded =
+                    listOf(
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                    ),
+                failed =
+                    listOf(
+                        FailedResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            error = "Error publishing to data store",
+                        ),
+                        FailedResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            error = "Error publishing to data store",
+                        ),
+                    ),
             )
-        )
         val mockWebServer = MockWebServer()
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
-        val response = runBlocking {
-            val resourceToReturn =
-                EHRDataAuthorityClient(url.toString(), client, authenticationService).addResources(
-                    "tenant",
-                    listOfResources
-                )
-            resourceToReturn
-        }
+        val response =
+            runBlocking {
+                val resourceToReturn =
+                    EHRDataAuthorityClient(url.toString(), client, authenticationService).addResources(
+                        "tenant",
+                        listOfResources,
+                    )
+                resourceToReturn
+            }
 
         val request = mockWebServer.takeRequest()
         val failedResponseIds = mutableListOf<String>()
@@ -216,13 +231,14 @@ class EHRDataAuthorityClientTest {
         response.failed.forEach { failedResponseIds.add(it.resourceId) }
         response.succeeded.forEach { succeededResponseIds.add(it.resourceId) }
         assertTrue(
-            failedResponseIds == listOf("FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3", "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4")
+            failedResponseIds == listOf("FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3", "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4"),
         )
         assertTrue(
-            succeededResponseIds == listOf(
-                "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2"
-            )
+            succeededResponseIds ==
+                listOf(
+                    "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                    "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                ),
         )
         assertEquals(true, request.path?.endsWith("/tenants/tenant/resources"))
         assertEquals(response.succeeded.size, 2)
@@ -243,174 +259,182 @@ class EHRDataAuthorityClientTest {
         val resourceId5 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5"
         val resource5 = Patient(Id(value = resourceId5))
 
-        val listOfResources = listOf<Resource<*>>(
-            resource1, resource2, resource3, resource4, resource5,
-            resource1, resource2, resource3, resource4, resource5,
-            resource1, resource2, resource3, resource4, resource5,
-            resource1, resource2, resource3, resource4, resource5,
-            resource1, resource2, resource3, resource4, resource5
-        )
+        val listOfResources =
+            listOf<Resource<*>>(
+                resource1, resource2, resource3, resource4, resource5,
+                resource1, resource2, resource3, resource4, resource5,
+                resource1, resource2, resource3, resource4, resource5,
+                resource1, resource2, resource3, resource4, resource5,
+                resource1, resource2, resource3, resource4, resource5,
+            )
 
-        val resourcesReturned1 = BatchResourceResponse(
-            succeeded = listOf(
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
-                    modificationType = ModificationType.CREATED
-                )
-            ),
-            failed = listOf(
-                FailedResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    error = "Error publishing to data store"
-                ),
-                FailedResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    error = "Error publishing to data store"
-                ),
-                FailedResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    error = "Error publishing to data store"
-                ),
-                FailedResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    error = "Error publishing to data store"
-                ),
-                FailedResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
-                    error = "Error publishing to data store"
-                )
+        val resourcesReturned1 =
+            BatchResourceResponse(
+                succeeded =
+                    listOf(
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                    ),
+                failed =
+                    listOf(
+                        FailedResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            error = "Error publishing to data store",
+                        ),
+                        FailedResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            error = "Error publishing to data store",
+                        ),
+                        FailedResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            error = "Error publishing to data store",
+                        ),
+                        FailedResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            error = "Error publishing to data store",
+                        ),
+                        FailedResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                            error = "Error publishing to data store",
+                        ),
+                    ),
             )
-        )
-        val resourcesReturned2 = BatchResourceResponse(
-            succeeded = listOf(
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    modificationType = ModificationType.CREATED
-                )
-            ),
-            failed = listOf(
-                FailedResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    error = "Error publishing to data store"
-                ),
-                FailedResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
-                    error = "Error publishing to data store"
-                ),
-                FailedResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    error = "Error publishing to data store"
-                )
+        val resourcesReturned2 =
+            BatchResourceResponse(
+                succeeded =
+                    listOf(
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                    ),
+                failed =
+                    listOf(
+                        FailedResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            error = "Error publishing to data store",
+                        ),
+                        FailedResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                            error = "Error publishing to data store",
+                        ),
+                        FailedResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            error = "Error publishing to data store",
+                        ),
+                    ),
             )
-        )
         val mockWebServer = MockWebServer()
-        mockWebServer.enqueue( // mock first response from chunk
+        mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(resourcesReturned1))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
-        mockWebServer.enqueue( // mock second response from chunk
+        mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(resourcesReturned2))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
 
         val url = mockWebServer.url("/test")
-        val response = runBlocking {
-            val resourcesToReturn =
-                EHRDataAuthorityClient(url.toString(), client, authenticationService).addResources(
-                    "tenant",
-                    listOfResources
-                )
-            resourcesToReturn
-        }
+        val response =
+            runBlocking {
+                val resourcesToReturn =
+                    EHRDataAuthorityClient(url.toString(), client, authenticationService).addResources(
+                        "tenant",
+                        listOfResources,
+                    )
+                resourcesToReturn
+            }
 
         val request = mockWebServer.takeRequest()
         assertEquals(true, request.path?.endsWith("/tenants/tenant/resources"))
@@ -435,62 +459,74 @@ class EHRDataAuthorityClientTest {
 
         val listOfResources = listOf<Resource<*>>(resource1, resource2, resource3, resource4, resource5)
 
-        val resourcesReturned1 = BatchResourceResponse(
-            succeeded = listOf(
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    modificationType = ModificationType.CREATED
-                )
+        val resourcesReturned1 =
+            BatchResourceResponse(
+                succeeded =
+                    listOf(
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                    ),
             )
-        )
-        val resourcesReturned2 = BatchResourceResponse(
-            succeeded = listOf(
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
-                    modificationType = ModificationType.CREATED
-                )
+        val resourcesReturned2 =
+            BatchResourceResponse(
+                succeeded =
+                    listOf(
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                    ),
             )
-        )
         val mockWebServer = MockWebServer()
-        mockWebServer.enqueue( // mock first response from chunk
+        mockWebServer.enqueue(
+            // mock first response from chunk
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(resourcesReturned1))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
-        mockWebServer.enqueue( // mock second response from chunk
+        mockWebServer.enqueue(
+            // mock second response from chunk
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(resourcesReturned2))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
 
         val url = mockWebServer.url("/test")
-        val response = runBlocking {
-            val resourcesToReturn =
-                EHRDataAuthorityClient(url.toString(), client, authenticationService, addBatchSize = 3).addResources(
-                    "tenant",
-                    listOfResources
-                )
-            resourcesToReturn
-        }
+        val response =
+            runBlocking {
+                val resourcesToReturn =
+                    EHRDataAuthorityClient(
+                        url.toString(),
+                        client,
+                        authenticationService,
+                        addBatchSize = 3,
+                    ).addResources(
+                        "tenant",
+                        listOfResources,
+                    )
+                resourcesToReturn
+            }
 
         assertEquals(0, response.failed.size)
         assertEquals(5, response.succeeded.size)
@@ -513,17 +549,18 @@ class EHRDataAuthorityClientTest {
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.BadRequest.value)
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
-        val exception = assertThrows<ClientFailureException> {
-            runBlocking {
-                EHRDataAuthorityClient(url.toString(), client, authenticationService).addResources(
-                    "tenant",
-                    listOfResources
-                )
+        val exception =
+            assertThrows<ClientFailureException> {
+                runBlocking {
+                    EHRDataAuthorityClient(url.toString(), client, authenticationService).addResources(
+                        "tenant",
+                        listOfResources,
+                    )
+                }
             }
-        }
 
         assertNotNull(exception.message)
         exception.message?.let { assertTrue(it.contains("400")) }
@@ -536,22 +573,24 @@ class EHRDataAuthorityClientTest {
     @Test
     fun `getResource works when found`() {
         val resourceId = "123"
-        val resource: Resource<*> = Patient(
-            id = Id(value = resourceId),
-            name = listOf(HumanName(family = "Test".asFHIR()))
-        )
+        val resource: Resource<*> =
+            Patient(
+                id = Id(value = resourceId),
+                name = listOf(HumanName(family = "Test".asFHIR())),
+            )
         val mockWebServer = MockWebServer()
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(resource))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
-        val response = runBlocking {
-            EHRDataAuthorityClient(url.toString(), client, authenticationService)
-                .getResource("tenant", "Patient", "123")
-        }
+        val response =
+            runBlocking {
+                EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                    .getResource("tenant", "Patient", "123")
+            }
         val returnedResource = response as Patient
         val request = mockWebServer.takeRequest()
 
@@ -566,14 +605,15 @@ class EHRDataAuthorityClientTest {
             MockResponse()
                 .setResponseCode(HttpStatusCode.NotFound.value)
                 .setBody("{\"errorMessage\": \"No resources ever\"}")
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
 
-        val response = runBlocking {
-            EHRDataAuthorityClient(url.toString(), client, authenticationService)
-                .getResource("tenant", "Patient", "123")
-        }
+        val response =
+            runBlocking {
+                EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                    .getResource("tenant", "Patient", "123")
+            }
         val request = mockWebServer.takeRequest()
 
         assertNull(response)
@@ -587,14 +627,15 @@ class EHRDataAuthorityClientTest {
             MockResponse()
                 .setResponseCode(HttpStatusCode.Gone.value)
                 .setBody("{\"errorMessage\": \"No resources ever\"}")
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
 
-        val response = runBlocking {
-            EHRDataAuthorityClient(url.toString(), client, authenticationService)
-                .getResource("tenant", "Patient", "123")
-        }
+        val response =
+            runBlocking {
+                EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                    .getResource("tenant", "Patient", "123")
+            }
         val request = mockWebServer.takeRequest()
 
         assertNull(response)
@@ -609,7 +650,7 @@ class EHRDataAuthorityClientTest {
             MockResponse()
                 .setResponseCode(HttpStatusCode.InternalServerError.value)
                 .setBody("{\"errorMessage\": \"No resources ever\"}")
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
 
@@ -618,7 +659,7 @@ class EHRDataAuthorityClientTest {
                 EHRDataAuthorityClient(url.toString(), client, authenticationService).getResource(
                     "tenant",
                     "Practitioner",
-                    resourceId
+                    resourceId,
                 )
             }
         }
@@ -627,22 +668,24 @@ class EHRDataAuthorityClientTest {
     @Test
     fun `getResourceAs works when found`() {
         val resourceId = "123"
-        val resource: Resource<*> = Patient(
-            id = Id(value = resourceId),
-            name = listOf(HumanName(family = "Test".asFHIR()))
-        )
+        val resource: Resource<*> =
+            Patient(
+                id = Id(value = resourceId),
+                name = listOf(HumanName(family = "Test".asFHIR())),
+            )
         val mockWebServer = MockWebServer()
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(resource))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
-        val returnedResource = runBlocking {
-            EHRDataAuthorityClient(url.toString(), client, authenticationService)
-                .getResourceAs<Patient>("tenant", "Patient", "123")
-        }
+        val returnedResource =
+            runBlocking {
+                EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                    .getResourceAs<Patient>("tenant", "Patient", "123")
+            }
         val request = mockWebServer.takeRequest()
 
         assertEquals("Test", returnedResource!!.name.first().family?.value)
@@ -656,14 +699,15 @@ class EHRDataAuthorityClientTest {
             MockResponse()
                 .setResponseCode(HttpStatusCode.NotFound.value)
                 .setBody("{\"errorMessage\": \"No resources ever\"}")
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
 
-        val returnedResource = runBlocking {
-            EHRDataAuthorityClient(url.toString(), client, authenticationService)
-                .getResourceAs<Patient>("tenant", "Patient", "123")
-        }
+        val returnedResource =
+            runBlocking {
+                EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                    .getResourceAs<Patient>("tenant", "Patient", "123")
+            }
         val request = mockWebServer.takeRequest()
 
         assertNull(returnedResource)
@@ -677,14 +721,15 @@ class EHRDataAuthorityClientTest {
             MockResponse()
                 .setResponseCode(HttpStatusCode.Gone.value)
                 .setBody("{\"errorMessage\": \"No resources ever\"}")
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
 
-        val returnedResource = runBlocking {
-            EHRDataAuthorityClient(url.toString(), client, authenticationService)
-                .getResourceAs<Patient>("tenant", "Patient", "123")
-        }
+        val returnedResource =
+            runBlocking {
+                EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                    .getResourceAs<Patient>("tenant", "Patient", "123")
+            }
         val request = mockWebServer.takeRequest()
 
         assertNull(returnedResource)
@@ -699,7 +744,7 @@ class EHRDataAuthorityClientTest {
             MockResponse()
                 .setResponseCode(HttpStatusCode.InternalServerError.value)
                 .setBody("{\"errorMessage\": \"No resources ever\"}")
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
 
@@ -708,7 +753,7 @@ class EHRDataAuthorityClientTest {
                 EHRDataAuthorityClient(url.toString(), client, authenticationService).getResourceAs<Patient>(
                     "tenant",
                     "Practitioner",
-                    resourceId
+                    resourceId,
                 )
             }
         }
@@ -719,37 +764,42 @@ class EHRDataAuthorityClientTest {
         val ident1 = Identifier("http://projectronin.com/id/mrn", "value1")
         val ident2 = Identifier("system2", "value2")
 
-        val searchResult = listOf(
-            IdentifierSearchResponse(
-                searchedIdentifier = ident1,
-                foundResources = listOf(
-                    FoundResourceIdentifiers("udpId1", listOf(ident1, Identifier("notSearched", "notSearched"))),
-                    FoundResourceIdentifiers("udpId2", listOf(ident1, Identifier("notSearched2", "notSearched2")))
-                )
-            ),
-            IdentifierSearchResponse(
-                searchedIdentifier = ident2,
-                foundResources = listOf(
-                    FoundResourceIdentifiers("udpId3", listOf(ident2))
-                )
+        val searchResult =
+            listOf(
+                IdentifierSearchResponse(
+                    searchedIdentifier = ident1,
+                    foundResources =
+                        listOf(
+                            FoundResourceIdentifiers("udpId1", listOf(ident1, Identifier("notSearched", "notSearched"))),
+                            FoundResourceIdentifiers("udpId2", listOf(ident1, Identifier("notSearched2", "notSearched2"))),
+                        ),
+                ),
+                IdentifierSearchResponse(
+                    searchedIdentifier = ident2,
+                    foundResources =
+                        listOf(
+                            FoundResourceIdentifiers("udpId3", listOf(ident2)),
+                        ),
+                ),
             )
-        )
         val mockWebServer = MockWebServer()
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(searchResult))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
-        val identifers = listOf(
-            ident1,
-            ident2
-        )
-        val response = runBlocking {
-            EHRDataAuthorityClient(url.toString(), client, authenticationService)
-                .getResourceIdentifiers("tenant", IdentifierSearchableResourceTypes.Location, identifers)
-        }
+        val identifers =
+            listOf(
+                ident1,
+                ident2,
+            )
+        val response =
+            runBlocking {
+                EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                    .getResourceIdentifiers("tenant", IdentifierSearchableResourceTypes.Location, identifers)
+            }
         val request = mockWebServer.takeRequest()
 
         assertEquals(2, response.size)
@@ -759,7 +809,7 @@ class EHRDataAuthorityClientTest {
         assertEquals("/test/tenants/tenant/resources/Location/identifiers", request.path)
         assertEquals(
             """[{"system":"http://projectronin.com/id/mrn","value":"value1"},{"system":"system2","value":"value2"}]""",
-            request.body.readUtf8()
+            request.body.readUtf8(),
         )
     }
 
@@ -768,46 +818,52 @@ class EHRDataAuthorityClientTest {
         val ident1 = Identifier("http://projectronin.com/id/mrn", "value1")
         val ident2 = Identifier("system2", "value2")
 
-        val searchResult1 = listOf(
-            IdentifierSearchResponse(
-                searchedIdentifier = ident1,
-                foundResources = listOf(
-                    FoundResourceIdentifiers("udpId1", listOf(ident1, Identifier("notSearched", "notSearched"))),
-                    FoundResourceIdentifiers("udpId2", listOf(ident1, Identifier("notSearched2", "notSearched2")))
-                )
+        val searchResult1 =
+            listOf(
+                IdentifierSearchResponse(
+                    searchedIdentifier = ident1,
+                    foundResources =
+                        listOf(
+                            FoundResourceIdentifiers("udpId1", listOf(ident1, Identifier("notSearched", "notSearched"))),
+                            FoundResourceIdentifiers("udpId2", listOf(ident1, Identifier("notSearched2", "notSearched2"))),
+                        ),
+                ),
             )
-        )
-        val searchResult2 = listOf(
-            IdentifierSearchResponse(
-                searchedIdentifier = ident2,
-                foundResources = listOf(
-                    FoundResourceIdentifiers("udpId3", listOf(ident2))
-                )
+        val searchResult2 =
+            listOf(
+                IdentifierSearchResponse(
+                    searchedIdentifier = ident2,
+                    foundResources =
+                        listOf(
+                            FoundResourceIdentifiers("udpId3", listOf(ident2)),
+                        ),
+                ),
             )
-        )
 
         val mockWebServer = MockWebServer()
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(searchResult1))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(searchResult2))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
-        val identifers = listOf(
-            ident1,
-            ident2
-        )
-        val response = runBlocking {
-            EHRDataAuthorityClient(url.toString(), client, authenticationService, 1)
-                .getResourceIdentifiers("tenant", IdentifierSearchableResourceTypes.Location, identifers)
-        }
+        val identifers =
+            listOf(
+                ident1,
+                ident2,
+            )
+        val response =
+            runBlocking {
+                EHRDataAuthorityClient(url.toString(), client, authenticationService, 1)
+                    .getResourceIdentifiers("tenant", IdentifierSearchableResourceTypes.Location, identifers)
+            }
         assertEquals(2, response.size)
         assertEquals(2, response[0].foundResources.size)
         assertEquals(ident1, response[0].searchedIdentifier)
@@ -819,14 +875,14 @@ class EHRDataAuthorityClientTest {
         assertEquals("/test/tenants/tenant/resources/Location/identifiers", request1.path)
         assertEquals(
             """[{"system":"http://projectronin.com/id/mrn","value":"value1"}]""",
-            request1.body.readUtf8()
+            request1.body.readUtf8(),
         )
 
         val request2 = mockWebServer.takeRequest()
         assertEquals("/test/tenants/tenant/resources/Location/identifiers", request2.path)
         assertEquals(
             """[{"system":"system2","value":"value2"}]""",
-            request2.body.readUtf8()
+            request2.body.readUtf8(),
         )
     }
 
@@ -844,7 +900,7 @@ class EHRDataAuthorityClientTest {
         val request = mockWebServer.takeRequest()
         assertEquals(
             "/test/tenants/tenant/resources/Location/tenant-1234",
-            request.path
+            request.path,
         )
         assertEquals("DELETE", request.method)
     }
@@ -865,7 +921,7 @@ class EHRDataAuthorityClientTest {
         val request = mockWebServer.takeRequest()
         assertEquals(
             "/test/tenants/tenant/resources/Location/tenant-1234",
-            request.path
+            request.path,
         )
         assertEquals("DELETE", request.method)
     }
@@ -873,32 +929,37 @@ class EHRDataAuthorityClientTest {
     @Test
     fun `getResourcesChangeStatus works with one resource being sent`() {
         val resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAKE"
-        val resource = listOf<Resource<*>>(
-            Patient(id = Id(value = resourceId))
-        )
-        val resourceReturn = BatchResourceChangeResponse(
-            succeeded = listOf(
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAKE",
-                    changeType = ChangeType.CHANGED
-                )
+        val resource =
+            listOf<Resource<*>>(
+                Patient(id = Id(value = resourceId)),
             )
-        )
+        val resourceReturn =
+            BatchResourceChangeResponse(
+                succeeded =
+                    listOf(
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAKE",
+                            changeType = ChangeType.CHANGED,
+                        ),
+                    ),
+            )
 
         val mockWebServer = MockWebServer()
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(resourceReturn))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
-        val response = runBlocking {
-            val resourceToReturn = EHRDataAuthorityClient(url.toString(), client, authenticationService)
-                .getResourcesChangeStatus("tenant", resource)
-            resourceToReturn
-        }
+        val response =
+            runBlocking {
+                val resourceToReturn =
+                    EHRDataAuthorityClient(url.toString(), client, authenticationService)
+                        .getResourcesChangeStatus("tenant", resource)
+                resourceToReturn
+            }
         assertEquals(resource[0].id?.value, response.succeeded[0].resourceId)
         assertEquals(resource[0].resourceType, response.succeeded[0].resourceType)
         assertEquals(response.succeeded[0].changeType, ChangeType.CHANGED)
@@ -920,47 +981,50 @@ class EHRDataAuthorityClientTest {
 
         val listOfResourceIds = listOf(resourceId1, resourceId2, resourceId3, resourceId4)
         val listOfResources = listOf<Resource<*>>(resource1, resource2, resource3, resource4)
-        val returnedResources = BatchResourceChangeResponse(
-            succeeded = listOf(
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    changeType = ChangeType.CHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    changeType = ChangeType.NEW
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    changeType = ChangeType.CHANGED
-                )
+        val returnedResources =
+            BatchResourceChangeResponse(
+                succeeded =
+                    listOf(
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            changeType = ChangeType.CHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            changeType = ChangeType.NEW,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            changeType = ChangeType.CHANGED,
+                        ),
+                    ),
             )
-        )
 
         val mockWebServer = MockWebServer()
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
-        val response = runBlocking {
-            val resourceToReturn =
-                EHRDataAuthorityClient(url.toString(), client, authenticationService).getResourcesChangeStatus(
-                    "tenant",
-                    listOfResources
-                )
-            resourceToReturn
-        }
+        val response =
+            runBlocking {
+                val resourceToReturn =
+                    EHRDataAuthorityClient(url.toString(), client, authenticationService).getResourcesChangeStatus(
+                        "tenant",
+                        listOfResources,
+                    )
+                resourceToReturn
+            }
 
         val request = mockWebServer.takeRequest()
         val responseIds = mutableListOf<String>()
@@ -984,196 +1048,204 @@ class EHRDataAuthorityClientTest {
         val resourceId5 = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5"
         val resource5 = Patient(Id(value = resourceId5))
 
-        val listOfResources = listOf<Resource<*>>(
-            resource1, resource2, resource3, resource4, resource5,
-            resource1, resource2, resource3, resource4, resource5,
-            resource1, resource2, resource3, resource4, resource5,
-            resource1, resource2, resource3, resource4, resource5,
-            resource1, resource2, resource3, resource4, resource5,
-            resource1, resource2, resource3, resource4, resource5
-        )
+        val listOfResources =
+            listOf<Resource<*>>(
+                resource1, resource2, resource3, resource4, resource5,
+                resource1, resource2, resource3, resource4, resource5,
+                resource1, resource2, resource3, resource4, resource5,
+                resource1, resource2, resource3, resource4, resource5,
+                resource1, resource2, resource3, resource4, resource5,
+                resource1, resource2, resource3, resource4, resource5,
+            )
 
-        val resourcesReturned1 = BatchResourceChangeResponse(
-            succeeded = listOf(
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
-                    changeType = ChangeType.UNCHANGED
-                )
+        val resourcesReturned1 =
+            BatchResourceChangeResponse(
+                succeeded =
+                    listOf(
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                    ),
             )
-        )
-        val resourcesReturned2 = BatchResourceChangeResponse(
-            succeeded = listOf(
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    changeType = ChangeType.NEW
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    changeType = ChangeType.NEW
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    changeType = ChangeType.UNCHANGED
-                ),
-                ChangeStatusResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
-                    changeType = ChangeType.UNCHANGED
-                )
+        val resourcesReturned2 =
+            BatchResourceChangeResponse(
+                succeeded =
+                    listOf(
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            changeType = ChangeType.NEW,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            changeType = ChangeType.NEW,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                        ChangeStatusResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                            changeType = ChangeType.UNCHANGED,
+                        ),
+                    ),
             )
-        )
         val mockWebServer = MockWebServer()
-        mockWebServer.enqueue( // mock first response from chunk
+        mockWebServer.enqueue(
+            // mock first response from chunk
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(resourcesReturned1))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
-        mockWebServer.enqueue( // mock second response from chunk
+        mockWebServer.enqueue(
+            // mock second response from chunk
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(resourcesReturned2))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
 
         val url = mockWebServer.url("/test")
-        val response = runBlocking {
-            val resourcesToReturn =
-                EHRDataAuthorityClient(url.toString(), client, authenticationService).getResourcesChangeStatus(
-                    "tenant",
-                    listOfResources
-                )
-            resourcesToReturn
-        }
+        val response =
+            runBlocking {
+                val resourcesToReturn =
+                    EHRDataAuthorityClient(url.toString(), client, authenticationService).getResourcesChangeStatus(
+                        "tenant",
+                        listOfResources,
+                    )
+                resourcesToReturn
+            }
 
         val request = mockWebServer.takeRequest()
         assertEquals(true, request.path?.endsWith("/tenants/tenant/resources/changeStatus"))
@@ -1192,17 +1264,18 @@ class EHRDataAuthorityClientTest {
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.BadRequest.value)
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
-        val exception = assertThrows<ClientFailureException> {
-            runBlocking {
-                EHRDataAuthorityClient(url.toString(), client, authenticationService).getResourcesChangeStatus(
-                    "tenant",
-                    listOfResources
-                )
+        val exception =
+            assertThrows<ClientFailureException> {
+                runBlocking {
+                    EHRDataAuthorityClient(url.toString(), client, authenticationService).getResourcesChangeStatus(
+                        "tenant",
+                        listOfResources,
+                    )
+                }
             }
-        }
 
         assertNotNull(exception.message)
         exception.message?.let { assertTrue(it.contains("400")) }
@@ -1226,34 +1299,38 @@ class EHRDataAuthorityClientTest {
         val listOfResourceIds = listOf(resourceId1, resourceId2, resourceId3, resourceId4)
         val listOfResources = listOf<Resource<*>>(resource1, resource2, resource3, resource4)
 
-        val returnedResources1 = BatchResourceResponse(
-            succeeded = listOf(
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    modificationType = ModificationType.CREATED
-                )
+        val returnedResources1 =
+            BatchResourceResponse(
+                succeeded =
+                    listOf(
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                    ),
             )
-        )
-        val returnedResources2 = BatchResourceResponse(
-            succeeded = listOf(
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    modificationType = ModificationType.CREATED
-                )
+        val returnedResources2 =
+            BatchResourceResponse(
+                succeeded =
+                    listOf(
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                    ),
             )
-        )
 
         val mockWebServer = MockWebServer()
         // Return PayloadTooLarge on the first call
@@ -1262,23 +1339,29 @@ class EHRDataAuthorityClientTest {
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources1))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources2))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
-        val response = runBlocking {
-            val resourceToReturn =
-                EHRDataAuthorityClient(url.toString(), client, authenticationService, addBatchSize = 4).addResources(
-                    "tenant",
-                    listOfResources
-                )
-            resourceToReturn
-        }
+        val response =
+            runBlocking {
+                val resourceToReturn =
+                    EHRDataAuthorityClient(
+                        url.toString(),
+                        client,
+                        authenticationService,
+                        addBatchSize = 4,
+                    ).addResources(
+                        "tenant",
+                        listOfResources,
+                    )
+                resourceToReturn
+            }
 
         assertEquals(3, mockWebServer.requestCount)
         val successIds = response.succeeded.map { it.resourceId }
@@ -1304,59 +1387,67 @@ class EHRDataAuthorityClientTest {
         val listOfResourceIds = listOf(resourceId1, resourceId2, resourceId3, resourceId4, resourceId5, resourceId6)
         val listOfResources = listOf<Resource<*>>(resource1, resource2, resource3, resource4, resource5, resource6)
 
-        val returnedResources1 = BatchResourceResponse(
-            succeeded = listOf(
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    modificationType = ModificationType.CREATED
-                )
+        val returnedResources1 =
+            BatchResourceResponse(
+                succeeded =
+                    listOf(
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK1",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                    ),
             )
-        )
-        val returnedResources2 = BatchResourceResponse(
-            succeeded = listOf(
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
-                    modificationType = ModificationType.CREATED
-                )
+        val returnedResources2 =
+            BatchResourceResponse(
+                succeeded =
+                    listOf(
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK3",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                    ),
             )
-        )
-        val returnedResources3 = BatchResourceResponse(
-            succeeded = listOf(
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
-                    modificationType = ModificationType.CREATED
-                )
+        val returnedResources3 =
+            BatchResourceResponse(
+                succeeded =
+                    listOf(
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK4",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                    ),
             )
-        )
-        val returnedResources4 = BatchResourceResponse(
-            succeeded = listOf(
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
-                    modificationType = ModificationType.CREATED
-                ),
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK6",
-                    modificationType = ModificationType.CREATED
-                )
+        val returnedResources4 =
+            BatchResourceResponse(
+                succeeded =
+                    listOf(
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK5",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK6",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                    ),
             )
-        )
 
         val mockWebServer = MockWebServer()
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources1))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         // Return PayloadTooLarge on the second call
         mockWebServer.enqueue(MockResponse().setResponseCode(HttpStatusCode.PayloadTooLarge.value))
@@ -1364,29 +1455,35 @@ class EHRDataAuthorityClientTest {
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources2))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources3))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources4))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
         val url = mockWebServer.url("/test")
-        val response = runBlocking {
-            val resourceToReturn =
-                EHRDataAuthorityClient(url.toString(), client, authenticationService, addBatchSize = 2).addResources(
-                    "tenant",
-                    listOfResources
-                )
-            resourceToReturn
-        }
+        val response =
+            runBlocking {
+                val resourceToReturn =
+                    EHRDataAuthorityClient(
+                        url.toString(),
+                        client,
+                        authenticationService,
+                        addBatchSize = 2,
+                    ).addResources(
+                        "tenant",
+                        listOfResources,
+                    )
+                resourceToReturn
+            }
 
         // 1. Batch size 2 - success
         // 2. Batch size 2 - payload too large
@@ -1408,15 +1505,17 @@ class EHRDataAuthorityClientTest {
 
         val listOfResources = listOf<Resource<*>>(resource1, resource2)
 
-        val returnedResources1 = BatchResourceResponse(
-            succeeded = listOf(
-                SucceededResource(
-                    resourceType = "Patient",
-                    resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
-                    modificationType = ModificationType.CREATED
-                )
+        val returnedResources1 =
+            BatchResourceResponse(
+                succeeded =
+                    listOf(
+                        SucceededResource(
+                            resourceType = "Patient",
+                            resourceId = "FAKEFAKE-FAKE-FAKE-FAKE-FAKEFAKEFAK2",
+                            modificationType = ModificationType.CREATED,
+                        ),
+                    ),
             )
-        )
 
         val mockWebServer = MockWebServer()
         mockWebServer.enqueue(MockResponse().setResponseCode(HttpStatusCode.PayloadTooLarge.value))
@@ -1424,21 +1523,22 @@ class EHRDataAuthorityClientTest {
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
                 .setBody(JacksonManager.objectMapper.writeValueAsString(returnedResources1))
-                .setHeader("Content-Type", "application/json")
+                .setHeader("Content-Type", "application/json"),
         )
 
         val url = mockWebServer.url("/test")
-        val response = runBlocking {
-            EHRDataAuthorityClient(
-                url.toString(),
-                client,
-                authenticationService,
-                addBatchSize = 1
-            ).addResources(
-                "tenant",
-                listOfResources
-            )
-        }
+        val response =
+            runBlocking {
+                EHRDataAuthorityClient(
+                    url.toString(),
+                    client,
+                    authenticationService,
+                    addBatchSize = 1,
+                ).addResources(
+                    "tenant",
+                    listOfResources,
+                )
+            }
 
         assertEquals(2, mockWebServer.requestCount)
         assertEquals(returnedResources1.succeeded, response.succeeded)

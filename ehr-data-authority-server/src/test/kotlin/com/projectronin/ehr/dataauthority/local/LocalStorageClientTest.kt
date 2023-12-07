@@ -27,62 +27,73 @@ import org.junit.jupiter.api.Test
 
 class LocalStorageClientTest {
     private val localStorageClient = LocalStorageClient()
-    private val practitioner1 = Practitioner(
-        id = Id("cmjones"),
-        identifier = listOf(
-            Identifier(system = CodeSystem.RONIN_TENANT.uri, value = "test".asFHIR()),
-            Identifier(system = CodeSystem.NPI.uri, value = "third".asFHIR()),
-            Identifier(system = Uri("system"), value = "value".asFHIR())
-        ),
-        name = listOf(HumanName(family = "Jones".asFHIR(), given = listOf("Cordelia", "May").asFHIR()))
-    )
-    private val practitioner2 = Practitioner(
-        id = Id("rallyr"),
-        identifier = listOf(
-            Identifier(system = CodeSystem.NPI.uri, value = "second".asFHIR())
-        ),
-        name = listOf(HumanName(family = "Llyr".asFHIR(), given = listOf("Regan", "Anne").asFHIR()))
-    )
-    private val practitioner3 = Practitioner(
-        id = Id("gwalsh"),
-        identifier = listOf(
-            Identifier(system = CodeSystem.NPI.uri, value = "first".asFHIR())
-        ),
-        name = listOf(HumanName(family = "Walsh".asFHIR(), given = listOf("Goneril").asFHIR()))
-    )
-    private val practitionerRole1 = PractitionerRole(
-        id = Id("12347"),
-        identifier = listOf(
-            Identifier(system = CodeSystem.NPI.uri, value = "id3".asFHIR())
-        ),
-        active = FHIRBoolean.TRUE,
-        period = Period(end = DateTime("2022")),
-        practitioner = Reference(reference = "Practitioner/cmjones".asFHIR()),
-        location = listOf(Reference(reference = "Location/12345".asFHIR())),
-        healthcareService = listOf(Reference(reference = "HealthcareService/3456".asFHIR())),
-        availableTime = listOf(AvailableTime(allDay = FHIRBoolean.FALSE)),
-        notAvailable = listOf(NotAvailable(description = "Not available now".asFHIR())),
-        availabilityExceptions = "exceptions".asFHIR(),
-        endpoint = listOf(Reference(reference = "Endpoint/1357".asFHIR()))
-    )
-    private val practitionerRole2 = PractitionerRole(
-        id = Id("12348"),
-        identifier = listOf(
-            Identifier(system = CodeSystem.NPI.uri, value = "id4".asFHIR())
-        ),
-        active = FHIRBoolean.TRUE,
-        period = Period(end = DateTime("2022")),
-        practitioner = Reference(reference = "Practitioner/rallyr".asFHIR()),
-        location = listOf(Reference(reference = "Location/12346".asFHIR())),
-        healthcareService = listOf(Reference(reference = "HealthcareService/3456".asFHIR())),
-        availableTime = listOf(AvailableTime(allDay = FHIRBoolean.TRUE)),
-        notAvailable = listOf(NotAvailable(description = "Available now".asFHIR())),
-        availabilityExceptions = "No exceptions".asFHIR(),
-        endpoint = listOf(
-            Reference(reference = "Endpoint/1358".asFHIR()),
-            Reference(reference = "Endpoint/1359".asFHIR())
+    private val practitioner1 =
+        Practitioner(
+            id = Id("cmjones"),
+            identifier =
+                listOf(
+                    Identifier(system = CodeSystem.RONIN_TENANT.uri, value = "test".asFHIR()),
+                    Identifier(system = CodeSystem.NPI.uri, value = "third".asFHIR()),
+                    Identifier(system = Uri("system"), value = "value".asFHIR()),
+                ),
+            name = listOf(HumanName(family = "Jones".asFHIR(), given = listOf("Cordelia", "May").asFHIR())),
         )
-    )
+    private val practitioner2 =
+        Practitioner(
+            id = Id("rallyr"),
+            identifier =
+                listOf(
+                    Identifier(system = CodeSystem.NPI.uri, value = "second".asFHIR()),
+                ),
+            name = listOf(HumanName(family = "Llyr".asFHIR(), given = listOf("Regan", "Anne").asFHIR())),
+        )
+    private val practitioner3 =
+        Practitioner(
+            id = Id("gwalsh"),
+            identifier =
+                listOf(
+                    Identifier(system = CodeSystem.NPI.uri, value = "first".asFHIR()),
+                ),
+            name = listOf(HumanName(family = "Walsh".asFHIR(), given = listOf("Goneril").asFHIR())),
+        )
+    private val practitionerRole1 =
+        PractitionerRole(
+            id = Id("12347"),
+            identifier =
+                listOf(
+                    Identifier(system = CodeSystem.NPI.uri, value = "id3".asFHIR()),
+                ),
+            active = FHIRBoolean.TRUE,
+            period = Period(end = DateTime("2022")),
+            practitioner = Reference(reference = "Practitioner/cmjones".asFHIR()),
+            location = listOf(Reference(reference = "Location/12345".asFHIR())),
+            healthcareService = listOf(Reference(reference = "HealthcareService/3456".asFHIR())),
+            availableTime = listOf(AvailableTime(allDay = FHIRBoolean.FALSE)),
+            notAvailable = listOf(NotAvailable(description = "Not available now".asFHIR())),
+            availabilityExceptions = "exceptions".asFHIR(),
+            endpoint = listOf(Reference(reference = "Endpoint/1357".asFHIR())),
+        )
+    private val practitionerRole2 =
+        PractitionerRole(
+            id = Id("12348"),
+            identifier =
+                listOf(
+                    Identifier(system = CodeSystem.NPI.uri, value = "id4".asFHIR()),
+                ),
+            active = FHIRBoolean.TRUE,
+            period = Period(end = DateTime("2022")),
+            practitioner = Reference(reference = "Practitioner/rallyr".asFHIR()),
+            location = listOf(Reference(reference = "Location/12346".asFHIR())),
+            healthcareService = listOf(Reference(reference = "HealthcareService/3456".asFHIR())),
+            availableTime = listOf(AvailableTime(allDay = FHIRBoolean.TRUE)),
+            notAvailable = listOf(NotAvailable(description = "Available now".asFHIR())),
+            availabilityExceptions = "No exceptions".asFHIR(),
+            endpoint =
+                listOf(
+                    Reference(reference = "Endpoint/1358".asFHIR()),
+                    Reference(reference = "Endpoint/1359".asFHIR()),
+                ),
+        )
     private val practitioners = listOf(practitioner1, practitioner2, practitioner3)
     private val practitionerRoles = listOf(practitionerRole1, practitionerRole2)
 
@@ -133,9 +144,10 @@ class LocalStorageClientTest {
     fun `localStorage batch upsert of 2 Practitioners returns response 200`() {
         runBlocking { localStorageClient.deleteAllResources() } // clear storage
         val expectedResponseStatus = HttpStatusCode.OK
-        val actualResponse = runBlocking {
-            localStorageClient.batchUpsert(practitioners)
-        }
+        val actualResponse =
+            runBlocking {
+                localStorageClient.batchUpsert(practitioners)
+            }
         assertEquals(expectedResponseStatus, actualResponse)
     }
 
@@ -143,9 +155,10 @@ class LocalStorageClientTest {
     fun `localStorage batchupsert of PractitionerRoles with reference targets missing, returns 200 - no validation`() {
         runBlocking { localStorageClient.deleteAllResources() } // clear storage
         val expectedResponseStatus = HttpStatusCode.OK
-        val actualResponse = runBlocking {
-            localStorageClient.batchUpsert(practitionerRoles)
-        }
+        val actualResponse =
+            runBlocking {
+                localStorageClient.batchUpsert(practitionerRoles)
+            }
         assertEquals(actualResponse, expectedResponseStatus)
     }
 
@@ -157,22 +170,25 @@ class LocalStorageClientTest {
         val entries = mutableListOf<BundleEntry>()
         entries.add(
             BundleEntry(
-                resource = Practitioner(
-                    id = Id("cmjones"),
-                    identifier = listOf(
-                        Identifier(system = CodeSystem.RONIN_TENANT.uri, value = "test".asFHIR()),
-                        Identifier(system = CodeSystem.NPI.uri, value = "third".asFHIR()),
-                        Identifier(system = Uri("system"), value = "value".asFHIR())
+                resource =
+                    Practitioner(
+                        id = Id("cmjones"),
+                        identifier =
+                            listOf(
+                                Identifier(system = CodeSystem.RONIN_TENANT.uri, value = "test".asFHIR()),
+                                Identifier(system = CodeSystem.NPI.uri, value = "third".asFHIR()),
+                                Identifier(system = Uri("system"), value = "value".asFHIR()),
+                            ),
+                        name = listOf(HumanName(family = "Jones".asFHIR(), given = listOf("Cordelia", "May").asFHIR())),
                     ),
-                    name = listOf(HumanName(family = "Jones".asFHIR(), given = listOf("Cordelia", "May").asFHIR()))
-                )
-            )
+            ),
         )
         val responseBundle = Bundle(entry = entries, type = Code(BundleType.TRANSACTION_RESPONSE.code))
         val searchToken = "system|value"
-        val actual = runBlocking {
-            localStorageClient.searchForResources("Practitioner", "test", searchToken)
-        }
+        val actual =
+            runBlocking {
+                localStorageClient.searchForResources("Practitioner", "test", searchToken)
+            }
         assertEquals(responseBundle, actual)
         assertEquals("Bundle", actual.resourceType)
         assertEquals(1, actual.entry.size)
@@ -188,9 +204,10 @@ class LocalStorageClientTest {
     fun `search works when nothing is found localStorageClient`() {
         val responseBundle = Bundle(entry = emptyList(), type = Code(BundleType.TRANSACTION_RESPONSE.code))
         val searchToken = "not|there"
-        val actual = runBlocking {
-            localStorageClient.searchForResources("Practitioner", "test", searchToken)
-        }
+        val actual =
+            runBlocking {
+                localStorageClient.searchForResources("Practitioner", "test", searchToken)
+            }
         assertEquals(responseBundle, actual)
         assertEquals("Bundle", actual.resourceType)
         assertEquals(0, actual.entry.size)
@@ -200,9 +217,10 @@ class LocalStorageClientTest {
     fun `search works when no Practitioner in localStorageClient`() {
         val responseBundle = Bundle(entry = emptyList(), type = Code(BundleType.TRANSACTION_RESPONSE.code))
         val searchToken = "not|there"
-        val actual = runBlocking {
-            localStorageClient.searchForResources("Patient", "test", searchToken)
-        }
+        val actual =
+            runBlocking {
+                localStorageClient.searchForResources("Patient", "test", searchToken)
+            }
         assertEquals(responseBundle, actual)
         assertEquals("Bundle", actual.resourceType)
         assertEquals(0, actual.entry.size)
