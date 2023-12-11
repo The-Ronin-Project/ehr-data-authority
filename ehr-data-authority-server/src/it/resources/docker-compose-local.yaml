@@ -35,6 +35,7 @@ services:
       - OCI_REGION=us-phoenix-1
       - OCI_TENANCY_OCID=ocid.tenancy
       - OCI_USER_OCID=userid
+      - OCI_INFX_REGISTRY_FILE=TheDataNormalizationRegistry.json
       - LOGGING_LEVEL_IO_KTOR=DEBUG
     depends_on:
       mysql-server:

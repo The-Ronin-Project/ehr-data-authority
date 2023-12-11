@@ -2,7 +2,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/n/namespace/b/infx-shared/o/DataNormalizationRegistry%2Fv3%2Fregistry.json"
+      "path": "/n/namespace/b/infx-shared/o/TheDataNormalizationRegistry.json"
     },
     "httpResponse": {
       "statusCode": 200,
