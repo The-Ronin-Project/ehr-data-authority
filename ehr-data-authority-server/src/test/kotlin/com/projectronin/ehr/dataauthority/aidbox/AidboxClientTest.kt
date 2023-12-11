@@ -362,7 +362,7 @@ class AidboxClientTest {
     }
 
     @Test
-    fun `aidbox batch upsert retries on 401 three times`() {
+    fun `aidbox batch upsert retries on 401 but still fails`() {
         val expectedResponseStatus = HttpStatusCode.Unauthorized
         val authenticationBroker = createAuthenticationBroker()
         val dataStorageClient =
@@ -376,40 +376,17 @@ class AidboxClientTest {
             runBlocking {
                 dataStorageClient.batchUpsert(practitioners)
             }
-            // if the endpoint keeps returning 401, we should have it reauthenticate
-            verifySequence {
-                authenticationBroker.reauthenticate()
-            }
+        }
+        // if the endpoint keeps returning 401, we should have it reauthenticate
+        verifySequence {
+            authenticationBroker.getAuthentication(eq(false))
+            authenticationBroker.getAuthentication(eq(true))
         }
     }
 
     @Test
     fun `aidbox batch upsert retries on 401 with success after retry`() {
-        val invalidAuth: Authentication =
-            mockk {
-                every { tokenType } returns authTokenType
-                every { accessToken } returns "invalid-token"
-            }
-        val validAuth: Authentication =
-            mockk {
-                every { tokenType } returns authTokenType
-                every { accessToken } returns authAccessToken
-            }
-        val hasReauthenticated = AtomicBoolean(false)
-        val authenticationBroker =
-            mockk<AidboxAuthenticationBroker> {
-                every { getAuthentication() } answers {
-                    if (hasReauthenticated.get()) {
-                        validAuth
-                    } else {
-                        invalidAuth
-                    }
-                }
-                every { reauthenticate() } answers {
-                    hasReauthenticated.set(true)
-                    validAuth
-                }
-            }
+        val authenticationBroker = createAuthenticationBrokerWithInvalidAuth()
         val dataStorageClient =
             createClient(
                 expectedUrl = urlBatchUpsert,
@@ -420,9 +397,8 @@ class AidboxClientTest {
             dataStorageClient.batchUpsert(practitioners)
         }
         verifySequence {
-            authenticationBroker.getAuthentication()
-            authenticationBroker.reauthenticate()
-            authenticationBroker.getAuthentication()
+            authenticationBroker.getAuthentication(eq(false))
+            authenticationBroker.getAuthentication(eq(true))
         }
     }
 
@@ -513,7 +489,10 @@ class AidboxClientTest {
             MockEngine { request ->
                 assertEquals(expectedUrl, request.url.toString())
                 if (expectedBody != "") {
-                    assertEquals(expectedBody, String(request.body.toByteArray())) // see if this is a JSON string/stream
+                    assertEquals(
+                        expectedBody,
+                        String(request.body.toByteArray()),
+                    ) // see if this is a JSON string/stream
                 }
                 val status =
                     if (!request.headers["Authorization"].equals(authHeader)) {
@@ -543,16 +522,38 @@ class AidboxClientTest {
 
     private fun createAuthenticationBroker(): AidboxAuthenticationBroker {
         return mockk<AidboxAuthenticationBroker> {
-            every { getAuthentication() } returns
+            every { getAuthentication(any<Boolean>()) } returns
                 mockk {
                     every { tokenType } returns authTokenType
                     every { accessToken } returns authAccessToken
                 }
-            every { reauthenticate() } returns
-                mockk {
-                    every { tokenType } returns authTokenType
-                    every { accessToken } returns authTokenType
+        }
+    }
+
+    private fun createAuthenticationBrokerWithInvalidAuth(): AidboxAuthenticationBroker {
+        val invalidAuth: Authentication =
+            mockk {
+                every { tokenType } returns authTokenType
+                every { accessToken } returns "invalid-token"
+            }
+        val validAuth: Authentication =
+            mockk {
+                every { tokenType } returns authTokenType
+                every { accessToken } returns authAccessToken
+            }
+        val hasReauthenticated = AtomicBoolean(false)
+        return mockk<AidboxAuthenticationBroker> {
+            every { getAuthentication(true) } answers {
+                hasReauthenticated.set(true)
+                validAuth
+            }
+            every { getAuthentication(false) } answers {
+                if (hasReauthenticated.get()) {
+                    validAuth
+                } else {
+                    invalidAuth
                 }
+            }
         }
     }
 }

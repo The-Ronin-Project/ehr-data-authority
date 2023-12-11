@@ -1,6 +1,7 @@
 package com.projectronin.ehr.dataauthority.aidbox.auth
 
 import com.projectronin.interop.common.auth.Authentication
+import com.projectronin.interop.common.auth.BrokeredAuthenticator
 import io.ktor.http.HttpStatusCode
 import io.mockk.every
 import io.mockk.mockk
@@ -19,7 +20,7 @@ class AuthenticationBrokerTest {
     private lateinit var broker: AidboxAuthenticationBroker
 
     private val cachedAuthorizationProperty =
-        AidboxAuthenticationBroker::class.memberProperties.first { it.name == "cachedAuthentication" } as KMutableProperty<Authentication?>
+        BrokeredAuthenticator::class.memberProperties.first { it.name == "cachedAuthentication" } as KMutableProperty<Authentication?>
 
     init {
         cachedAuthorizationProperty.isAccessible = true
