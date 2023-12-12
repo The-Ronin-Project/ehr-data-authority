@@ -37,7 +37,7 @@ dependencies {
 
     runtimeOnly(libs.liquibase.core)
     runtimeOnly(libs.mysql.connector.java)
-    runtimeOnly(libs.interop.validation.client)
+    implementation(libs.interop.validation.client)
 
     // Needed to format logs for DataDog
     runtimeOnly(libs.logstash.logback.encoder)

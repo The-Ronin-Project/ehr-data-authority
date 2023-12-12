@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.projectronin.interop.common.http.spring.HttpSpringConfig
 import com.projectronin.interop.common.jackson.JacksonManager
 import com.projectronin.interop.datalake.spring.DatalakeSpringConfig
+import com.projectronin.interop.fhir.ronin.spring.RoninProfileConfig
 import com.projectronin.interop.kafka.spring.KafkaSpringConfig
+import com.projectronin.interop.validation.client.spring.ValidationClientSpringConfig
 import org.ktorm.database.Database
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -23,12 +25,15 @@ import javax.sql.DataSource
 @ComponentScan(
     basePackages = [
         "com.projectronin.ehr",
-        "com.projectronin.interop.fhir.ronin",
-        "com.projectronin.interop.validation",
-        "com.projectronin.interop.ehr",
     ],
 )
-@Import(KafkaSpringConfig::class, HttpSpringConfig::class, DatalakeSpringConfig::class)
+@Import(
+    KafkaSpringConfig::class,
+    HttpSpringConfig::class,
+    DatalakeSpringConfig::class,
+    RoninProfileConfig::class,
+    ValidationClientSpringConfig::class,
+)
 @SpringBootApplication
 @EnableTransactionManagement
 class EHRDataAuthorityServer {
