@@ -17,7 +17,9 @@ import com.projectronin.interop.fhir.generators.primitives.of
 import com.projectronin.interop.fhir.generators.resources.patient
 import com.projectronin.interop.fhir.r4.CodeSystem
 import com.projectronin.interop.fhir.r4.CodeableConcepts
+import com.projectronin.interop.fhir.r4.datatype.Meta
 import com.projectronin.interop.fhir.r4.datatype.Quantity
+import com.projectronin.interop.fhir.r4.datatype.primitive.Canonical
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.datatype.primitive.Uri
 import com.projectronin.interop.fhir.r4.resource.Observation
@@ -241,8 +243,11 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `invalid resource returns failure and adds to validation service`() {
+        // Not using the RCDM Patient to create an easier to fail resource.
+        // We need to have the Meta or else we won't report it to the Validation Service.
         val patient = patient {
             id of Id("tenant-12345")
+            meta of Meta(profile = listOf(Canonical("http://projectronin.io/fhir/StructureDefinition/ronin-patient")))
             identifier plus identifier {
                 system of CodeSystem.RONIN_TENANT.uri
                 value of "tenant"
@@ -276,13 +281,8 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `tenant mismatch just fails`() {
-        val patient = patient {
+        val patient = rcdmPatient("tenant") {
             id of Id("tenant-12345")
-            identifier plus identifier {
-                system of CodeSystem.RONIN_TENANT.uri
-                value of "tenant"
-                type of CodeableConcepts.RONIN_TENANT
-            }
         }
 
         HttpStatusCode.BadRequest

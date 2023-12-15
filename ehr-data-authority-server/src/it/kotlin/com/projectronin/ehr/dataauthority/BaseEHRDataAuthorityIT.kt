@@ -5,6 +5,7 @@ import com.projectronin.ehr.dataauthority.testclients.DBClient
 import com.projectronin.ehr.dataauthority.testclients.KafkaClient
 import com.projectronin.ehr.dataauthority.testclients.ValidationClient
 import com.projectronin.fhir.r4.Resource
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
@@ -39,16 +40,23 @@ open class BaseEHRDataAuthorityIT : BaseEHRDataAuthority() {
     open val resources = mapOf<String, KClass<out Resource>>()
 
     @BeforeEach
-    fun setup() {
+    fun setupKafka() {
+        // Doing this as a before all causes problems, but KafkaClient.monitorResource already checks for
+        // an existing resource so this really only happens once.
         resources.forEach { (topic, resource) ->
             KafkaClient.monitorResource(topic, resource)
         }
     }
 
+    @AfterAll
+    fun resetKafka() {
+        // Only reset once at the end of each group of tests
+        KafkaClient.reset()
+    }
+
     @AfterEach
     fun cleanup() {
         DBClient.purgeHashes()
-        KafkaClient.reset()
         ValidationClient.clearAllResources()
     }
 }

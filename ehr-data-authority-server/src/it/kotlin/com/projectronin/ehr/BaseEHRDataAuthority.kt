@@ -22,6 +22,7 @@ import org.testcontainers.containers.DockerComposeContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.File
 import java.io.IOException
+import java.time.Duration
 import java.util.concurrent.CancellationException
 import java.net.SocketTimeoutException as JavaSocketTimeoutException
 
@@ -57,9 +58,9 @@ abstract class BaseEHRDataAuthority {
             docker?.stop()
 
             docker =
-                DockerComposeContainer(File(BaseEHRDataAuthority::class.java.getResource(dockerCompose)!!.file)).withEnv(
-                    getDockerEnv()
-                )
+                DockerComposeContainer(File(BaseEHRDataAuthority::class.java.getResource(dockerCompose)!!.file))
+                    .withEnv(getDockerEnv())
+                    .withStartupTimeout(Duration.ofMinutes(10))
                     .waitingFor("ehr-data-authority", Wait.forLogMessage(".*Started EHRDataAuthorityServerKt.*", 1))
             docker!!.start()
             lastDockerCompose = dockerCompose

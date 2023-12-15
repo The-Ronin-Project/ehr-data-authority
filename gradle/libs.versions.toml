@@ -9,9 +9,10 @@ interop-ehr = "13.0.0"
 interop-fhir = "9.0.0"
 interop-gradle = "4.0.0"
 interop-kafka = "9.0.0"
+interop-rcdm = "1.0.0"
 interop-validation = "4.0.1"
 jackson = "2.16.0"
-# @keep Uplifting to 1.9.x appears to cause some dependency mismatches
+# @pin Uplifting to 1.9.x appears to cause some dependency mismatches
 kotlin = "1.8.22"
 kotlin-logging = "3.0.5"
 kotlinx-coroutines = "1.7.3"
@@ -37,13 +38,12 @@ interop-commonJackson = { module = "com.projectronin.interop:interop-common-jack
 interop-commonKtorm = { module = "com.projectronin.interop:interop-common-ktorm", version.ref = "interop-common" }
 interop-commonTestDb = { module = "com.projectronin.interop:interop-common-test-db", version.ref = "interop-common" }
 interop-datalake = { module = "com.projectronin.interop.publish:interop-datalake", version.ref = "interop-datalake" }
-interop-ehr-api = { module = "com.projectronin.interop.ehr:interop-ehr", version.ref = "interop-ehr" }
-interop-ehr-fhir-ronin = { module = "com.projectronin.interop.ehr:interop-fhir-ronin", version.ref = "interop-ehr" }
 interop-ehr-fhir-roninGenerators = { module = "com.projectronin.interop.ehr:interop-fhir-ronin-generators", version.ref = "interop-ehr" }
 interop-fhir = { module = "com.projectronin.interop.fhir:interop-fhir", version.ref = "interop-fhir" }
 interop-fhirGenerators = { module = "com.projectronin.interop.fhir:interop-fhir-generators", version.ref = "interop-fhir" }
 interop-kafka = { module = "com.projectronin.interop.publish:interop-kafka", version.ref = "interop-kafka" }
 interop-kafka-testing-client = { module = "com.projectronin.interop.publish:interop-kafka-testing-client", version.ref = "interop-kafka" }
+interop-rcdm-validate = { module = "com.projectronin.interop.rcdm:interop-rcdm-validate", version.ref = "interop-rcdm" }
 interop-validation-client = { module = "com.projectronin.interop.validation:interop-validation-client", version.ref = "interop-validation" }
 jackson-dataformat-xml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml", version.ref = "jackson" }
 jackson-dataformat-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }

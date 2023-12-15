@@ -16,7 +16,6 @@ dependencies {
     implementation(libs.interop.commonJackson)
     implementation(libs.interop.fhir)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.interop.validation.client)
 
     testImplementation(libs.mockk)
     testImplementation(libs.ktor.client.mock)

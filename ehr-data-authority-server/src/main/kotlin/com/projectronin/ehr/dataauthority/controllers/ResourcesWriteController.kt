@@ -15,10 +15,10 @@ import com.projectronin.ehr.dataauthority.models.ResourceResponse
 import com.projectronin.ehr.dataauthority.models.SucceededResource
 import com.projectronin.ehr.dataauthority.publish.PublishService
 import com.projectronin.ehr.dataauthority.util.ResourceTenantMismatchUtil
-import com.projectronin.ehr.dataauthority.validation.FailedValidation
-import com.projectronin.ehr.dataauthority.validation.PassedValidation
-import com.projectronin.ehr.dataauthority.validation.ValidationManager
 import com.projectronin.interop.fhir.r4.resource.Resource
+import com.projectronin.interop.rcdm.validate.FailedValidation
+import com.projectronin.interop.rcdm.validate.PassedValidation
+import com.projectronin.interop.rcdm.validate.ValidationService
 import mu.KotlinLogging
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -34,7 +34,7 @@ class ResourcesWriteController(
     private val resourceHashDao: ResourceHashDAOService,
     private val changeDetectionService: ChangeDetectionService,
     private val kafkaPublisher: KafkaPublisher,
-    private val validationManager: ValidationManager,
+    private val validationService: ValidationService,
     private val publishService: PublishService,
     private val storageMode: StorageMode,
 ) {
@@ -70,15 +70,7 @@ class ResourcesWriteController(
                         if (isLocal) {
                             publishResource(resource, tenantId, changeStatus)
                         } else {
-                            when (val validation = validationManager.validateResource(resource, tenantId)) {
-                                is PassedValidation -> publishResource(resource, tenantId, changeStatus)
-                                is FailedValidation ->
-                                    FailedResource(
-                                        resource.resourceType,
-                                        resource.id!!.value!!,
-                                        validation.failureMessage,
-                                    )
-                            }
+                            validateAndPublishResource(resource, tenantId, changeStatus)
                         }
                     }
                 }
@@ -115,7 +107,11 @@ class ResourcesWriteController(
                 ChangeType.NEW -> {
                     runCatching { resourceHashDao.upsertHash(resourceHashesDO) }.onFailure {
                         logger.error(it) { "Exception persisting new hash for $resourceHashesDO" }
-                        return FailedResource(resource.resourceType, resource.id!!.value!!, "Error updating the hash store")
+                        return FailedResource(
+                            resource.resourceType,
+                            resource.id!!.value!!,
+                            "Error updating the hash store",
+                        )
                     }
                     ModificationType.CREATED
                 }
@@ -123,7 +119,11 @@ class ResourcesWriteController(
                 ChangeType.CHANGED -> {
                     runCatching { resourceHashDao.upsertHash(resourceHashesDO) }.onFailure {
                         logger.error(it) { "Exception persisting updated hash for $resourceHashesDO" }
-                        return FailedResource(resource.resourceType, resource.id!!.value!!, "Error updating the hash store")
+                        return FailedResource(
+                            resource.resourceType,
+                            resource.id!!.value!!,
+                            "Error updating the hash store",
+                        )
                     }
                     ModificationType.UPDATED
                 }
@@ -134,7 +134,36 @@ class ResourcesWriteController(
         return SucceededResource(resource.resourceType, resource.id!!.value!!, modificationType)
     }
 
-    fun ChangeStatus.toHashDO(tenant: String) =
+    @Suppress("UNCHECKED_CAST")
+    private fun <R : Resource<R>> validateAndPublishResource(
+        resource: Resource<R>,
+        tenantId: String,
+        changeStatus: ChangeStatus,
+    ): ResourceResponse {
+        val validation =
+            runCatching { validationService.validate(resource as R, tenantId) }.fold(
+                onSuccess = { it },
+                onFailure = { exception ->
+                    return FailedResource(
+                        resource.resourceType,
+                        resource.id!!.value!!,
+                        exception.localizedMessage,
+                    )
+                },
+            )
+
+        return when (validation) {
+            is PassedValidation -> publishResource(resource, tenantId, changeStatus)
+            is FailedValidation ->
+                FailedResource(
+                    resource.resourceType,
+                    resource.id!!.value!!,
+                    validation.failureMessage,
+                )
+        }
+    }
+
+    private fun ChangeStatus.toHashDO(tenant: String) =
         ResourceHashesDO {
             hashId = this@toHashDO.hashId
             resourceId = this@toHashDO.resourceId
