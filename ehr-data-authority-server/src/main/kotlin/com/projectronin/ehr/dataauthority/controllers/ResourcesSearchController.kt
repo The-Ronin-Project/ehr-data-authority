@@ -15,6 +15,10 @@ import com.projectronin.interop.fhir.r4.resource.Patient
 import com.projectronin.interop.fhir.r4.resource.Practitioner
 import com.projectronin.interop.fhir.r4.resource.Resource
 import io.ktor.http.HttpStatusCode
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.springframework.http.HttpStatus
@@ -37,6 +41,17 @@ class ResourcesSearchController(
 
     private val logger = KotlinLogging.logger { }
 
+    @Operation(
+        summary = "Binary retrieval from OCI.",
+        description = "Binary retrieval from OCI.",
+    )
+    @Parameter(name = "tenantId", example = "tenant")
+    @Parameter(name = "udpId", example = "tenant-12345678")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Returns the associated resource if found"),
+        ],
+    )
     @GetMapping("/tenants/{tenantId}/resources/Binary/{udpId}")
     fun getBinaryResource(
         @PathVariable("tenantId") tenantId: String,
@@ -53,6 +68,18 @@ class ResourcesSearchController(
         return ResponseEntity.ok(resource)
     }
 
+    @Operation(
+        summary = "Retrieves the resource related to the given resourceType and udpId for a tenantId.",
+        description = "Retrieves the resource related to the given resourceType and udpId for a tenantId.",
+    )
+    @Parameter(name = "tenantId", example = "tenant")
+    @Parameter(name = "resourceType", example = "Patient")
+    @Parameter(name = "udpId", example = "tenant-12345678")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Returns the associated resource if found"),
+        ],
+    )
     @GetMapping("/tenants/{tenantId}/resources/{resourceType}/{udpId}")
     @PreAuthorize("hasAuthority('SCOPE_search:resources')")
     fun getResource(
@@ -79,6 +106,22 @@ class ResourcesSearchController(
         return ResponseEntity.ok(resource)
     }
 
+    @Operation(
+        summary = "Retrieves the identifiers associated to the resourceType",
+        description = "Retrieves the identifiers associated to the resourceType with identifiers for tenantId",
+    )
+    @Parameter(name = "tenantId", example = "tenant")
+    @Parameter(name = "resourceType", example = "Patient")
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description =
+                    "Returns a list of foundResources that are associated with the " +
+                        "given identifiers",
+            ),
+        ],
+    )
     @PostMapping("/tenants/{tenantId}/resources/{resourceType}/identifiers")
     @PreAuthorize("hasAuthority('SCOPE_search:resources')")
     fun getResourceIdentifiers(

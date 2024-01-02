@@ -22,6 +22,7 @@ dependencies {
     implementation(libs.interop.rcdm.validate)
     implementation(libs.interop.kafka)
     implementation(libs.interop.datalake)
+    implementation(libs.springdoc.openapi.ui)
 
     implementation(libs.guava)
     implementation(libs.bundles.ktor)

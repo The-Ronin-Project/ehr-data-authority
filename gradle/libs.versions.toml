@@ -27,6 +27,9 @@ mysql = "8.0.33"
 ronin-kafka = "1.1.2"
 ronin-test = "0.2.0"
 spring-boot = "3.2.0"
+springdoc = "2.3.0"
+openapi-generator = "7.1.0"
+jakarta = "3.0.2"
 testcontainers = "1.19.3"
 
 [libraries]
@@ -71,6 +74,9 @@ rider-core = { module = "com.github.database-rider:rider-core", version.ref = "d
 ronin-kafka = { module = "com.projectronin:ronin-kafka", version.ref = "ronin-kafka" }
 ronin-test-data-generator = { module = "com.projectronin.test:ronin-test-data-generator", version.ref = "ronin-test" }
 spring-boot-parent = { module = "org.springframework.boot:spring-boot-parent", version.ref = "spring-boot" }
+jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta" }
+spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation", version.ref = "spring-boot" }
+springdoc-openapi-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
 testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
 
 [bundles]
@@ -103,3 +109,4 @@ interop-spring-boot = { id = "com.projectronin.interop.gradle.spring-boot", vers
 interop-spring-framework = { id = "com.projectronin.interop.gradle.spring", version.ref = "interop-gradle" }
 interop-version-catalog = { id = "com.projectronin.interop.gradle.version-catalog-update", version.ref = "interop-gradle" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+openapi-generator = { id = "org.openapi.generator", version.ref = "openapi-generator" }

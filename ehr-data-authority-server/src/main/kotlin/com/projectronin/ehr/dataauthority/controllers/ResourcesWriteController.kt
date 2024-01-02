@@ -19,6 +19,10 @@ import com.projectronin.interop.fhir.r4.resource.Resource
 import com.projectronin.interop.rcdm.validate.FailedValidation
 import com.projectronin.interop.rcdm.validate.PassedValidation
 import com.projectronin.interop.rcdm.validate.ValidationService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 import mu.KotlinLogging
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -28,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import io.swagger.v3.oas.annotations.parameters.RequestBody as RequestBodyParam
 
 @RestController
 class ResourcesWriteController(
@@ -41,6 +46,22 @@ class ResourcesWriteController(
     private val logger = KotlinLogging.logger { }
     private val isLocal = storageMode == StorageMode.LOCAL
 
+    @Operation(
+        summary = "Takes in a list of resources, and posts them",
+        description =
+            "Takes a list of resources and determines if the resource is new or has been modified, " +
+                "it is published to the Ronin clinical data store.",
+    )
+    @Parameter(name = "tenantId", example = "tenant")
+    @RequestBodyParam(description = "Complete FHIR Resource")
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Returns a list of resources there successfully added and a list of failed/not found resources",
+            ),
+        ],
+    )
     @PostMapping("/tenants/{tenantId}/resources")
     @PreAuthorize("hasAuthority('SCOPE_write:resources')")
     fun addNewResources(

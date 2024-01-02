@@ -8,6 +8,7 @@ dependencies {
     implementation(libs.common.fhir.r4.models)
     implementation(libs.interop.kafka)
     implementation(libs.guava)
+    implementation(libs.springdoc.openapi.ui)
     testImplementation(libs.mockk)
     testImplementation(libs.interop.commonJackson)
 }

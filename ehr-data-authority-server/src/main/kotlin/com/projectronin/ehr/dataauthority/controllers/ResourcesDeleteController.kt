@@ -3,6 +3,10 @@ package com.projectronin.ehr.dataauthority.controllers
 import com.projectronin.ehr.dataauthority.change.data.services.DataStorageService
 import com.projectronin.ehr.dataauthority.change.data.services.ResourceHashDAOService
 import com.projectronin.ehr.dataauthority.change.data.services.StorageMode
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.springframework.http.ResponseEntity
@@ -21,6 +25,22 @@ class ResourcesDeleteController(
     private val deletableTenantIndicators = setOf("ronin", "ehrda")
     private val isLocal = storageMode == StorageMode.LOCAL
 
+    @Operation(
+        summary = "Deletes a resource",
+        description =
+            "Deletes the resource for the given resourceType and udpId for a given tenantId. " +
+                "\nNOTE: This API only supports deleting from testing tenants. Any non-testing tenant that is used " +
+                "will result in a 400.",
+    )
+    @Parameter(name = "tenantId", example = "tenant")
+    @Parameter(name = "resourceType", example = "Patient")
+    @Parameter(name = "udpId", example = "tenant-1")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Successful operation"),
+            ApiResponse(responseCode = "400", description = "Failed operation"),
+        ],
+    )
     @DeleteMapping("/tenants/{tenantId}/resources/{resourceType}/{udpId}")
     @PreAuthorize("hasAuthority('SCOPE_delete:resources')")
     fun deleteResource(
@@ -49,6 +69,19 @@ class ResourcesDeleteController(
         return ResponseEntity.ok().build()
     }
 
+    @Operation(
+        summary = "Deletes ALL resources from local storage",
+        description =
+            "Deletes ALL resources from Local Storage. " +
+                "\nNOTE: This API only supports deleting the local storage.  This means the spring profile must be set to" +
+                "'local'",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Successful operation"),
+            ApiResponse(responseCode = "400", description = "Bad request"),
+        ],
+    )
     @DeleteMapping("/local")
     @PreAuthorize("hasAuthority('SCOPE_delete:resources')")
     fun deleteAllResources(): ResponseEntity<Void> {

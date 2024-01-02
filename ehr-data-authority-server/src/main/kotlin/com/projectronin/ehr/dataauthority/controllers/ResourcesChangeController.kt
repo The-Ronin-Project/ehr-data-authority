@@ -6,6 +6,10 @@ import com.projectronin.ehr.dataauthority.models.BatchResourceChangeResponse
 import com.projectronin.ehr.dataauthority.models.ChangeStatusResource
 import com.projectronin.ehr.dataauthority.util.ResourceTenantMismatchUtil
 import com.projectronin.interop.fhir.r4.resource.Resource
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
@@ -21,6 +25,16 @@ class ResourcesChangeController(
      * Takes a list of [resources] and determines if those have changed
      * from what is already stored
      */
+    @Operation(
+        summary = "Determines change status of resources",
+        description = "Takes a list of resources and determines if those have changed compared to what is already stored",
+    )
+    @Parameter(name = "tenantId", example = "tenant")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Returns a list of resources with change status"),
+        ],
+    )
     @PostMapping("/tenants/{tenantId}/resources/changeStatus")
     @PreAuthorize("hasAuthority('SCOPE_search:resources')")
     fun determineIfResourcesChanged(
