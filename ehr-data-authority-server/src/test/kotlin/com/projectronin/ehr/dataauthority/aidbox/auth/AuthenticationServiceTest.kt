@@ -21,7 +21,6 @@ import org.junit.jupiter.api.assertThrows
 class AuthenticationServiceTest {
     private val baseUrl = "http://localhost:9999"
     private val authUrl = "http://localhost:9999/auth/token"
-    private val deleteSessionUrl = "http://localhost:9999/Session"
 
     @Test
     fun `minimal authentication returned`() {
@@ -34,7 +33,7 @@ class AuthenticationServiceTest {
             |}
             """.trimMargin()
 
-        val httpClient = makeClient(expectedBody, responseContent, HttpStatusCode.OK, authUrl)
+        val httpClient = makeClient(expectedBody, responseContent, HttpStatusCode.OK)
         val service = AidboxAuthenticationService(httpClient, baseUrl, AidboxCredentials("client-id", "client-secret"))
         val authentication = service.getAuthentication()
         assertEquals("Bearer", authentication.tokenType)
@@ -58,7 +57,7 @@ class AuthenticationServiceTest {
             |}
             """.trimMargin()
 
-        val httpClient = makeClient(expectedBody, responseContent, HttpStatusCode.OK, authUrl)
+        val httpClient = makeClient(expectedBody, responseContent, HttpStatusCode.OK)
         val service = AidboxAuthenticationService(httpClient, baseUrl, AidboxCredentials("client-id", "client-secret"))
         val authentication = service.getAuthentication()
         assertEquals("Bearer", authentication.tokenType)
@@ -73,32 +72,21 @@ class AuthenticationServiceTest {
         val expectedBody =
             """{"client_id":"client-id","client_secret":"client-secret","grant_type":"client_credentials"}"""
 
-        val httpClient = makeClient(expectedBody, "", HttpStatusCode.ServiceUnavailable, authUrl)
+        val httpClient = makeClient(expectedBody, "", HttpStatusCode.ServiceUnavailable)
         val service = AidboxAuthenticationService(httpClient, baseUrl, AidboxCredentials("client-id", "client-secret"))
         assertThrows<ServiceUnavailableException> {
             service.getAuthentication()
         }
     }
 
-    @Test
-    fun `authentication expired session deleted returns OK`() {
-        val expectedBody = ""
-        val httpClient = makeClient(expectedBody, "", HttpStatusCode.OK, deleteSessionUrl)
-        val service = AidboxAuthenticationService(httpClient, baseUrl, AidboxCredentials("client-id", "client-secret"))
-        val deleteSession = service.deleteAuthenticationTokenSession("abcd1234")
-        assertEquals("OK", deleteSession.description)
-        assertEquals(200, deleteSession.value)
-    }
-
     private fun makeClient(
         expectedBody: String,
         responseContent: String,
         status: HttpStatusCode,
-        url: String,
     ): HttpClient =
         HttpClient(
             MockEngine { request ->
-                assertEquals(url, request.url.toString())
+                assertEquals(authUrl, request.url.toString())
                 assertEquals(expectedBody, String(request.body.toByteArray()))
                 respond(
                     content = responseContent,
