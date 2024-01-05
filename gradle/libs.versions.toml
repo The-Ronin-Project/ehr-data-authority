@@ -2,16 +2,16 @@
 apache-kafka = "3.6.1"
 dbrider = "1.41.0"
 fhir-models = "1.3.0"
-guava = "32.1.3-jre"
+guava = "33.0.0-jre"
 interop-common = "4.1.0"
 interop-datalake = "9.0.0"
-interop-ehr = "13.1.0"
+interop-ehr = "13.1.1"
 interop-fhir = "9.1.1"
-interop-gradle = "4.0.0"
+interop-gradle = "4.0.2"
 interop-kafka = "9.0.0"
-interop-rcdm = "1.0.0"
+interop-rcdm = "1.1.0"
 interop-validation = "4.0.1"
-jackson = "2.16.0"
+jackson = "2.16.1"
 # @pin Uplifting to 1.9.x appears to cause some dependency mismatches
 kotlin = "1.8.22"
 kotlin-logging = "3.0.5"
@@ -19,17 +19,16 @@ kotlinx-coroutines = "1.7.3"
 kotlinx-serialization = "1.6.2"
 ktor = "2.3.7"
 ktorm = "3.6.0"
-liquibase = "4.25.0"
+liquibase = "4.25.1"
 logstash = "7.4"
 mockk = "1.13.8"
 mockwebserver = "4.12.0"
 mysql = "8.0.33"
+openapi-generator = "7.2.0"
 ronin-kafka = "1.1.2"
 ronin-test = "0.2.0"
-spring-boot = "3.2.0"
+spring-boot = "3.2.1"
 springdoc = "2.3.0"
-openapi-generator = "7.1.0"
-jakarta = "3.0.2"
 testcontainers = "1.19.3"
 
 [libraries]
@@ -74,8 +73,6 @@ rider-core = { module = "com.github.database-rider:rider-core", version.ref = "d
 ronin-kafka = { module = "com.projectronin:ronin-kafka", version.ref = "ronin-kafka" }
 ronin-test-data-generator = { module = "com.projectronin.test:ronin-test-data-generator", version.ref = "ronin-test" }
 spring-boot-parent = { module = "org.springframework.boot:spring-boot-parent", version.ref = "spring-boot" }
-jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta" }
-spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation", version.ref = "spring-boot" }
 springdoc-openapi-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
 testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
 

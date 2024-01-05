@@ -14,9 +14,10 @@ class HealthCheckIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `health check returns status`() {
-        val response = runBlocking {
-            httpClient.get("$serverUrl$urlPart")
-        }
+        val response =
+            runBlocking {
+                httpClient.get("$serverUrl$urlPart")
+            }
         assertEquals(response.status, HttpStatusCode.OK)
         val body = runBlocking { response.body<String>() }
         val jsonObject = objectMapper.readTree(body)

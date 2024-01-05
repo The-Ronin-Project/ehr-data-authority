@@ -23,9 +23,10 @@ class ResourcesChangeControllerLocalIT : BaseEHRDataAuthorityLocalIT() {
     // /////////////////////  LOCAL STORAGE CLIENT TESTS  ///////////////////////
     @Test
     fun `returns new resource when added`() {
-        val patient = rcdmPatient("ehrda") {
-            id of Id("ehrda-9876")
-        }
+        val patient =
+            rcdmPatient("ehrda") {
+                id of Id("ehrda-9876")
+            }
 
         val response = runBlocking { client.getResourcesChangeStatus("ehrda", listOf(patient)) }
         assertEquals(1, response.succeeded.size)
@@ -39,10 +40,11 @@ class ResourcesChangeControllerLocalIT : BaseEHRDataAuthorityLocalIT() {
 
     @Test
     fun `returns unchanged when resource is unchanged`() {
-        val patient = rcdmPatient("ehrda") {
-            id of Id("ehrda-9984")
-            gender of AdministrativeGender.FEMALE.asCode()
-        }
+        val patient =
+            rcdmPatient("ehrda") {
+                id of Id("ehrda-9984")
+                gender of AdministrativeGender.FEMALE.asCode()
+            }
         runBlocking { client.addResources("ehrda", listOf(patient)) }
 
         val response = runBlocking { client.getResourcesChangeStatus("ehrda", listOf(patient)) }
@@ -57,10 +59,11 @@ class ResourcesChangeControllerLocalIT : BaseEHRDataAuthorityLocalIT() {
 
     @Test
     fun `returns changed when resource is changed`() {
-        val originalPatient = rcdmPatient("ehrda") {
-            id of Id("ehrda-9784")
-            gender of AdministrativeGender.FEMALE.asCode()
-        }
+        val originalPatient =
+            rcdmPatient("ehrda") {
+                id of Id("ehrda-9784")
+                gender of AdministrativeGender.FEMALE.asCode()
+            }
         val addingOne = runBlocking { client.addResources("ehrda", listOf(originalPatient)) }
         assertEquals(1, addingOne.succeeded.size)
         assertEquals(0, addingOne.failed.size)
@@ -84,12 +87,14 @@ class ResourcesChangeControllerLocalIT : BaseEHRDataAuthorityLocalIT() {
 
     @Test
     fun `multi-resource pass`() {
-        val patient1 = rcdmPatient("ehrda") {
-            id of Id("ehrda-77889")
-        }
-        val patient2 = rcdmPatient("ehrda") {
-            id of Id("ehrda-44990")
-        }
+        val patient1 =
+            rcdmPatient("ehrda") {
+                id of Id("ehrda-77889")
+            }
+        val patient2 =
+            rcdmPatient("ehrda") {
+                id of Id("ehrda-44990")
+            }
 
         val response = runBlocking { client.getResourcesChangeStatus("ehrda", listOf(patient1, patient2)) }
         assertEquals(2, response.succeeded.size)
@@ -108,14 +113,16 @@ class ResourcesChangeControllerLocalIT : BaseEHRDataAuthorityLocalIT() {
 
     @Test
     fun `tenant mismatch fails`() {
-        val patient = patient {
-            id of Id("ehrda-12345")
-            identifier plus identifier {
-                system of CodeSystem.RONIN_TENANT.uri
-                value of "ehrda"
-                type of CodeableConcepts.RONIN_TENANT
+        val patient =
+            patient {
+                id of Id("ehrda-12345")
+                identifier plus
+                    identifier {
+                        system of CodeSystem.RONIN_TENANT.uri
+                        value of "ehrda"
+                        type of CodeableConcepts.RONIN_TENANT
+                    }
             }
-        }
 
         HttpStatusCode.BadRequest
         val response =
@@ -126,9 +133,10 @@ class ResourcesChangeControllerLocalIT : BaseEHRDataAuthorityLocalIT() {
     @Test
     fun `repeat requests result in new -- verifying change controller is not adding resource`() {
         // First we do a full new request.
-        val patient = rcdmPatient("ehrda") {
-            id of Id("ehrda-12345")
-        }
+        val patient =
+            rcdmPatient("ehrda") {
+                id of Id("ehrda-12345")
+            }
 
         val response = runBlocking { client.getResourcesChangeStatus("ehrda", listOf(patient)) }
         assertEquals(1, response.succeeded.size)

@@ -12,12 +12,14 @@ class ResourcesDeleteControllerLocalIT : BaseEHRDataAuthorityLocalIT() {
     // /////////////////////  LOCAL STORAGE CLIENT TESTS  ///////////////////////
     @Test
     fun `delete works`() {
-        val patient = rcdmPatient("ehrda") {
-            id of Id("ehrda-12345")
-        }
-        val patient2 = rcdmPatient("ehrda") {
-            id of Id("ehrda-54321")
-        }
+        val patient =
+            rcdmPatient("ehrda") {
+                id of Id("ehrda-12345")
+            }
+        val patient2 =
+            rcdmPatient("ehrda") {
+                id of Id("ehrda-54321")
+            }
 
         runBlocking { client.addResources("ehrda", listOf(patient, patient2)) }
         val response = runBlocking { client.getResource("ehrda", "Patient", "ehrda-12345") }

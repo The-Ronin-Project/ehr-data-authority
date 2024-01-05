@@ -17,36 +17,39 @@ import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.runBlocking
 
 object ValidationClient {
-    val httpClient = HttpClient(CIO) {
-        // If not a successful response, Ktor will throw Exceptions
-        expectSuccess = true
+    val httpClient =
+        HttpClient(CIO) {
+            // If not a successful response, Ktor will throw Exceptions
+            expectSuccess = true
 
-        // Setup JSON
-        install(ContentNegotiation) {
-            jackson {
-                JacksonManager.setUpMapper(this)
+            // Setup JSON
+            install(ContentNegotiation) {
+                jackson {
+                    JacksonManager.setUpMapper(this)
+                }
+            }
+
+            // Enable logging.
+            install(Logging) {
+                level = LogLevel.NONE
             }
         }
 
-        // Enable logging.
-        install(Logging) {
-            level = LogLevel.NONE
-        }
-    }
-
-    private val authenticationService = ValidationAuthenticationService(
-        httpClient,
-        "http://localhost:8081/validation/token",
-        "https://interop-validation.dev.projectronin.io",
-        "validation-client",
-        "client-secret",
-        false
-    )
+    private val authenticationService =
+        ValidationAuthenticationService(
+            httpClient,
+            "http://localhost:8081/validation/token",
+            "https://interop-validation.dev.projectronin.io",
+            "validation-client",
+            "client-secret",
+            false,
+        )
     private val resourcesClient = ResourceClient("http://localhost:8082", httpClient, authenticationService)
 
-    fun getResources(): List<Resource> = runBlocking {
-        resourcesClient.getResources(listOf(ResourceStatus.REPORTED), Order.DESC, 50)
-    }
+    fun getResources(): List<Resource> =
+        runBlocking {
+            resourcesClient.getResources(listOf(ResourceStatus.REPORTED), Order.DESC, 50)
+        }
 
     fun clearResources(resources: List<Resource>) {
         runBlocking {

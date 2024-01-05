@@ -16,9 +16,10 @@ class ResourcesDeleteControllerIT : BaseEHRDataAuthorityIT() {
     @Test
     fun `delete works`() {
         Thread.sleep(20000) // need to wait for db and tables to be ready or it yells at us.
-        val patient = rcdmPatient("ehrda") {
-            id of Id("ehrda-12345")
-        }
+        val patient =
+            rcdmPatient("ehrda") {
+                id of Id("ehrda-12345")
+            }
         AidboxClient.addResource(patient)
         DBClient.setHashValue("ehrda", "Patient", "ehrda-12345", patient.consistentHashCode())
         runBlocking { client.deleteResource("ehrda", "Patient", "ehrda-12345") }

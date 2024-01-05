@@ -28,6 +28,7 @@ import java.net.SocketTimeoutException as JavaSocketTimeoutException
 
 abstract class BaseEHRDataAuthority {
     abstract fun getDockerEnv(): MutableMap<String, String>
+
     abstract fun getDockerCompose(): String
 
     companion object {
@@ -45,7 +46,7 @@ abstract class BaseEHRDataAuthority {
             "https://ehr.dev.projectronin.io",
             "id",
             "secret",
-            false
+            false,
         )
 
     val client = EHRDataAuthorityClient(serverUrl, httpClient, authenticationService)
@@ -98,7 +99,8 @@ class HttpSpringConfigTest {
                             is RequestFailureException,
                             is SocketTimeoutException,
                             is JavaSocketTimeoutException,
-                            is IOException -> true
+                            is IOException,
+                            -> true
 
                             // Else, retry if the cause was not a cancellation.
                             else -> cause !is CancellationException

@@ -42,14 +42,15 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
     override val resources =
         mapOf(
             "patient" to Patient::class,
-            "observation" to com.projectronin.fhir.r4.Observation::class
+            "observation" to com.projectronin.fhir.r4.Observation::class,
         )
 
     @Test
     fun `adds resource when new`() {
-        val patient = rcdmPatient("tenant") {
-            id of Id("tenant-12345")
-        }
+        val patient =
+            rcdmPatient("tenant") {
+                id of Id("tenant-12345")
+            }
 
         val response = runBlocking { client.addResources("tenant", listOf(patient)) }
         assertEquals(1, response.succeeded.size)
@@ -77,16 +78,17 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `updates resource when changed`() {
-        val originalPatient = rcdmPatient("tenant") {
-            id of Id("tenant-12345")
-            gender of AdministrativeGender.FEMALE.asCode()
-        }
+        val originalPatient =
+            rcdmPatient("tenant") {
+                id of Id("tenant-12345")
+                gender of AdministrativeGender.FEMALE.asCode()
+            }
         val addedPatient = AidboxClient.addResource(originalPatient)
         DBClient.setHashValue(
             "tenant",
             "Patient",
             "tenant-12345",
-            originalPatient.copy(meta = null).consistentHashCode()
+            originalPatient.copy(meta = null).consistentHashCode(),
         )
 
         val updatedPatient = originalPatient.copy(gender = AdministrativeGender.MALE.asCode())
@@ -118,10 +120,11 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `updates resource when same hash code, but changed`() {
-        val originalPatient = rcdmPatient("tenant") {
-            id of Id("tenant-12345")
-            gender of AdministrativeGender.FEMALE.asCode()
-        }
+        val originalPatient =
+            rcdmPatient("tenant") {
+                id of Id("tenant-12345")
+                gender of AdministrativeGender.FEMALE.asCode()
+            }
         val addedPatient = AidboxClient.addResource(originalPatient)
 
         val updatedPatient = originalPatient.copy(gender = AdministrativeGender.MALE.asCode())
@@ -131,7 +134,7 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
             "tenant",
             "Patient",
             "tenant-12345",
-            updatedPatient.copy(meta = null).consistentHashCode()
+            updatedPatient.copy(meta = null).consistentHashCode(),
         )
 
         val response = runBlocking { client.addResources("tenant", listOf(updatedPatient)) }
@@ -161,16 +164,17 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `returns success when resource is unchanged`() {
-        val originalPatient = rcdmPatient("tenant") {
-            id of Id("tenant-12345")
-            gender of AdministrativeGender.FEMALE.asCode()
-        }
+        val originalPatient =
+            rcdmPatient("tenant") {
+                id of Id("tenant-12345")
+                gender of AdministrativeGender.FEMALE.asCode()
+            }
         val addedPatient = AidboxClient.addResource(originalPatient)
         DBClient.setHashValue(
             "tenant",
             "Patient",
             "tenant-12345",
-            originalPatient.copy(meta = null).consistentHashCode()
+            originalPatient.copy(meta = null).consistentHashCode(),
         )
 
         val response = runBlocking { client.addResources("tenant", listOf(originalPatient)) }
@@ -199,12 +203,14 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `multi resource - pass`() {
-        val patient1 = rcdmPatient("tenant") {
-            id of Id("tenant-12345")
-        }
-        val patient2 = rcdmPatient("tenant") {
-            id of Id("tenant-67890")
-        }
+        val patient1 =
+            rcdmPatient("tenant") {
+                id of Id("tenant-12345")
+            }
+        val patient2 =
+            rcdmPatient("tenant") {
+                id of Id("tenant-67890")
+            }
 
         val response = runBlocking { client.addResources("tenant", listOf(patient1, patient2)) }
         assertEquals(2, response.succeeded.size)
@@ -245,15 +251,17 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
     fun `invalid resource returns failure and adds to validation service`() {
         // Not using the RCDM Patient to create an easier to fail resource.
         // We need to have the Meta or else we won't report it to the Validation Service.
-        val patient = patient {
-            id of Id("tenant-12345")
-            meta of Meta(profile = listOf(Canonical("http://projectronin.io/fhir/StructureDefinition/ronin-patient")))
-            identifier plus identifier {
-                system of CodeSystem.RONIN_TENANT.uri
-                value of "tenant"
-                type of CodeableConcepts.RONIN_TENANT
+        val patient =
+            patient {
+                id of Id("tenant-12345")
+                meta of Meta(profile = listOf(Canonical("http://projectronin.io/fhir/StructureDefinition/ronin-patient")))
+                identifier plus
+                    identifier {
+                        system of CodeSystem.RONIN_TENANT.uri
+                        value of "tenant"
+                        type of CodeableConcepts.RONIN_TENANT
+                    }
             }
-        }
 
         val response = runBlocking { client.addResources("tenant", listOf(patient)) }
         assertEquals(0, response.succeeded.size)
@@ -281,9 +289,10 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `tenant mismatch just fails`() {
-        val patient = rcdmPatient("tenant") {
-            id of Id("tenant-12345")
-        }
+        val patient =
+            rcdmPatient("tenant") {
+                id of Id("tenant-12345")
+            }
 
         HttpStatusCode.BadRequest
         val response =
@@ -306,9 +315,10 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
     @Test
     fun `repeat requests result in unmodified`() {
         // First we do a full new request.
-        val patient = rcdmPatient("tenant") {
-            id of Id("tenant-12345")
-        }
+        val patient =
+            rcdmPatient("tenant") {
+                id of Id("tenant-12345")
+            }
 
         val response = runBlocking { client.addResources("tenant", listOf(patient)) }
         assertEquals(1, response.succeeded.size)
@@ -354,9 +364,10 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `same resource with different source is considered unmodified`() {
-        val patient = rcdmPatient("tenant") {
-            id of Id("tenant-12345")
-        }
+        val patient =
+            rcdmPatient("tenant") {
+                id of Id("tenant-12345")
+            }
 
         val response = runBlocking { client.addResources("tenant", listOf(patient)) }
         assertEquals(1, response.succeeded.size)
@@ -396,14 +407,16 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `write maintains precision with trailing zeroes`() {
-        val observation = rcdmObservation("test") {
-            id of "test-12345"
-            value of DynamicValues.quantity(
-                quantity {
-                    value of BigDecimal("0.40")
-                }
-            )
-        }
+        val observation =
+            rcdmObservation("test") {
+                id of "test-12345"
+                value of
+                    DynamicValues.quantity(
+                        quantity {
+                            value of BigDecimal("0.40")
+                        },
+                    )
+            }
 
         val response = runBlocking { client.addResources("test", listOf(observation)) }
         assertEquals(1, response.succeeded.size)
@@ -472,7 +485,8 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
         AidboxClient.deleteResource("Observation", "ggwadc8y-L-197322448")
     }
 
-    private val observationJson = """
+    private val observationJson =
+        """
         {
           "resourceType": "Observation",
           "id": "ggwadc8y-L-197322448",
@@ -807,5 +821,5 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
             }
           ]
         }
-    """.trimIndent()
+        """.trimIndent()
 }

@@ -13,17 +13,24 @@ object DBClient {
 
     fun purgeHashes() = database.deleteAll(ResourceHashesDOs)
 
-    fun getStoredHashValue(tenantId: String, resourceType: String, resourceId: String): Int? =
-        resourceHashesDAO.getHash(tenantId, resourceType, resourceId)?.hash
+    fun getStoredHashValue(
+        tenantId: String,
+        resourceType: String,
+        resourceId: String,
+    ): Int? = resourceHashesDAO.getHash(tenantId, resourceType, resourceId)?.hash
 
-    fun setHashValue(tenantId: String, resourceType: String, resourceId: String, hash: Int) =
-        resourceHashesDAO.upsertHash(
-            ResourceHashesDO {
-                this.tenantId = tenantId
-                this.resourceType = resourceType
-                this.resourceId = resourceId
-                this.hash = hash
-                updateDateTime = OffsetDateTime.now()
-            }
-        )
+    fun setHashValue(
+        tenantId: String,
+        resourceType: String,
+        resourceId: String,
+        hash: Int,
+    ) = resourceHashesDAO.upsertHash(
+        ResourceHashesDO {
+            this.tenantId = tenantId
+            this.resourceType = resourceType
+            this.resourceId = resourceId
+            this.hash = hash
+            updateDateTime = OffsetDateTime.now()
+        },
+    )
 }

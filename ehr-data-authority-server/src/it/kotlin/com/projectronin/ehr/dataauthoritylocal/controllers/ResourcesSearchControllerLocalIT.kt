@@ -30,37 +30,42 @@ class ResourcesSearchControllerLocalIT : BaseEHRDataAuthorityLocalIT() {
     // ////////////////////////  LOCAL-STORAGE-CLIENT TESTS  //////////////////////////
     @Test
     fun `get works for local storage client`() {
-        val patient = patient {
-            id of Id(value = "ehrda-12345")
-            identifier of listOf(
-                identifier {
-                    system of "system"
-                    value of "value"
-                },
-                identifier {
-                    system of CodeSystem.RONIN_TENANT.uri.value!!
-                    value of "ehrda"
-                }
-            )
-            name of listOf(
-                name {
-                    family of "Lastnameski"
-                }
-            )
-        }
-        val patient2 = patient {
-            id of Id(value = "ehrda-154321")
-            identifier of listOf(
-                identifier {
-                    system of "system2"
-                    value of "value"
-                },
-                identifier {
-                    system of CodeSystem.RONIN_TENANT.uri.value!!
-                    value of "ehrda"
-                }
-            )
-        }
+        val patient =
+            patient {
+                id of Id(value = "ehrda-12345")
+                identifier of
+                    listOf(
+                        identifier {
+                            system of "system"
+                            value of "value"
+                        },
+                        identifier {
+                            system of CodeSystem.RONIN_TENANT.uri.value!!
+                            value of "ehrda"
+                        },
+                    )
+                name of
+                    listOf(
+                        name {
+                            family of "Lastnameski"
+                        },
+                    )
+            }
+        val patient2 =
+            patient {
+                id of Id(value = "ehrda-154321")
+                identifier of
+                    listOf(
+                        identifier {
+                            system of "system2"
+                            value of "value"
+                        },
+                        identifier {
+                            system of CodeSystem.RONIN_TENANT.uri.value!!
+                            value of "ehrda"
+                        },
+                    )
+            }
 
         runBlocking { client.addResources("ehrda", listOf(patient, patient2)) }
         val response = runBlocking { client.getResource("ehrda", "Patient", "ehrda-12345") }
@@ -72,59 +77,66 @@ class ResourcesSearchControllerLocalIT : BaseEHRDataAuthorityLocalIT() {
 
     @Test
     fun `getResource with local storage client returns a 404 if requested resource does not exist`() {
-        val exception = assertThrows<ClientFailureException> {
-            val resourceUrl = "$serverUrl/tenants/Test/resources/Patient/Test-fake-not-real-patient"
-            val authentication = authenticationService.getAuthentication()
+        val exception =
+            assertThrows<ClientFailureException> {
+                val resourceUrl = "$serverUrl/tenants/Test/resources/Patient/Test-fake-not-real-patient"
+                val authentication = authenticationService.getAuthentication()
 
-            runBlocking {
-                val response: HttpResponse = httpClient.request("test", resourceUrl) { url ->
-                    get(url) {
-                        headers {
-                            append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+                runBlocking {
+                    val response: HttpResponse =
+                        httpClient.request("test", resourceUrl) { url ->
+                            get(url) {
+                                headers {
+                                    append(HttpHeaders.Authorization, "Bearer ${authentication.accessToken}")
+                                }
+                                accept(ContentType.Application.Json)
+                                contentType(ContentType.Application.Json)
+                            }
                         }
-                        accept(ContentType.Application.Json)
-                        contentType(ContentType.Application.Json)
-                    }
+                    response.body()
                 }
-                response.body()
             }
-        }
         assertEquals(HttpStatusCode.NotFound, exception.status)
     }
 
     @Test
     fun `get fails for tenant mismatch with local client storage`() {
-        val patient = patient {
-            id of Id(value = "ehrda-12345")
-            identifier of listOf(
-                identifier {
-                    system of "system"
-                    value of "value"
-                },
-                identifier {
-                    system of CodeSystem.RONIN_TENANT.uri.value!!
-                    value of "ehrda"
-                }
-            )
-            name of listOf(
-                name {
-                    family of "Lastnameski"
-                }
-            )
-        }
-        val patient2 = patient {
-            id of Id(value = "ehrda-154321")
-            identifier of listOf(
-                identifier {
-                    system of "system2"
-                    value of "value"
-                },
-                identifier {
-                    system of CodeSystem.RONIN_TENANT.uri.value!!
-                    value of "ehrda"
-                }
-            )
-        }
+        val patient =
+            patient {
+                id of Id(value = "ehrda-12345")
+                identifier of
+                    listOf(
+                        identifier {
+                            system of "system"
+                            value of "value"
+                        },
+                        identifier {
+                            system of CodeSystem.RONIN_TENANT.uri.value!!
+                            value of "ehrda"
+                        },
+                    )
+                name of
+                    listOf(
+                        name {
+                            family of "Lastnameski"
+                        },
+                    )
+            }
+        val patient2 =
+            patient {
+                id of Id(value = "ehrda-154321")
+                identifier of
+                    listOf(
+                        identifier {
+                            system of "system2"
+                            value of "value"
+                        },
+                        identifier {
+                            system of CodeSystem.RONIN_TENANT.uri.value!!
+                            value of "ehrda"
+                        },
+                    )
+            }
 
         runBlocking { client.addResources("ehrda", listOf(patient, patient2)) }
         assertThrows<ClientFailureException> {
@@ -136,66 +148,73 @@ class ResourcesSearchControllerLocalIT : BaseEHRDataAuthorityLocalIT() {
 
     @Test
     fun `search works for local storage client`() {
-        val patient = patient {
-            id of Id(value = "ehrda-154321")
-            identifier of listOf(
-                identifier {
-                    system of "system2"
-                    value of "value"
-                },
-                identifier {
-                    system of CodeSystem.RONIN_TENANT.uri.value!!
-                    value of "ehrda"
-                }
-            )
-        }
-        val patient2 = patient {
-            id of Id(value = "ehrda-12345")
-            identifier of listOf(
-                identifier {
-                    system of "system1"
-                    value of "value"
-                },
-                identifier {
-                    system of CodeSystem.RONIN_MRN.uri
-                    value of "value"
-                },
-                identifier {
-                    system of CodeSystem.RONIN_TENANT.uri.value!!
-                    value of "ehrda"
-                }
-            )
-        }
+        val patient =
+            patient {
+                id of Id(value = "ehrda-154321")
+                identifier of
+                    listOf(
+                        identifier {
+                            system of "system2"
+                            value of "value"
+                        },
+                        identifier {
+                            system of CodeSystem.RONIN_TENANT.uri.value!!
+                            value of "ehrda"
+                        },
+                    )
+            }
+        val patient2 =
+            patient {
+                id of Id(value = "ehrda-12345")
+                identifier of
+                    listOf(
+                        identifier {
+                            system of "system1"
+                            value of "value"
+                        },
+                        identifier {
+                            system of CodeSystem.RONIN_MRN.uri
+                            value of "value"
+                        },
+                        identifier {
+                            system of CodeSystem.RONIN_TENANT.uri.value!!
+                            value of "ehrda"
+                        },
+                    )
+            }
 
-        val patient3 = patient {
-            id of Id(value = "ehrda-4567")
-            identifier of listOf(
-                identifier {
-                    system of "system2"
-                    value of "value"
-                },
-                identifier {
-                    system of CodeSystem.RONIN_TENANT.uri.value!!
-                    value of "ehrda"
-                },
-                identifier {
-                    system of "cool-system"
-                    value of "wow"
-                }
-            )
-        }
+        val patient3 =
+            patient {
+                id of Id(value = "ehrda-4567")
+                identifier of
+                    listOf(
+                        identifier {
+                            system of "system2"
+                            value of "value"
+                        },
+                        identifier {
+                            system of CodeSystem.RONIN_TENANT.uri.value!!
+                            value of "ehrda"
+                        },
+                        identifier {
+                            system of "cool-system"
+                            value of "wow"
+                        },
+                    )
+            }
 
         runBlocking { client.addResources("ehrda", listOf(patient, patient2, patient3)) }
-        val response = runBlocking {
-            client.getResourceIdentifiers(
-                "ehrda",
-                IdentifierSearchableResourceTypes.Patient,
-                listOf(
-                    Identifier(CodeSystem.RONIN_MRN.uri.value!!, "value"),
-                    Identifier("system2", "value")
+        val response =
+            runBlocking {
+                client.getResourceIdentifiers(
+                    "ehrda",
+                    IdentifierSearchableResourceTypes.Patient,
+                    listOf(
+                        Identifier(CodeSystem.RONIN_MRN.uri.value!!, "value"),
+                        Identifier("system2", "value"),
+                    ),
                 )
-            )
-        }
+            }
 
         assertEquals(2, response.size)
         val searchResult1 = response[0]

@@ -26,9 +26,10 @@ class ResourcesChangeControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `returns new when resource is new`() {
-        val patient = rcdmPatient("tenant") {
-            id of Id("tenant-9876")
-        }
+        val patient =
+            rcdmPatient("tenant") {
+                id of Id("tenant-9876")
+            }
 
         val response = runBlocking { client.getResourcesChangeStatus("tenant", listOf(patient)) }
         assertEquals(1, response.succeeded.size)
@@ -42,16 +43,17 @@ class ResourcesChangeControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `returns unchanged when resource is unchanged`() {
-        val patient = rcdmPatient("tenant") {
-            id of Id("tenant-9984")
-            gender of AdministrativeGender.FEMALE.asCode()
-        }
+        val patient =
+            rcdmPatient("tenant") {
+                id of Id("tenant-9984")
+                gender of AdministrativeGender.FEMALE.asCode()
+            }
         AidboxClient.addResource(patient)
         DBClient.setHashValue(
             "tenant",
             "Patient",
             "tenant-9984",
-            patient.copy(meta = null).consistentHashCode()
+            patient.copy(meta = null).consistentHashCode(),
         )
 
         val response = runBlocking { client.getResourcesChangeStatus("tenant", listOf(patient)) }
@@ -68,16 +70,17 @@ class ResourcesChangeControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `returns changed when resource is changed`() {
-        val originalPatient = rcdmPatient("tenant") {
-            id of Id("tenant-9784")
-            gender of AdministrativeGender.FEMALE.asCode()
-        }
+        val originalPatient =
+            rcdmPatient("tenant") {
+                id of Id("tenant-9784")
+                gender of AdministrativeGender.FEMALE.asCode()
+            }
         AidboxClient.addResource(originalPatient)
         DBClient.setHashValue(
             "tenant",
             "Patient",
             "tenant-9784",
-            originalPatient.copy(meta = null).consistentHashCode()
+            originalPatient.copy(meta = null).consistentHashCode(),
         )
 
         val updatedPatient = originalPatient.copy(gender = AdministrativeGender.MALE.asCode())
@@ -96,12 +99,14 @@ class ResourcesChangeControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `multi-resource pass`() {
-        val patient1 = rcdmPatient("tenant") {
-            id of Id("tenant-77889")
-        }
-        val patient2 = rcdmPatient("tenant") {
-            id of Id("tenant-9784")
-        }
+        val patient1 =
+            rcdmPatient("tenant") {
+                id of Id("tenant-77889")
+            }
+        val patient2 =
+            rcdmPatient("tenant") {
+                id of Id("tenant-9784")
+            }
 
         val response = runBlocking { client.getResourcesChangeStatus("tenant", listOf(patient1, patient2)) }
         assertEquals(2, response.succeeded.size)
@@ -120,14 +125,16 @@ class ResourcesChangeControllerIT : BaseEHRDataAuthorityIT() {
 
     @Test
     fun `tenant mismatch fails`() {
-        val patient = patient {
-            id of Id("tenant-12345")
-            identifier plus identifier {
-                system of CodeSystem.RONIN_TENANT.uri
-                value of "tenant"
-                type of CodeableConcepts.RONIN_TENANT
+        val patient =
+            patient {
+                id of Id("tenant-12345")
+                identifier plus
+                    identifier {
+                        system of CodeSystem.RONIN_TENANT.uri
+                        value of "tenant"
+                        type of CodeableConcepts.RONIN_TENANT
+                    }
             }
-        }
 
         HttpStatusCode.BadRequest
         val response =
@@ -138,9 +145,10 @@ class ResourcesChangeControllerIT : BaseEHRDataAuthorityIT() {
     @Test
     fun `repeat requests result in new -- verifying change controller is not adding resource`() {
         // First we do a full new request.
-        val patient = rcdmPatient("tenant") {
-            id of Id("tenant-12345")
-        }
+        val patient =
+            rcdmPatient("tenant") {
+                id of Id("tenant-12345")
+            }
 
         val response = runBlocking { client.getResourcesChangeStatus("tenant", listOf(patient)) }
         assertEquals(1, response.succeeded.size)

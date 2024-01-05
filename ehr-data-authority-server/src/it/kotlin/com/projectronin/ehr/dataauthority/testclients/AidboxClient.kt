@@ -20,20 +20,28 @@ object AidboxClient {
     private val authenticationBroker = AidboxAuthenticationBroker(authenticationService)
     private val aidboxClient = AidboxClient(httpClient, BASE_URL, authenticationBroker)
 
-    fun addResource(resource: Resource<*>): Resource<*> = runBlocking {
-        val response = aidboxClient.batchUpsert(listOf(resource))
-        if (!response.isSuccess()) {
-            throw IllegalStateException("None success returned from adding resource: ${response.description}")
+    fun addResource(resource: Resource<*>): Resource<*> =
+        runBlocking {
+            val response = aidboxClient.batchUpsert(listOf(resource))
+            if (!response.isSuccess()) {
+                throw IllegalStateException("None success returned from adding resource: ${response.description}")
+            }
+
+            getResource(resource.resourceType, resource.id!!.value!!)
         }
 
-        getResource(resource.resourceType, resource.id!!.value!!)
-    }
+    fun getResource(
+        resourceType: String,
+        id: String,
+    ): Resource<*> =
+        runBlocking {
+            aidboxClient.getResource(resourceType, id)
+        }
 
-    fun getResource(resourceType: String, id: String): Resource<*> = runBlocking {
-        aidboxClient.getResource(resourceType, id)
-    }
-
-    fun deleteResource(resourceType: String, id: String) = runBlocking {
+    fun deleteResource(
+        resourceType: String,
+        id: String,
+    ) = runBlocking {
         aidboxClient.deleteResource(resourceType, id)
     }
 }
