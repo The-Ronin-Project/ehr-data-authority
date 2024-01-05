@@ -1,6 +1,5 @@
 package com.projectronin.ehr.dataauthority.client
 
-import com.projectronin.ehr.dataauthority.client.auth.EHRDataAuthorityAuthenticationService
 import com.projectronin.ehr.dataauthority.models.BatchResourceChangeResponse
 import com.projectronin.ehr.dataauthority.models.BatchResourceResponse
 import com.projectronin.ehr.dataauthority.models.ChangeStatusResource
@@ -12,6 +11,7 @@ import com.projectronin.ehr.dataauthority.models.IdentifierSearchResponse
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
 import com.projectronin.ehr.dataauthority.models.ModificationType
 import com.projectronin.ehr.dataauthority.models.SucceededResource
+import com.projectronin.interop.common.http.auth.InteropAuthenticationService
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.common.http.exceptions.ServerFailureException
 import com.projectronin.interop.common.http.ktor.ContentLengthSupplier
@@ -41,7 +41,7 @@ import org.junit.jupiter.api.assertThrows
 class EHRDataAuthorityClientTest {
     private val authenticationToken = "12345678"
     private val authenticationService =
-        mockk<EHRDataAuthorityAuthenticationService> {
+        mockk<InteropAuthenticationService> {
             every { getAuthentication() } returns
                 mockk {
                     every { accessToken } returns authenticationToken

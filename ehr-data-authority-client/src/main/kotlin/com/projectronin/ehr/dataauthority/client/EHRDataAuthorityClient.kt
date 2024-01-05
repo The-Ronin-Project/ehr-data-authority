@@ -1,12 +1,13 @@
 package com.projectronin.ehr.dataauthority.client
 
-import com.projectronin.ehr.dataauthority.client.auth.EHRDataAuthorityAuthenticationService
+import com.projectronin.ehr.dataauthority.client.auth.EHRDataAuthorityAuthenticationConfig
 import com.projectronin.ehr.dataauthority.models.BatchResourceChangeResponse
 import com.projectronin.ehr.dataauthority.models.BatchResourceResponse
 import com.projectronin.ehr.dataauthority.models.FailedResource
 import com.projectronin.ehr.dataauthority.models.Identifier
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchResponse
 import com.projectronin.ehr.dataauthority.models.IdentifierSearchableResourceTypes
+import com.projectronin.interop.common.http.auth.InteropAuthenticationService
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.common.http.request
 import com.projectronin.interop.fhir.r4.resource.Resource
@@ -24,6 +25,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.coroutines.runBlocking
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
@@ -35,7 +37,8 @@ class EHRDataAuthorityClient(
     @Value("\${ehrda.url}")
     private val hostUrl: String,
     private val client: HttpClient,
-    private val authenticationService: EHRDataAuthorityAuthenticationService,
+    @Qualifier(EHRDataAuthorityAuthenticationConfig.AUTH_SERVICE_BEAN_NAME)
+    private val authenticationService: InteropAuthenticationService,
     @Value("\${ehrda.batch.identifiers:50}")
     private val identifiersBatchSize: Int = 50,
     @Value("\${ehrda.batch.add:20}")

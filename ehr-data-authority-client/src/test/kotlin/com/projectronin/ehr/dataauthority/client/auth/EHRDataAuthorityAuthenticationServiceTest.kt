@@ -1,7 +1,6 @@
 package com.projectronin.ehr.dataauthority.client.auth
 
-import com.projectronin.ehr.dataauthority.client.auth.EHRDataAuthorityAuthenticationService.Auth0Authentication
-import com.projectronin.ehr.dataauthority.client.auth.EHRDataAuthorityAuthenticationService.FormBasedAuthentication
+import com.projectronin.interop.common.http.auth.InteropAuthenticationService
 import com.projectronin.interop.common.http.exceptions.ClientAuthenticationException
 import com.projectronin.interop.common.http.spring.HttpSpringConfig
 import io.ktor.http.HttpStatusCode
@@ -23,7 +22,14 @@ class EHRDataAuthorityAuthenticationServiceTest {
     private val clientId = "MyTestClientId"
     private val clientSecret = "SuperSecretAndSafe"
     private val service =
-        EHRDataAuthorityAuthenticationService(httpClient, authUrl, audience, clientId, clientSecret, true)
+        EHRDataAuthorityAuthenticationConfig(
+            httpClient,
+            authUrl,
+            audience,
+            clientId,
+            clientSecret,
+            true,
+        ).interopAuthenticationService()
 
     private val expectedPayload =
         """{"client_id":"$clientId","client_secret":"$clientSecret","audience":"$audience","grant_type":"client_credentials"}"""
@@ -61,7 +67,7 @@ class EHRDataAuthorityAuthenticationServiceTest {
         )
 
         val authentication = service.getAuthentication()
-        assertInstanceOf(Auth0Authentication::class.java, authentication)
+        assertInstanceOf(InteropAuthenticationService.Auth0Authentication::class.java, authentication)
         assertEquals("YouShallPass", authentication.accessToken)
         assertEquals("Bearer", authentication.tokenType)
         assertNotNull(authentication.expiresAt)
@@ -76,7 +82,14 @@ class EHRDataAuthorityAuthenticationServiceTest {
     @Test
     fun `retrieves form-based authentication`() {
         val service =
-            EHRDataAuthorityAuthenticationService(httpClient, authUrl, audience, clientId, clientSecret, false)
+            EHRDataAuthorityAuthenticationConfig(
+                httpClient,
+                authUrl,
+                audience,
+                clientId,
+                clientSecret,
+                false,
+            ).interopAuthenticationService()
         mockWebServer.enqueue(
             MockResponse()
                 .setResponseCode(HttpStatusCode.OK.value)
@@ -85,7 +98,7 @@ class EHRDataAuthorityAuthenticationServiceTest {
         )
 
         val authentication = service.getAuthentication()
-        assertInstanceOf(FormBasedAuthentication::class.java, authentication)
+        assertInstanceOf(InteropAuthenticationService.FormBasedAuthentication::class.java, authentication)
         assertEquals("YouShallPass", authentication.accessToken)
         assertEquals("Bearer", authentication.tokenType)
         assertNull(authentication.expiresAt)

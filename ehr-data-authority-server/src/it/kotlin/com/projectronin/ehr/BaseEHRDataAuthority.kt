@@ -1,7 +1,7 @@
 package com.projectronin.ehr
 
 import com.projectronin.ehr.dataauthority.client.EHRDataAuthorityClient
-import com.projectronin.ehr.dataauthority.client.auth.EHRDataAuthorityAuthenticationService
+import com.projectronin.ehr.dataauthority.client.auth.EHRDataAuthorityAuthenticationConfig
 import com.projectronin.interop.common.http.exceptions.RequestFailureException
 import com.projectronin.interop.common.http.ktor.ContentLengthSupplier
 import com.projectronin.interop.common.http.retry
@@ -40,14 +40,14 @@ abstract class BaseEHRDataAuthority {
     val httpClient = HttpSpringConfigTest().getHttpClient()
 
     val authenticationService =
-        EHRDataAuthorityAuthenticationService(
+        EHRDataAuthorityAuthenticationConfig(
             httpClient,
             "http://localhost:8081/ehr/token",
             "https://ehr.dev.projectronin.io",
             "id",
             "secret",
             false,
-        )
+        ).interopAuthenticationService()
 
     val client = EHRDataAuthorityClient(serverUrl, httpClient, authenticationService)
 
