@@ -1,8 +1,12 @@
 package com.projectronin.ehr.dataauthority.testclients
 
+import com.projectronin.interop.common.http.auth.AuthMethod
+import com.projectronin.interop.common.http.auth.AuthenticationConfig
+import com.projectronin.interop.common.http.auth.Client
+import com.projectronin.interop.common.http.auth.InteropAuthenticationService
+import com.projectronin.interop.common.http.auth.Token
 import com.projectronin.interop.common.jackson.JacksonManager
 import com.projectronin.interop.validation.client.ResourceClient
-import com.projectronin.interop.validation.client.auth.ValidationAuthenticationService
 import com.projectronin.interop.validation.client.generated.models.Order
 import com.projectronin.interop.validation.client.generated.models.Resource
 import com.projectronin.interop.validation.client.generated.models.ResourceStatus
@@ -35,15 +39,14 @@ object ValidationClient {
             }
         }
 
-    private val authenticationService =
-        ValidationAuthenticationService(
-            httpClient,
-            "http://localhost:8081/validation/token",
-            "https://interop-validation.dev.projectronin.io",
-            "validation-client",
-            "client-secret",
-            false,
+    private val authenticationConfig =
+        AuthenticationConfig(
+            token = Token(url = "http://localhost:8081/validation/token"),
+            audience = "https://interop-validation.dev.projectronin.io",
+            client = Client(id = "validation-client", secret = "client-secret"),
+            method = AuthMethod.STANDARD,
         )
+    private val authenticationService = InteropAuthenticationService(httpClient, authenticationConfig)
     private val resourcesClient = ResourceClient("http://localhost:8082", httpClient, authenticationService)
 
     fun getResources(): List<Resource> =
