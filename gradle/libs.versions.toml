@@ -9,7 +9,7 @@ interop-ehr = "13.1.1"
 interop-fhir = "9.1.1"
 interop-gradle = "4.0.2"
 interop-kafka = "9.0.0"
-interop-rcdm = "1.2.0"
+interop-rcdm = "1.2.1"
 interop-validation = "4.0.2"
 jackson = "2.16.1"
 # @pin Uplifting to 1.9.x appears to cause some dependency mismatches
