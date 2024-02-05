@@ -41,7 +41,7 @@ class ResourcesWriteController(
     private val kafkaPublisher: KafkaPublisher,
     private val validationService: ValidationService,
     private val publishService: PublishService,
-    private val storageMode: StorageMode,
+    storageMode: StorageMode,
 ) {
     private val logger = KotlinLogging.logger { }
     private val isLocal = storageMode == StorageMode.LOCAL
@@ -107,16 +107,19 @@ class ResourcesWriteController(
         tenantId: String,
         changeStatus: ChangeStatus,
     ): ResourceResponse {
+        val resourceType = resource.resourceType
+        val resourceId = resource.id!!.value!!
+
         val published = publishService.publish(listOf(resource))
         if (!published) {
-            return FailedResource(resource.resourceType, resource.id!!.value!!, "Error publishing to data store.")
+            return FailedResource(resourceType, resourceId, "Error publishing to data store.")
         }
 
         if (!isLocal) {
             runCatching { kafkaPublisher.publishResource(resource, changeStatus.type) }.exceptionOrNull()?.let {
                 return FailedResource(
-                    resource.resourceType,
-                    resource.id!!.value!!,
+                    resourceType,
+                    resourceId,
                     "Failed to publish to Kafka: ${it.localizedMessage}",
                 )
             }
@@ -129,8 +132,8 @@ class ResourcesWriteController(
                     runCatching { resourceHashDao.upsertHash(resourceHashesDO) }.onFailure {
                         logger.error(it) { "Exception persisting new hash for $resourceHashesDO" }
                         return FailedResource(
-                            resource.resourceType,
-                            resource.id!!.value!!,
+                            resourceType,
+                            resourceId,
                             "Error updating the hash store",
                         )
                     }
@@ -141,8 +144,8 @@ class ResourcesWriteController(
                     runCatching { resourceHashDao.upsertHash(resourceHashesDO) }.onFailure {
                         logger.error(it) { "Exception persisting updated hash for $resourceHashesDO" }
                         return FailedResource(
-                            resource.resourceType,
-                            resource.id!!.value!!,
+                            resourceType,
+                            resourceId,
                             "Error updating the hash store",
                         )
                     }
@@ -152,7 +155,7 @@ class ResourcesWriteController(
                 else -> throw IllegalStateException("Only new or changed statuses are allowed to be published")
             }
 
-        return SucceededResource(resource.resourceType, resource.id!!.value!!, modificationType)
+        return SucceededResource(resourceType, resourceId, modificationType)
     }
 
     @Suppress("UNCHECKED_CAST")
