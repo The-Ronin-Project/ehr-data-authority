@@ -776,24 +776,6 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
             "system": "http://unitsofmeasure.org",
             "code": "%"
           },
-          "interpretation": [
-            {
-              "coding": [
-                {
-                  "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/52",
-                  "code": "214",
-                  "userSelected": true
-                },
-                {
-                  "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
-                  "code": "N",
-                  "display": "Normal",
-                  "userSelected": false
-                }
-              ],
-              "text": "Normal"
-            }
-          ],
           "referenceRange": [
             {
               "low": {
