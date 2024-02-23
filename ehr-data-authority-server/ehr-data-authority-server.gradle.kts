@@ -48,8 +48,6 @@ dependencies {
     itImplementation(project)
     itImplementation(project(":ehr-data-authority-models"))
     itImplementation(project(":ehr-data-authority-client"))
-    itImplementation(platform(libs.testcontainers.bom))
-    itImplementation("org.testcontainers:testcontainers")
     itImplementation(libs.bundles.ktor)
     itImplementation(libs.interop.fhir)
     itImplementation(libs.common.fhir.r4.models)
@@ -71,3 +69,34 @@ dependencies {
 tasks.withType<Test> {
     maxHeapSize = "2g"
 }
+
+// We also test a local version, so use a similar setup as our IT docker to add Local testing.
+val runDockerLocal =
+    tasks.create("runDockerLocal") {
+        dependsOn(tasks.named("runDocker"))
+
+        doLast {
+            exec {
+                workingDir = file("./src/it/resources")
+                commandLine(
+                    "docker compose -f docker-compose-local.yaml -p resources-local up -d --wait --wait-timeout 600".split(
+                        " ",
+                    ),
+                )
+            }
+        }
+    }
+
+tasks.named("it").get().dependsOn(runDockerLocal)
+
+val stopDockerLocal =
+    tasks.create("stopDockerLocal") {
+        doLast {
+            exec {
+                workingDir = file("./src/it/resources")
+                commandLine("docker compose -f docker-compose-local.yaml -p resources-local down".split(" "))
+            }
+        }
+    }
+
+tasks.named("stopDocker").get().finalizedBy(stopDockerLocal)

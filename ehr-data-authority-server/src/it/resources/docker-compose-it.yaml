@@ -1,14 +1,11 @@
 services:
   ehr-data-authority:
     restart: on-failure
-    build:
-      context: ../../..
-      dockerfile: Dockerfile
+    build: ../../..
     image: ehr-data-authority:local
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE
       - AIDBOX_URL=http://devbox:8888
       - AIDBOX_CLIENT_ID=client
       - AIDBOX_CLIENT_SECRET=secret
@@ -40,6 +37,10 @@ services:
       - OCI_USER_OCID=userid
       - OCI_INFX_REGISTRY_FILE=TheDataNormalizationRegistry.json
       - LOGGING_LEVEL_IO_KTOR=DEBUG
+    healthcheck:
+      test: [ "CMD", "curl", "-k", "-X", "GET", "localhost:8080/actuator/health" ]
+      timeout: 5s
+      retries: 30
     depends_on:
       devbox:
         condition: service_healthy
@@ -61,7 +62,7 @@ services:
     expose:
       - 3306
     volumes:
-      - ./db:/docker-entrypoint-initdb.d
+      - ../../../build/resources/it/db:/docker-entrypoint-initdb.d
     healthcheck:
       test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "springuser", "-pThePassword" ]
       timeout: 5s
@@ -79,22 +80,22 @@ services:
     environment:
       - AIDBOX_LICENSE_ID
       - AIDBOX_LICENSE_KEY
-      - AIDBOX_PORT
-      - AIDBOX_CLIENT_ID
-      - AIDBOX_ADMIN_ID
-      - AIDBOX_ADMIN_PASSWORD
-      - AIDBOX_CLIENT_SECRET
-      - PGPORT
-      - PGHOSTPORT
-      - AIDBOX_FHIR_VERSION
-      - PGHOST
-      - PGUSER
-      - PGPASSWORD
-      - PGDATABASE
-      - box_features_validation_skip_reference
+      - AIDBOX_PORT=8888
+      - AIDBOX_CLIENT_ID=client
+      - AIDBOX_ADMIN_ID=admin
+      - AIDBOX_ADMIN_PASSWORD=secret
+      - AIDBOX_CLIENT_SECRET=secret
+      - PGPORT=5432
+      - PGHOSTPORT=5437
+      - AIDBOX_FHIR_VERSION=4.0.0
+      - PGHOST=database
+      - PGUSER=postgres
+      - PGPASSWORD=postgres
+      - PGDATABASE=devbox
+      - box_features_validation_skip_reference=true
     volumes:
-      - ./config:/var/config
-      - ./data:/data # Avoid collision with "data" folder used by devbox-db and mirth-db
+      - ../../../build/resources/it/config:/var/config
+      - ../../../build/resources/it/data:/data # Avoid collision with "data" folder used by devbox-db and mirth-db
     healthcheck:
       test: [ "CMD-SHELL", "curl -f -s -S -I -X GET http://localhost:8888/fhir/metadata || exit 1" ]
       timeout: 5s
@@ -106,18 +107,17 @@ services:
     ports:
       - "5437:5432"
     environment:
-      - PGPORT
-      - PGHOSTPORT
-      - PGHOST
-      - PGUSER
-      - PGPASSWORD
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
-      - PGDATABASE
-      - box_features_validation_skip_reference
+      - PGPORT=5432
+      - PGHOSTPORT=5437
+      - PGHOST=database
+      - PGUSER=postgres
+      - PGPASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=devbox
+      - PGDATABASE=devbox
     volumes:
-      - ./data-dbpg:/data # Avoid collision with "data" folder used by devbox and mirth-db
+      - ../../../build/resources/it/data-dbpg:/data # Avoid collision with "data" folder used by devbox and mirth-db
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -h localhost -p 5432 -d devbox" ]
       interval: 35s
@@ -153,7 +153,7 @@ services:
     ports:
       - "8081:8080"
     volumes:
-      - ./:/host
+      - ../../../build/resources/it:/host
     environment:
       - JSON_CONFIG_PATH=/host/mock-oauth2-config.json
 
@@ -201,8 +201,8 @@ services:
     platform: linux/amd64
     image: "docker-proxy.devops.projectronin.io/mockserver/mockserver:latest"
     volumes:
-      - "./mock-oci/config/mockserver.properties:/config/mockserver.properties"
-      - "./mock-oci/expectations:/expectations"
+      - "../../../build/resources/it/mock-oci/config/mockserver.properties:/config/mockserver.properties"
+      - "../../../build/resources/it/mock-oci/expectations:/expectations"
     ports:
       - 1081:443
     networks:

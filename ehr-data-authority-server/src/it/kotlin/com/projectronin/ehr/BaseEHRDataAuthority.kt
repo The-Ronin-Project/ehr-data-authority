@@ -17,32 +17,18 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.utils.unwrapCancellationException
 import io.ktor.serialization.jackson.jackson
-import org.junit.jupiter.api.BeforeAll
-import org.testcontainers.containers.DockerComposeContainer
-import org.testcontainers.containers.wait.strategy.Wait
-import java.io.File
 import java.io.IOException
-import java.time.Duration
 import java.util.concurrent.CancellationException
 import java.net.SocketTimeoutException as JavaSocketTimeoutException
 
-abstract class BaseEHRDataAuthority {
-    abstract fun getDockerEnv(): MutableMap<String, String>
-
-    abstract fun getDockerCompose(): String
-
-    companion object {
-        var lastDockerCompose: String? = null
-        var docker: DockerComposeContainer<*>? = null
-    }
-
-    val serverUrl = "http://localhost:8080"
+abstract class BaseEHRDataAuthority(serverPort: Int, authPort: Int) {
+    val serverUrl = "http://localhost:$serverPort"
     val httpClient = HttpSpringConfigTest().getHttpClient()
 
     val authenticationService =
         EHRDataAuthorityAuthenticationConfig(
             httpClient,
-            "http://localhost:8081/ehr/token",
+            "http://localhost:$authPort/ehr/token",
             "https://ehr.dev.projectronin.io",
             "id",
             "secret",
@@ -50,23 +36,6 @@ abstract class BaseEHRDataAuthority {
         ).interopAuthenticationService()
 
     val client = EHRDataAuthorityClient(serverUrl, httpClient, authenticationService)
-
-    @BeforeAll
-    fun startDocker() {
-        val dockerCompose = getDockerCompose()
-        if (docker == null || lastDockerCompose != dockerCompose) {
-            // Stop the current docker if there is one
-            docker?.stop()
-
-            docker =
-                DockerComposeContainer(File(BaseEHRDataAuthority::class.java.getResource(dockerCompose)!!.file))
-                    .withEnv(getDockerEnv())
-                    .withStartupTimeout(Duration.ofMinutes(10))
-                    .waitingFor("ehr-data-authority", Wait.forLogMessage(".*Started EHRDataAuthorityServerKt.*", 1))
-            docker!!.start()
-            lastDockerCompose = dockerCompose
-        }
-    }
 }
 
 class HttpSpringConfigTest {

@@ -1,4 +1,5 @@
 package com.projectronin.ehr.dataauthoritylocal.controllers
+
 import com.projectronin.ehr.dataauthority.models.ModificationType
 import com.projectronin.ehr.dataauthoritylocal.BaseEHRDataAuthorityLocalIT
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
@@ -161,10 +162,6 @@ class ResourcesWriteControllerLocalIT : BaseEHRDataAuthorityLocalIT() {
         runBlocking { client.deleteResource("ehrda", "Patient", "ehrda-12345") }
         runBlocking { client.deleteResource("ehrda", "Patient", "ehrda-67890") }
     }
-
-    @Test
-    fun `invalid resource returns failure and adds to validation service - local storage client`() {}
-    // local storage does not use validation service
 
     @Test
     fun `tenant mismatch just fails - local storage client`() {

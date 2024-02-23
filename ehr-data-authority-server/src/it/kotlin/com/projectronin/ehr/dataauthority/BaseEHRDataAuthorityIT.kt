@@ -12,32 +12,7 @@ import org.junit.jupiter.api.TestInstance
 import kotlin.reflect.KClass
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-open class BaseEHRDataAuthorityIT : BaseEHRDataAuthority() {
-    override fun getDockerEnv() =
-        mutableMapOf(
-            "AIDBOX_LICENSE_ID" to System.getenv("AIDBOX_LICENSE_ID"),
-            "AIDBOX_LICENSE_KEY" to System.getenv("AIDBOX_LICENSE_KEY"),
-            "AIDBOX_PORT" to "8888",
-            "AIDBOX_CLIENT_ID" to "client",
-            "AIDBOX_ADMIN_ID" to "admin",
-            "AIDBOX_ADMIN_PASSWORD" to "secret",
-            "AIDBOX_CLIENT_SECRET" to "secret",
-            "AIDBOX_DEV_MODE" to "true",
-            "AIDBOX_FHIR_VERSION" to "4.0.0",
-            "PGPORT" to "5432",
-            "PGHOSTPORT" to "5437",
-            "PGHOST" to "database",
-            "PGUSER" to "postgres",
-            "POSTGRES_USER" to "postgres",
-            "POSTGRES_PASSWORD" to "postgres",
-            "POSTGRES_DB" to "devbox",
-            "PGPASSWORD" to "postgres",
-            "PGDATABASE" to "devbox",
-            "box_features_validation_skip_reference" to "true",
-        )
-
-    override fun getDockerCompose() = "/docker-compose-it.yaml"
-
+open class BaseEHRDataAuthorityIT : BaseEHRDataAuthority(8080, 8081) {
     open val resources = mapOf<String, KClass<out Resource>>()
 
     @BeforeEach
