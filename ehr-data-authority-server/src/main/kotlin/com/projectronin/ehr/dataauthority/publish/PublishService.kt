@@ -23,7 +23,8 @@ class PublishService(
      * For an existing resource id, publish updates that resource with the new data. For a new id, it adds the resource.
      * Expects that the caller will not input an empty List.
      * @param resourceCollection List of FHIR resources to publish. May be a mixed List with different resourceTypes.
-     * @return true for success: an HTTP 2xx response, or publish was skipped for an empty list; otherwise false.
+     * @return The List of resources as they were stored in the making data system. This may match the inputs, but may also
+     * include additional information such as updated meta information.
      */
     fun publish(resourceCollection: List<Resource<*>>): List<Resource<*>> {
         logger.info { "Publishing Ronin clinical data" }
