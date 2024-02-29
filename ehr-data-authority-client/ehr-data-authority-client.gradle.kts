@@ -9,6 +9,7 @@ dependencies {
     implementation(platform(libs.spring.boot.parent))
 
     api(project(":ehr-data-authority-models"))
+    implementation(libs.dd.trace.api)
     implementation(libs.bundles.jackson)
     implementation(libs.bundles.ktor)
     implementation(libs.interop.common)

@@ -49,7 +49,7 @@ class ResourcesSearchController(
     @Parameter(name = "udpId", example = "tenant-12345678")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "200", description = "Returns the associated resource if found"),
+            ApiResponse(responseCode = "200", description = "Returns the associated binary resource if found"),
         ],
     )
     @GetMapping("/tenants/{tenantId}/resources/Binary/{udpId}")
@@ -112,8 +112,8 @@ class ResourcesSearchController(
     }
 
     @Operation(
-        summary = "Retrieves the identifiers associated to the resourceType",
-        description = "Retrieves the identifiers associated to the resourceType with identifiers for tenantId",
+        summary = "Returns all identifiers tied to a resource indicated by the given identifier",
+        description = "Returns all identifiers tied to a resource indicated by the given identifier",
     )
     @Parameter(name = "tenantId", example = "tenant")
     @Parameter(name = "resourceType", example = "Patient")
@@ -123,7 +123,7 @@ class ResourcesSearchController(
                 responseCode = "200",
                 description =
                     "Returns a list of foundResources that are associated with the " +
-                        "given identifiers",
+                        "searched identifiers",
             ),
         ],
     )
