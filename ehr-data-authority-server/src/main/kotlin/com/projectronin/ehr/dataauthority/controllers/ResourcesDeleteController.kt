@@ -26,9 +26,9 @@ class ResourcesDeleteController(
     private val isLocal = storageMode == StorageMode.LOCAL
 
     @Operation(
-        summary = "Deletes a resource",
+        summary = "Deletes the provided resource",
         description =
-            "Deletes the resource for the given resourceType and udpId for a given tenantId. " +
+            "Deletes the resource for the given resourceType and udpId for a given tenantId from EHRDA. " +
                 "\nNOTE: This API only supports deleting from testing tenants. Any non-testing tenant that is used " +
                 "will result in a 400.",
     )

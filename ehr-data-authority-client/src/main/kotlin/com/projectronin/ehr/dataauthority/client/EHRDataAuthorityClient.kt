@@ -11,6 +11,7 @@ import com.projectronin.interop.common.http.auth.InteropAuthenticationService
 import com.projectronin.interop.common.http.exceptions.ClientFailureException
 import com.projectronin.interop.common.http.request
 import com.projectronin.interop.fhir.r4.resource.Resource
+import datadog.trace.api.Trace
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.accept
@@ -52,6 +53,7 @@ class EHRDataAuthorityClient(
      * then sends to [addResourcesByBatch] to post the resources
      * returns list of [BatchResourceResponse]
      */
+    @Trace
     suspend fun addResources(
         tenantId: String,
         resources: List<Resource<*>>,
@@ -128,6 +130,7 @@ class EHRDataAuthorityClient(
     /**
      * Retrieves the resource with [resourceType] and [udpId] for [tenantId].
      */
+    @Trace
     suspend fun getResource(
         tenantId: String,
         resourceType: String,
@@ -175,6 +178,7 @@ class EHRDataAuthorityClient(
     /**
      * Retrieves the identifiers associated to the [resourceType] with [identifiers] for [tenantId]
      */
+    @Trace
     suspend fun getResourceIdentifiers(
         tenantId: String,
         resourceType: IdentifierSearchableResourceTypes,
@@ -203,6 +207,7 @@ class EHRDataAuthorityClient(
      * tenants. Any non-testing tenant that is attempted to be deleted from will result in a 400. If this request was
      * unsuccessful, any exception returned by the EHR Data Authority will be thrown.
      */
+    @Trace
     suspend fun deleteResource(
         tenantId: String,
         resourceType: String,
@@ -222,6 +227,7 @@ class EHRDataAuthorityClient(
     /**
      * Returns the change status of given [resources] compared against the existing stored resources.
      */
+    @Trace
     suspend fun getResourcesChangeStatus(
         tenantId: String,
         resources: List<Resource<*>>,
