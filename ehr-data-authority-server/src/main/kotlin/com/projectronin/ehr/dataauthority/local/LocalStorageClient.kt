@@ -1,7 +1,7 @@
 package com.projectronin.ehr.dataauthority.local
 
 import com.projectronin.ehr.dataauthority.change.data.services.DataStorageService
-import com.projectronin.interop.common.http.exceptions.ClientFailureException
+import com.projectronin.interop.common.collection.associateWithNonNull
 import com.projectronin.interop.fhir.r4.datatype.Identifier
 import com.projectronin.interop.fhir.r4.datatype.primitive.Code
 import com.projectronin.interop.fhir.r4.resource.Bundle
@@ -20,20 +20,29 @@ class LocalStorageClient : DataStorageService {
     var localStorageMap: ConcurrentSkipListMap<String, MutableMap<String, Resource<*>>> =
         ConcurrentSkipListMap<String, MutableMap<String, Resource<*>>>()
 
-    override suspend fun batchUpsert(resourceCollection: List<Resource<*>>): HttpStatusCode {
+    override suspend fun batchUpsert(resourceCollection: List<Resource<*>>): List<Resource<*>> {
         resourceCollection.forEach {
             localStorageMap.computeIfAbsent(it.resourceType) { key -> mutableMapOf() }
                 .put(it.id!!.value!!, it)
         }
-        return HttpStatusCode.OK
+        return resourceCollection
     }
 
     override fun getResource(
         resourceType: String,
         resourceFHIRID: String,
-    ): Resource<*> {
-        val resource = localStorageMap.get(resourceType)?.get(resourceFHIRID)
-        return resource ?: throw ClientFailureException(HttpStatusCode.NotFound, "Local Server")
+    ): Resource<*>? {
+        return getResources(resourceType, listOf(resourceFHIRID))[resourceFHIRID]
+    }
+
+    override fun getResources(
+        resourceType: String,
+        resourceIds: List<String>,
+    ): Map<String, Resource<*>> {
+        val resourceTypeMap = localStorageMap.get(resourceType)
+        return resourceTypeMap?.let { map ->
+            resourceIds.associateWithNonNull { map[it] }
+        } ?: emptyMap()
     }
 
     override suspend fun searchForResources(

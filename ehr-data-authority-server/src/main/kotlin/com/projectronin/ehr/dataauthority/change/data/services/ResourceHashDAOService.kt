@@ -4,13 +4,12 @@ import com.projectronin.ehr.dataauthority.change.data.model.ResourceHashesDO
 
 interface ResourceHashDAOService {
     /**
-     * Retrieves the [ResourceHashesDO] associated with [resourceType], [resourceId] and [tenantId].
+     * Retrieves the [ResourceHashesDO] for the supplied [resourceIds] in the [tenantId].
      */
-    fun getHash(
+    fun getHashes(
         tenantId: String,
-        resourceType: String,
-        resourceId: String,
-    ): ResourceHashesDO?
+        resourceIds: List<ResourceId>,
+    ): Map<ResourceId, ResourceHashesDO>
 
     /**
      * Inserts or updates the [resourceHashesDO] and returns the current view from the data store.

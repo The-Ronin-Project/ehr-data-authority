@@ -92,12 +92,17 @@ class ResourcesSearchController(
                 dataStorageService.getResource(resourceType, udpId)
             } catch (exception: Exception) {
                 if (exception is HttpException && exception.status in notFoundStatuses) {
-                    return ResponseEntity.notFound().build()
+                    // Just return null and we'll treat it as though the service returned us nothing.
+                    null
                 } else {
                     logger.error(exception.getLogMarker(), exception) { "Exception while retrieving from $storageMode" }
                     return ResponseEntity.internalServerError().build()
                 }
             }
+
+        if (resource == null) {
+            return ResponseEntity.notFound().build()
+        }
 
         // the tenant ID should be in identifiers, but that would require us casting to every resource type
         if (resource.id?.value?.startsWith("$tenantId-") == false) {

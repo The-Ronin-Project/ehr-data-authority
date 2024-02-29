@@ -6,3 +6,10 @@ resource_hashes:
     tenant_id: "tenant1"
     hash_code: 13579
     update_dt_tm: "2022-08-01 11:18:00 +0000"
+  - hash_id: "xzn7K+2qRg2iLjVOw4GsWg=="
+    # UUID: c739fb2b-edaa-460d-a22e-354ec381ac5a
+    resource_id: "tenant1-67890"
+    resource_type: "Practitioner"
+    tenant_id: "tenant1"
+    hash_code: 123456789
+    update_dt_tm: "2024-02-28 14:43:00 +0000"

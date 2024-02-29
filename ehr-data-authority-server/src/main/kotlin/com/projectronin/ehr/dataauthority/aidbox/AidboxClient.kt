@@ -19,6 +19,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.ktor.http.encodeURLPathPart
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
@@ -32,11 +33,13 @@ class AidboxClient(
     @Value("\${aidbox.url}")
     private val aidboxURLRest: String,
     private val authenticationBroker: AidboxAuthenticationBroker,
+    @Value("\${aidbox.batch.size:10")
+    private val aidboxBatchSize: Int = 10,
 ) : DataStorageService {
     private val logger = KotlinLogging.logger { }
     private val numAuthRetries = 1
 
-    override suspend fun batchUpsert(resourceCollection: List<Resource<*>>): HttpStatusCode {
+    override suspend fun batchUpsert(resourceCollection: List<Resource<*>>): List<Resource<*>> {
         val arrayLength = resourceCollection.size
         val showArray =
             when (arrayLength) {
@@ -46,60 +49,70 @@ class AidboxClient(
         logger.debug { "Aidbox batch upsert of $arrayLength $showArray" }
         val bundle = makeBundleForBatchUpsert(aidboxURLRest, resourceCollection)
         return runBlocking {
-            val response: HttpResponse =
-                runBlocking {
-                    httpClient.request(
-                        "Aidbox",
-                        "$aidboxURLRest/fhir",
-                        authenticationBroker,
-                        numAuthRetries,
-                        logger,
-                    ) { url, authentication ->
-                        post(url) {
-                            headers {
-                                append(
-                                    HttpHeaders.Authorization,
-                                    "${authentication?.tokenType} ${authentication?.accessToken}",
-                                )
-                                append("aidbox-validation-skip", "reference")
-                            }
-                            contentType(ContentType.Application.Json)
-                            accept(ContentType.Application.Json)
-                            setBody(bundle)
-                        }
+            httpClient.request(
+                "Aidbox",
+                "$aidboxURLRest/fhir",
+                authenticationBroker,
+                numAuthRetries,
+                logger,
+            ) { url, authentication ->
+                post(url) {
+                    headers {
+                        append(
+                            HttpHeaders.Authorization,
+                            "${authentication?.tokenType} ${authentication?.accessToken}",
+                        )
+                        append("aidbox-validation-skip", "reference")
                     }
+                    contentType(ContentType.Application.Json)
+                    accept(ContentType.Application.Json)
+                    setBody(bundle)
                 }
-            response.status
+            }.getResources()
         }
     }
 
     override fun getResource(
         resourceType: String,
         resourceFHIRID: String,
-    ): Resource<*> {
+    ): Resource<*>? {
+        return getResources(resourceType, listOf(resourceFHIRID))[resourceFHIRID]
+    }
+
+    override fun getResources(
+        resourceType: String,
+        resourceIds: List<String>,
+    ): Map<String, Resource<*>> {
+        val chunkedIds = resourceIds.chunked(aidboxBatchSize)
         return runBlocking {
-            val response: HttpResponse =
-                runBlocking {
-                    httpClient.request(
-                        "Aidbox",
-                        "$aidboxURLRest/fhir/$resourceType/$resourceFHIRID",
-                        authenticationBroker,
-                        numAuthRetries,
-                        logger,
-                    ) { url, authentication ->
-                        get(url) {
-                            headers {
-                                append(
-                                    HttpHeaders.Authorization,
-                                    "${authentication?.tokenType} ${authentication?.accessToken}",
-                                )
-                            }
-                            contentType(ContentType.Application.Json)
-                            accept(ContentType.Application.Json)
+            chunkedIds.flatMap { currentIds ->
+                httpClient.request(
+                    "Aidbox",
+                    "$aidboxURLRest/fhir/$resourceType",
+                    authenticationBroker,
+                    numAuthRetries,
+                    logger,
+                ) { url, authentication ->
+                    get(url) {
+                        headers {
+                            append(
+                                HttpHeaders.Authorization,
+                                "${authentication?.tokenType} ${authentication?.accessToken}",
+                            )
+                        }
+                        contentType(ContentType.Application.Json)
+                        accept(ContentType.Application.Json)
+                        url {
+                            encodedParameters.append(
+                                "_id",
+                                currentIds.joinToString(separator = ",") {
+                                    it.encodeURLParameter(spaceToPlus = true)
+                                },
+                            )
                         }
                     }
-                }
-            response.body()
+                }.getResources()
+            }.associateBy { it.id!!.value!! }
         }
     }
 
@@ -167,4 +180,6 @@ class AidboxClient(
     override suspend fun deleteAllResources(): HttpStatusCode {
         return HttpStatusCode.BadRequest
     }
+
+    private suspend fun HttpResponse.getResources(): List<Resource<*>> = this.body<Bundle>().entry.mapNotNull { it.resource }
 }

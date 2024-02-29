@@ -12,9 +12,10 @@ interface DataStorageService {
      * on references is that all the referenced resources are either in the bundle or already in Aidbox.
      * The transaction bundle is all-or-nothing: Every resource in the bundle must succeed to return a 200 response.
      * @param resourceCollection List of FHIR resources to publish. May be a mixed List with different resourceTypes.
-     * @return [HttpStatusCode] from the Aidbox FHIR transaction bundle REST API.
+     * @return the [Resource]s as they were entered into the data storage. Note these may or may not match the provided
+     * resources as the underlying data system may add additional information.
      */
-    suspend fun batchUpsert(resourceCollection: List<Resource<*>>): HttpStatusCode
+    suspend fun batchUpsert(resourceCollection: List<Resource<*>>): List<Resource<*>>
 
     /**
      * Fetches a full FHIR resource from Aidbox based on the Fhir ID.
@@ -25,7 +26,15 @@ interface DataStorageService {
     fun getResource(
         resourceType: String,
         resourceFHIRID: String,
-    ): Resource<*>
+    ): Resource<*>?
+
+    /**
+     * Fetches the FHIR Resources from Aidbox based off the [resourceType] and [resourceIds], with the response keyed by the [resourceIds].
+     */
+    fun getResources(
+        resourceType: String,
+        resourceIds: List<String>,
+    ): Map<String, Resource<*>>
 
     /**
      * Fetches a full FHIR resource from Aidbox based on the resource identifiers.

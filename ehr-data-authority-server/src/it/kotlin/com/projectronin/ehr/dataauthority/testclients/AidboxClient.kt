@@ -6,7 +6,6 @@ import com.projectronin.ehr.dataauthority.aidbox.auth.AidboxAuthenticationServic
 import com.projectronin.ehr.dataauthority.aidbox.auth.AidboxCredentials
 import com.projectronin.interop.common.http.spring.HttpSpringConfig
 import com.projectronin.interop.fhir.r4.resource.Resource
-import io.ktor.http.isSuccess
 import kotlinx.coroutines.runBlocking
 
 object AidboxClient {
@@ -23,8 +22,8 @@ object AidboxClient {
     fun addResource(resource: Resource<*>): Resource<*> =
         runBlocking {
             val response = aidboxClient.batchUpsert(listOf(resource))
-            if (!response.isSuccess()) {
-                throw IllegalStateException("None success returned from adding resource: ${response.description}")
+            if (response.isEmpty()) {
+                throw IllegalStateException("Non success returned from adding resource")
             }
 
             getResource(resource.resourceType, resource.id!!.value!!)
@@ -35,7 +34,7 @@ object AidboxClient {
         id: String,
     ): Resource<*> =
         runBlocking {
-            aidboxClient.getResource(resourceType, id)
+            aidboxClient.getResource(resourceType, id)!!
         }
 
     fun deleteResource(

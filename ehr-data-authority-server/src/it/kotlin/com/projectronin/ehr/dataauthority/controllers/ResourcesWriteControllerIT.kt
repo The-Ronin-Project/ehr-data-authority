@@ -402,6 +402,9 @@ class ResourcesWriteControllerIT : BaseEHRDataAuthorityIT() {
         assertEquals("tenant-12345", success2.resourceId)
         assertEquals(ModificationType.UNMODIFIED, success2.modificationType)
 
+        val kafkaEvents2 = KafkaClient.readEvents("patient")
+        assertEquals(0, kafkaEvents2.size)
+
         AidboxClient.deleteResource("Patient", "tenant-12345")
     }
 

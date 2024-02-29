@@ -2,6 +2,8 @@ package com.projectronin.ehr.dataauthority.local
 
 import com.projectronin.ehr.dataauthority.change.data.model.ResourceHashesDO
 import com.projectronin.ehr.dataauthority.change.data.services.ResourceHashDAOService
+import com.projectronin.ehr.dataauthority.change.data.services.ResourceId
+import com.projectronin.interop.common.collection.associateWithNonNull
 import org.springframework.context.annotation.Profile
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -12,30 +14,38 @@ import java.util.UUID
  */
 @Profile("local")
 class LocalStorageMapHashDAO : ResourceHashDAOService {
-    private var localStorageHash: MutableMap<Triple<String, String, String>, Int> = mutableMapOf()
+    private var localStorageHash: MutableMap<Pair<String, ResourceId>, Int> = mutableMapOf()
 
-    override fun getHash(
+    override fun getHashes(
         tenantId: String,
-        resourceType: String,
-        resourceId: String,
-    ): ResourceHashesDO? {
-        val hashFound = localStorageHash[Triple(tenantId, resourceType, resourceId)]
-
-        return hashFound?.let {
-            val uuid = UUID.randomUUID()
-            ResourceHashesDO {
-                this.hashId = uuid
-                this.resourceId = resourceId
-                this.resourceType = resourceType
-                this.tenantId = tenantId
-                this.updateDateTime = OffsetDateTime.now(ZoneOffset.UTC)
-                this.hash = hashFound
+        resourceIds: List<ResourceId>,
+    ): Map<ResourceId, ResourceHashesDO> {
+        return resourceIds.associateWithNonNull { resourceId ->
+            val hash = localStorageHash[Pair(tenantId, resourceId)]
+            hash?.let {
+                val uuid = UUID.randomUUID()
+                ResourceHashesDO {
+                    this.hashId = uuid
+                    this.resourceId = resourceId.id
+                    this.resourceType = resourceId.type
+                    this.tenantId = tenantId
+                    this.updateDateTime = OffsetDateTime.now(ZoneOffset.UTC)
+                    this.hash = it
+                }
             }
         }
     }
 
     override fun upsertHash(resourceHashesDO: ResourceHashesDO): ResourceHashesDO {
-        localStorageHash[Triple(resourceHashesDO.tenantId!!, resourceHashesDO.resourceType, resourceHashesDO.resourceId)] =
+        localStorageHash[
+            Pair(
+                resourceHashesDO.tenantId,
+                ResourceId(
+                    resourceHashesDO.resourceType,
+                    resourceHashesDO.resourceId,
+                ),
+            ),
+        ] =
             resourceHashesDO.hash
         return resourceHashesDO
     }
@@ -45,7 +55,7 @@ class LocalStorageMapHashDAO : ResourceHashDAOService {
         resourceType: String,
         resourceId: String,
     ): Boolean {
-        return localStorageHash.keys.remove(Triple(tenantId, resourceType, resourceId))
+        return localStorageHash.keys.remove(Pair(tenantId, ResourceId(resourceType, resourceId)))
     }
 
     override fun deleteAllOfHash(): Boolean {

@@ -3,8 +3,10 @@ package com.projectronin.ehr.dataauthority.change
 import com.projectronin.ehr.dataauthority.change.data.model.ResourceHashesDO
 import com.projectronin.ehr.dataauthority.change.data.services.DataStorageService
 import com.projectronin.ehr.dataauthority.change.data.services.ResourceHashDAOService
+import com.projectronin.ehr.dataauthority.change.data.services.ResourceId
 import com.projectronin.ehr.dataauthority.change.model.ChangeStatus
 import com.projectronin.ehr.dataauthority.models.ChangeType
+import com.projectronin.interop.common.collection.associateWithNonNull
 import com.projectronin.interop.common.reflect.copy
 import com.projectronin.interop.fhir.r4.resource.Resource
 import mu.KotlinLogging
@@ -27,42 +29,39 @@ class ChangeDetectionService(
     fun <T> determineChangeStatuses(
         tenantId: String,
         resources: Map<T, Resource<*>>,
-    ): Map<T, ChangeStatus> = resources.mapValues { determineChangeStatus(tenantId, it.value) }
+    ): Map<T, ChangeStatus> {
+        val normalizedResources = resources.mapValues { it.value.normalizeResource() }
+        val currentHashes = normalizedResources.mapValues { it.value.consistentHashCode() }
+        val storedHashes = getStoredHashes(tenantId, resources)
 
-    /**
-     * Determines the [ChangeStatus] for the given resource within this tenant.
-     */
-    private fun determineChangeStatus(
-        tenantId: String,
-        resource: Resource<*>,
-    ): ChangeStatus {
-        val resourceType = resource.resourceType
-        val resourceId = resource.id!!.value!!
+        val changeTypeByKey = mutableMapOf<T, ChangeType>()
+        val toCompare = mutableListOf<T>()
+        resources.keys.forEach { key ->
+            val storedHash = storedHashes[key]
+            val resourceHash = currentHashes[key]
 
-        val normalizedResource = normalizeResource(resource)
-        val resourceHash = normalizedResource.consistentHashCode()
-        val currentHashDO = getStoredHash(tenantId, resourceType, resourceId)
-
-        logger.debug { "resourceHash = $resourceHash" }
-        logger.debug { "currentHashDO = $currentHashDO" }
-
-        val changeType =
-            if (currentHashDO == null) {
-                // If we have no record, we treat it as new
-                ChangeType.NEW
-            } else if (resourceHash != currentHashDO.hash) {
-                // If our current record and the new hash do not match, then it has changed.
-                ChangeType.CHANGED
+            if (storedHash == null) {
+                changeTypeByKey[key] = ChangeType.NEW
+            } else if (resourceHash != storedHash.hash) {
+                changeTypeByKey[key] = ChangeType.CHANGED
             } else {
-                // Since they do match, we'll do a deeper comparison.
-                val storedResource = getStoredResource(resourceType, resourceId)
+                toCompare.add(key)
+            }
+        }
 
-                // The normalized form will strip out the meta, so we are intentionally checking the profile
-                // If the profile has changed, then the resource has changed.
+        val resourcesToCompare = toCompare.associateWithNonNull { resources[it] }
+        val storedResources = getStoredResources(tenantId, resourcesToCompare.values)
+        resourcesToCompare.forEach { (key, resource) ->
+            val storedResource = storedResources[resource.id!!.value!!]!!
+
+            // The normalized form will strip out the meta, so we are intentionally checking the profile
+            // If the profile has changed, then the resource has changed.
+            val changeType =
                 if (resource.meta?.profile != storedResource.meta?.profile) {
                     ChangeType.CHANGED
                 } else {
-                    val normalizedStored = normalizeResource(storedResource)
+                    val normalizedResource = normalizedResources[key]
+                    val normalizedStored = storedResource.normalizeResource()
 
                     logger.debug { "Comparing new resource $normalizedResource to stored resource $normalizedStored" }
 
@@ -73,32 +72,42 @@ class ChangeDetectionService(
                         ChangeType.CHANGED
                     }
                 }
-            }
+            changeTypeByKey[key] = changeType
+        }
 
-        return ChangeStatus(resourceType, resourceId, changeType, currentHashDO?.hashId, resourceHash)
+        return resources.mapValues { (key, resource) ->
+            val changeType = changeTypeByKey[key]!!
+            val storedHash = storedHashes[key]
+            val newHash = currentHashes[key]!!
+            ChangeStatus(resource.resourceType, resource.id!!.value!!, changeType, storedHash?.hashId, newHash)
+        }
     }
 
-    /**
-     * Retrieves the stored hash for the [resourceType] with [resourceId] for [tenantId].
-     */
-    private fun getStoredHash(
+    private fun <T> getStoredHashes(
         tenantId: String,
-        resourceType: String,
-        resourceId: String,
-    ): ResourceHashesDO? = resourceHashDao.getHash(tenantId, resourceType, resourceId)
+        resources: Map<T, Resource<*>>,
+    ): Map<T, ResourceHashesDO> {
+        val resourceIdsToKey =
+            resources.map { (key, resource) ->
+                ResourceId(resource.resourceType, resource.id!!.value!!) to key
+            }.toMap()
+        val hashesByResourceId = resourceHashDao.getHashes(tenantId, resourceIdsToKey.keys.toList())
+        return hashesByResourceId.mapKeys { resourceIdsToKey[it.key]!! }
+    }
 
-    /**
-     * Gets the stored resource for the [resourceType] with [resourceId]
-     */
-    private fun getStoredResource(
-        resourceType: String,
-        resourceId: String,
-    ): Resource<*> {
-        return dataStorageService.getResource(resourceType, resourceId)
+    private fun getStoredResources(
+        tenantId: String,
+        resources: Collection<Resource<*>>,
+    ): Map<String, Resource<*>> {
+        val resourcesByType = resources.groupBy { it.resourceType }
+        return resourcesByType.flatMap { (type, currentResources) ->
+            val resourceIds = currentResources.map { it.id!!.value!! }
+            dataStorageService.getResources(type, resourceIds).toList()
+        }.toMap()
     }
 
     /**
-     * Normalizes the [resource] to allow for a proper comparison regardless of changes made by the backing system.
+     * Normalizes this resource to allow for a proper comparison regardless of changes made by the backing system.
      */
-    private fun normalizeResource(resource: Resource<*>): Resource<*> = copy(resource, mapOf("meta" to null))
+    private fun Resource<*>.normalizeResource(): Resource<*> = copy(this, mapOf("meta" to null))
 }

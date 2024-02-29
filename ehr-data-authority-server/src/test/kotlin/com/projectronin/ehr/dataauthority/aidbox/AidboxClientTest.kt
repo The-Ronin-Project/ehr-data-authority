@@ -249,60 +249,86 @@ class AidboxClientTest {
 
     @Test
     fun `resource retrieve test`() {
-        val responseBody =
+        val resource1 =
             Patient(
                 id = Id("123"),
             )
-        val response = JacksonManager.objectMapper.writeValueAsString(responseBody)
-        val dataStorageClient = createClient("", "$urlRest/fhir/Patient/123", responseBody = response)
-        val actual = dataStorageClient.getResource("Patient", "123")
+        val response = getBundleJson(listOf(resource1))
+        val dataStorageClient = createClient("", "$urlRest/fhir/Patient?_id=123", responseBody = response)
+        val actual = dataStorageClient.getResource("Patient", "123")!!
         assertEquals("Patient", actual.resourceType)
         assertEquals("123", actual.id?.value)
-        assertEquals(responseBody, actual)
+        assertEquals(resource1, actual)
+    }
+
+    @Test
+    fun `getResources works`() {
+        val resource1 =
+            Patient(
+                id = Id("123"),
+            )
+        val resource2 =
+            Patient(
+                id = Id("456"),
+            )
+        val response = getBundleJson(listOf(resource1, resource2))
+        val dataStorageClient = createClient("", "$urlRest/fhir/Patient?_id=123,456", responseBody = response)
+        val actual = dataStorageClient.getResources("Patient", listOf("123", "456"))
+        assertEquals(2, actual.size)
+
+        val actual1 = actual["123"]!!
+        assertEquals("Patient", actual1.resourceType)
+        assertEquals("123", actual1.id?.value)
+        assertEquals(resource1, actual1)
+
+        val actual2 = actual["456"]!!
+        assertEquals("Patient", actual2.resourceType)
+        assertEquals("456", actual2.id?.value)
+        assertEquals(resource2, actual2)
     }
 
     @Test
     fun `aidbox batch upsert of 2 Practitioner (RoninResource), response 200`() {
-        val expectedResponseStatus = HttpStatusCode.OK
-        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
+        val response = getBundleJson(practitioners)
+        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseBody = response)
         val actualResponse =
             runBlocking {
                 dataStorageClient.batchUpsert(practitioners)
             }
-        assertEquals(expectedResponseStatus, actualResponse)
+        assertEquals(practitioners, actualResponse)
     }
 
     @Test
     fun `aidbox batch upsert of 2 Location (R4Resource), response 200`() {
-        val expectedResponseStatus = HttpStatusCode.OK
-        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
+        val response = getBundleJson(locations)
+        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseBody = response)
         val actualResponse =
             runBlocking {
                 dataStorageClient.batchUpsert(locations)
             }
-        assertEquals(expectedResponseStatus, actualResponse)
+        assertEquals(locations, actualResponse)
     }
 
     @Test
     fun `aidbox batch upsert of all related FHIRResources (RoninResource and R4Resource), response 200`() {
-        val expectedResponseStatus = HttpStatusCode.OK
-        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
+        val response = getBundleJson(fullRoles)
+        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseBody = response)
         val actualResponse =
             runBlocking {
                 dataStorageClient.batchUpsert(fullRoles)
             }
-        assertEquals(expectedResponseStatus, actualResponse)
+        assertEquals(fullRoles, actualResponse)
     }
 
     @Test
     fun `aidbox batch upsert of mixed, some unrelated FHIRResources (RoninResource and R4Resource), response 200`() {
-        val expectedResponseStatus = HttpStatusCode.OK
-        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
+        val response = getBundleJson(unrelatedResourceInList)
+        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseBody = response)
         val actualResponse =
             runBlocking {
                 dataStorageClient.batchUpsert(unrelatedResourceInList)
             }
-        assertEquals(expectedResponseStatus, actualResponse)
+        assertEquals(unrelatedResourceInList, actualResponse)
     }
 
     @Test
@@ -325,29 +351,6 @@ class AidboxClientTest {
                 dataStorageClient.batchUpsert(oneMissingTargetRoles)
             }
         }
-    }
-
-    @Test
-    fun `aidbox batch upsert of 2 Practitioner resources, response 1xx`() {
-        val expectedResponseStatus = HttpStatusCode.Continue
-        val dataStorageClient =
-            createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
-        val actualResponse =
-            runBlocking {
-                dataStorageClient.batchUpsert(practitioners)
-            }
-        assertEquals(expectedResponseStatus, actualResponse)
-    }
-
-    @Test
-    fun `aidbox batch upsert of 2 Practitioner resources, response 2xx`() {
-        val expectedResponseStatus = HttpStatusCode.Accepted
-        val dataStorageClient = createClient(expectedUrl = urlBatchUpsert, responseStatus = expectedResponseStatus)
-        val actualResponse =
-            runBlocking {
-                dataStorageClient.batchUpsert(practitioners)
-            }
-        assertEquals(expectedResponseStatus, actualResponse)
     }
 
     @Test
@@ -387,10 +390,12 @@ class AidboxClientTest {
     @Test
     fun `aidbox batch upsert retries on 401 with success after retry`() {
         val authenticationBroker = createAuthenticationBrokerWithInvalidAuth()
+        val response = getBundleJson(practitioners)
         val dataStorageClient =
             createClient(
                 expectedUrl = urlBatchUpsert,
                 authenticationBroker = authenticationBroker,
+                responseBody = response,
             )
 
         runBlocking {
@@ -555,5 +560,14 @@ class AidboxClientTest {
                 }
             }
         }
+    }
+
+    private fun getBundleJson(resources: List<Resource<*>>): String {
+        val bundle =
+            Bundle(
+                type = BundleType.TRANSACTION_RESPONSE.asCode(),
+                entry = resources.map { BundleEntry(resource = it) },
+            )
+        return JacksonManager.objectMapper.writeValueAsString(bundle)
     }
 }

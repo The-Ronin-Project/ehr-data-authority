@@ -3,6 +3,7 @@ package com.projectronin.ehr.dataauthority.testclients
 import com.projectronin.ehr.dataauthority.change.data.ResourceHashesDAO
 import com.projectronin.ehr.dataauthority.change.data.binding.ResourceHashesDOs
 import com.projectronin.ehr.dataauthority.change.data.model.ResourceHashesDO
+import com.projectronin.ehr.dataauthority.change.data.services.ResourceId
 import org.ktorm.database.Database
 import org.ktorm.dsl.deleteAll
 import java.time.OffsetDateTime
@@ -17,7 +18,10 @@ object DBClient {
         tenantId: String,
         resourceType: String,
         resourceId: String,
-    ): Int? = resourceHashesDAO.getHash(tenantId, resourceType, resourceId)?.hash
+    ): Int? {
+        val resourceIdObject = ResourceId(resourceType, resourceId)
+        return resourceHashesDAO.getHashes(tenantId, listOf(resourceIdObject))[resourceIdObject]?.hash
+    }
 
     fun setHashValue(
         tenantId: String,

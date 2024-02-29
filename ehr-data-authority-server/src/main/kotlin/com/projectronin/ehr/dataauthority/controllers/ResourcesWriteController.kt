@@ -11,7 +11,6 @@ import com.projectronin.ehr.dataauthority.models.BatchResourceResponse
 import com.projectronin.ehr.dataauthority.models.ChangeType
 import com.projectronin.ehr.dataauthority.models.FailedResource
 import com.projectronin.ehr.dataauthority.models.ModificationType
-import com.projectronin.ehr.dataauthority.models.ResourceResponse
 import com.projectronin.ehr.dataauthority.models.SucceededResource
 import com.projectronin.ehr.dataauthority.publish.PublishService
 import com.projectronin.ehr.dataauthority.util.ResourceTenantMismatchUtil
@@ -45,6 +44,7 @@ class ResourcesWriteController(
 ) {
     private val logger = KotlinLogging.logger { }
     private val isLocal = storageMode == StorageMode.LOCAL
+    private val emptyBatchResponse = BatchResourceResponse(emptyList(), emptyList())
 
     @Operation(
         summary = "Takes in a list of resources, and posts them",
@@ -76,115 +76,156 @@ class ResourcesWriteController(
         val resourcesByKey = resources.associateBy { it.toKey() }
         val changeStatusesByKey = changeDetectionService.determineChangeStatuses(tenantId, resourcesByKey)
 
-        val responses =
-            resourcesByKey.map { (key, resource) ->
-                val changeStatus = changeStatusesByKey[key]!!
-                when (changeStatus.type) {
-                    ChangeType.UNCHANGED ->
-                        SucceededResource(
-                            resource.resourceType,
-                            resource.id!!.value!!,
-                            ModificationType.UNMODIFIED,
-                        )
-
-                    else -> {
-                        if (isLocal) {
-                            publishResource(resource, tenantId, changeStatus)
-                        } else {
-                            validateAndPublishResource(resource, tenantId, changeStatus)
-                        }
-                    }
-                }
-            }
-
-        val succeeded = responses.filterIsInstance<SucceededResource>()
-        val failed = responses.filterIsInstance<FailedResource>()
-        return ResponseEntity.ok(BatchResourceResponse(succeeded, failed))
+        val response = processResources(resourcesByKey, changeStatusesByKey, tenantId)
+        return ResponseEntity.ok(response)
     }
 
-    private fun publishResource(
-        resource: Resource<*>,
+    private fun processResources(
+        resourcesByKey: Map<String, Resource<*>>,
+        changeStatusesByKey: Map<String, ChangeStatus>,
         tenantId: String,
-        changeStatus: ChangeStatus,
-    ): ResourceResponse {
-        val resourceType = resource.resourceType
-        val resourceId = resource.id!!.value!!
+    ): BatchResourceResponse {
+        val (unchangedKeys, changedKeys) = changeStatusesByKey.entries.partition { it.value.type == ChangeType.UNCHANGED }
+        val changedResources = changedKeys.associate { it.key to resourcesByKey[it.key]!! }
 
-        val published = publishService.publish(listOf(resource))
-        if (!published) {
-            return FailedResource(resourceType, resourceId, "Error publishing to data store.")
-        }
+        val unchangedResponses =
+            unchangedKeys.map { (key, _) ->
+                val resource = resourcesByKey[key]!!
+                SucceededResource(
+                    resource.resourceType,
+                    resource.id!!.value!!,
+                    ModificationType.UNMODIFIED,
+                )
+            }
 
-        if (!isLocal) {
-            runCatching { kafkaPublisher.publishResource(resource, changeStatus.type) }.exceptionOrNull()?.let {
-                return FailedResource(
-                    resourceType,
-                    resourceId,
-                    "Failed to publish to Kafka: ${it.localizedMessage}",
+        val publishResponse =
+            if (changedResources.isEmpty()) {
+                emptyBatchResponse
+            } else if (isLocal) {
+                publishResources(changedResources, changeStatusesByKey, tenantId)
+            } else {
+                validateAndPublishResources(changedResources, changeStatusesByKey, tenantId)
+            }
+
+        return BatchResourceResponse(
+            succeeded = publishResponse.succeeded + unchangedResponses,
+            failed = publishResponse.failed,
+        )
+    }
+
+    private fun publishResources(
+        resourcesByKey: Map<String, Resource<*>>,
+        changeStatusesByKey: Map<String, ChangeStatus>,
+        tenantId: String,
+    ): BatchResourceResponse {
+        val publishedResponsesByKey = publishService.publish(resourcesByKey.values.toList()).associateBy { it.toKey() }
+
+        val failedResponses = mutableListOf<FailedResource>()
+        failedResponses.addAll(
+            resourcesByKey.keys.minus(publishedResponsesByKey.keys).map {
+                val resource = resourcesByKey[it]!!
+                FailedResource(resource.resourceType, resource.id!!.value!!, "Error publishing to data store")
+            },
+        )
+
+        val passedKafkaResources = mutableMapOf<String, Resource<*>>()
+        if (isLocal) {
+            passedKafkaResources.putAll(publishedResponsesByKey)
+        } else {
+            publishedResponsesByKey.forEach { key, aidboxResource ->
+                val resource = resourcesByKey[key]!!
+                val changeStatus = changeStatusesByKey[key]!!
+                runCatching { kafkaPublisher.publishResource(resource, aidboxResource, changeStatus.type) }.fold(
+                    onSuccess = { passedKafkaResources[key] = resource },
+                    onFailure = {
+                        failedResponses.add(
+                            FailedResource(
+                                resource.resourceType,
+                                resource.id!!.value!!,
+                                "Failed to publish to Kafka: ${it.localizedMessage}",
+                            ),
+                        )
+                    },
                 )
             }
         }
 
-        val resourceHashesDO = changeStatus.toHashDO(tenantId)
-        val modificationType =
-            when (changeStatus.type) {
-                ChangeType.NEW -> {
-                    runCatching { resourceHashDao.upsertHash(resourceHashesDO) }.onFailure {
+        val successfulResponses =
+            passedKafkaResources.mapNotNull { (key, resource) ->
+                val resourceType = resource.resourceType
+                val resourceId = resource.id!!.value!!
+
+                val changeStatus = changeStatusesByKey[key]!!
+                val modificationType =
+                    when (changeStatus.type) {
+                        ChangeType.NEW -> ModificationType.CREATED
+                        ChangeType.CHANGED -> ModificationType.UPDATED
+                        else -> throw IllegalStateException("Only new or changed statuses are allowed to be published")
+                    }
+
+                val resourceHashesDO = changeStatus.toHashDO(tenantId)
+                runCatching { resourceHashDao.upsertHash(resourceHashesDO) }.fold(
+                    onSuccess = {
+                        SucceededResource(resourceType, resourceId, modificationType)
+                    },
+                    onFailure = {
                         logger.error(it) { "Exception persisting new hash for $resourceHashesDO" }
-                        return FailedResource(
-                            resourceType,
-                            resourceId,
-                            "Error updating the hash store",
+                        failedResponses.add(
+                            FailedResource(
+                                resource.resourceType,
+                                resource.id!!.value!!,
+                                "Error updating the hash store",
+                            ),
                         )
-                    }
-                    ModificationType.CREATED
-                }
-
-                ChangeType.CHANGED -> {
-                    runCatching { resourceHashDao.upsertHash(resourceHashesDO) }.onFailure {
-                        logger.error(it) { "Exception persisting updated hash for $resourceHashesDO" }
-                        return FailedResource(
-                            resourceType,
-                            resourceId,
-                            "Error updating the hash store",
-                        )
-                    }
-                    ModificationType.UPDATED
-                }
-
-                else -> throw IllegalStateException("Only new or changed statuses are allowed to be published")
+                        null
+                    },
+                )
             }
 
-        return SucceededResource(resourceType, resourceId, modificationType)
+        return BatchResourceResponse(
+            succeeded = successfulResponses,
+            failed = failedResponses,
+        )
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <R : Resource<R>> validateAndPublishResource(
-        resource: Resource<R>,
+    private fun <R : Resource<R>> validateAndPublishResources(
+        resourcesByKey: Map<String, Resource<R>>,
+        changeStatusesByKey: Map<String, ChangeStatus>,
         tenantId: String,
-        changeStatus: ChangeStatus,
-    ): ResourceResponse {
-        val validation =
-            runCatching { validationService.validate(resource as R, tenantId) }.fold(
-                onSuccess = { it },
-                onFailure = { exception ->
-                    return FailedResource(
-                        resource.resourceType,
-                        resource.id!!.value!!,
-                        exception.localizedMessage,
-                    )
-                },
-            )
+    ): BatchResourceResponse {
+        val validationByKey =
+            resourcesByKey.mapNotNull { (key, resource) ->
+                runCatching { validationService.validate(resource as R, tenantId) }.fold(
+                    onSuccess = { key to it },
+                    onFailure = { key to FailedValidation(it.localizedMessage) },
+                )
+            }
 
-        return when (validation) {
-            is PassedValidation -> publishResource(resource, tenantId, changeStatus)
-            is FailedValidation ->
+        val passedValidationResources =
+            validationByKey.filter { it.second is PassedValidation }.map { it.first to resourcesByKey[it.first]!! }
+                .toMap()
+        val publishResponse =
+            if (passedValidationResources.isEmpty()) {
+                emptyBatchResponse
+            } else {
+                publishResources(passedValidationResources, changeStatusesByKey, tenantId)
+            }
+
+        val failedValidation =
+            validationByKey.filter { it.second is FailedValidation }.map { (key, validation) ->
+                val resource = resourcesByKey[key]!!
                 FailedResource(
                     resource.resourceType,
                     resource.id!!.value!!,
-                    validation.failureMessage,
+                    (validation as FailedValidation).failureMessage,
                 )
-        }
+            }
+
+        return BatchResourceResponse(
+            succeeded = publishResponse.succeeded,
+            failed = publishResponse.failed + failedValidation,
+        )
     }
 
     private fun ChangeStatus.toHashDO(tenant: String) =

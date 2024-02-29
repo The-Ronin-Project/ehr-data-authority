@@ -4,13 +4,13 @@ import com.github.database.rider.core.api.connection.ConnectionHolder
 import com.github.database.rider.core.api.dataset.DataSet
 import com.github.database.rider.core.api.dataset.ExpectedDataSet
 import com.projectronin.ehr.dataauthority.change.data.model.ResourceHashesDO
+import com.projectronin.ehr.dataauthority.change.data.services.ResourceId
 import com.projectronin.interop.common.test.database.dbrider.DBRiderConnection
 import com.projectronin.interop.common.test.database.ktorm.KtormHelper
 import com.projectronin.interop.common.test.database.liquibase.LiquibaseTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
@@ -23,50 +23,87 @@ class ResourceHashesDAOTest {
     lateinit var connectionHolder: ConnectionHolder
 
     @Test
-    @DataSet(value = ["/dbunit/hashes/NoHashes.yaml"], cleanAfter = true)
-    fun `getHash when none exist`() {
+    @DataSet(value = ["/dbunit/hashes/MultipleHashes.yaml"], cleanAfter = true)
+    fun `getHashes when none are found`() {
         val dao = ResourceHashesDAO(KtormHelper.database())
-        val hash = dao.getHash("tenant1", "Patient", "12345")
-        assertNull(hash)
+        val resourceId1 = ResourceId("Patient", "banana")
+        val resourceId2 = ResourceId("Patient", "apple")
+        val hashes = dao.getHashes("tenant1", listOf(resourceId1, resourceId2))
+
+        assertEquals(0, hashes.size)
     }
 
     @Test
-    @DataSet(value = ["/dbunit/hashes/SingleHash.yaml"], cleanAfter = true)
-    fun `getHash when not found for tenant`() {
+    @DataSet(value = ["/dbunit/hashes/MultipleHashes.yaml"], cleanAfter = true)
+    fun `getHashes when some are found`() {
         val dao = ResourceHashesDAO(KtormHelper.database())
-        val hash = dao.getHash("tenant2", "Patient", "12345")
-        assertNull(hash)
+        val resourceId1 = ResourceId("Patient", "tenant1-12345")
+        val resourceId2 = ResourceId("Patient", "apple")
+        val hashes = dao.getHashes("tenant1", listOf(resourceId1, resourceId2))
+
+        assertEquals(1, hashes.size)
+
+        val hash1 = hashes[resourceId1]!!
+        assertEquals(UUID.fromString("b4e8e80a-297a-4b19-bd59-4b8072db9cc4"), hash1.hashId)
+        assertEquals("tenant1-12345", hash1.resourceId)
+        assertEquals("Patient", hash1.resourceType)
+        assertEquals("tenant1", hash1.tenantId)
+        assertEquals(13579, hash1.hash)
+        assertEquals(OffsetDateTime.of(2022, 8, 1, 11, 18, 0, 0, ZoneOffset.UTC), hash1.updateDateTime)
     }
 
     @Test
-    @DataSet(value = ["/dbunit/hashes/SingleHash.yaml"], cleanAfter = true)
-    fun `getHash when not found for resource type`() {
+    @DataSet(value = ["/dbunit/hashes/MultipleHashes.yaml"], cleanAfter = true)
+    fun `getHashes when all are found`() {
         val dao = ResourceHashesDAO(KtormHelper.database())
-        val hash = dao.getHash("tenant1", "Location", "12345")
-        assertNull(hash)
+        val resourceId1 = ResourceId("Patient", "tenant1-12345")
+        val resourceId2 = ResourceId("Patient", "tenant1-67890")
+        val hashes = dao.getHashes("tenant1", listOf(resourceId1, resourceId2))
+
+        assertEquals(2, hashes.size)
+
+        val hash1 = hashes[resourceId1]!!
+        assertEquals(UUID.fromString("b4e8e80a-297a-4b19-bd59-4b8072db9cc4"), hash1.hashId)
+        assertEquals("tenant1-12345", hash1.resourceId)
+        assertEquals("Patient", hash1.resourceType)
+        assertEquals("tenant1", hash1.tenantId)
+        assertEquals(13579, hash1.hash)
+        assertEquals(OffsetDateTime.of(2022, 8, 1, 11, 18, 0, 0, ZoneOffset.UTC), hash1.updateDateTime)
+
+        val hash2 = hashes[resourceId2]!!
+        assertEquals(UUID.fromString("9234c30c-d4b5-469b-9a02-59425df9c702"), hash2.hashId)
+        assertEquals("tenant1-67890", hash2.resourceId)
+        assertEquals("Patient", hash2.resourceType)
+        assertEquals("tenant1", hash2.tenantId)
+        assertEquals(24680, hash2.hash)
+        assertEquals(OffsetDateTime.of(2023, 5, 23, 9, 32, 0, 0, ZoneOffset.UTC), hash2.updateDateTime)
     }
 
     @Test
-    @DataSet(value = ["/dbunit/hashes/SingleHash.yaml"], cleanAfter = true)
-    fun `getHash when not found for resource ID`() {
+    @DataSet(value = ["/dbunit/hashes/MultipleHashes.yaml"], cleanAfter = true)
+    fun `getHashes works across resource types`() {
         val dao = ResourceHashesDAO(KtormHelper.database())
-        val hash = dao.getHash("tenant1", "Patient", "67890")
-        assertNull(hash)
-    }
+        val resourceId1 = ResourceId("Patient", "tenant1-12345")
+        val resourceId2 = ResourceId("Practitioner", "tenant1-67890")
+        val hashes = dao.getHashes("tenant1", listOf(resourceId1, resourceId2))
 
-    @Test
-    @DataSet(value = ["/dbunit/hashes/SingleHash.yaml"], cleanAfter = true)
-    fun `getHash when found for tenant, type and ID`() {
-        val dao = ResourceHashesDAO(KtormHelper.database())
-        val hash = dao.getHash("tenant1", "Patient", "12345")
+        assertEquals(2, hashes.size)
 
-        hash!!
-        assertEquals(UUID.fromString("b4e8e80a-297a-4b19-bd59-4b8072db9cc4"), hash.hashId)
-        assertEquals("12345", hash.resourceId)
-        assertEquals("Patient", hash.resourceType)
-        assertEquals("tenant1", hash.tenantId)
-        assertEquals(13579, hash.hash)
-        assertEquals(OffsetDateTime.of(2022, 8, 1, 11, 18, 0, 0, ZoneOffset.UTC), hash.updateDateTime)
+        val hash1 = hashes[resourceId1]!!
+        assertEquals(UUID.fromString("b4e8e80a-297a-4b19-bd59-4b8072db9cc4"), hash1.hashId)
+        assertEquals("tenant1-12345", hash1.resourceId)
+        assertEquals("Patient", hash1.resourceType)
+        assertEquals("tenant1", hash1.tenantId)
+        assertEquals(13579, hash1.hash)
+        assertEquals(OffsetDateTime.of(2022, 8, 1, 11, 18, 0, 0, ZoneOffset.UTC), hash1.updateDateTime)
+
+        val hash2 = hashes[resourceId2]!!
+        assertEquals(UUID.fromString("c739fb2b-edaa-460d-a22e-354ec381ac5a"), hash2.hashId)
+        assertEquals("tenant1-67890", hash2.resourceId)
+        assertEquals("Practitioner", hash2.resourceType)
+        assertEquals("tenant1", hash2.tenantId)
+        assertEquals(123456789, hash2.hash)
+        assertEquals(OffsetDateTime.of(2024, 2, 28, 14, 43, 0, 0, ZoneOffset.UTC), hash2.updateDateTime)
     }
 
     @Test

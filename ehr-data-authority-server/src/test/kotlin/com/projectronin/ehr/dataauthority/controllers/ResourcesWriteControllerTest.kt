@@ -14,6 +14,7 @@ import com.projectronin.interop.fhir.generators.datatypes.identifier
 import com.projectronin.interop.fhir.generators.resources.observation
 import com.projectronin.interop.fhir.generators.resources.patient
 import com.projectronin.interop.fhir.r4.CodeSystem
+import com.projectronin.interop.fhir.r4.datatype.Meta
 import com.projectronin.interop.fhir.r4.datatype.primitive.Code
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.resource.Binary
@@ -63,10 +64,22 @@ class ResourcesWriteControllerTest {
             id of Id("$mockTenantId-1")
             identifier of listOf(testTenantIdentifier)
         }
+    private val publishedPatient =
+        patient {
+            id of Id("$mockTenantId-1")
+            identifier of listOf(testTenantIdentifier)
+            meta of Meta(versionId = Id("100"))
+        }
     private val testObservation =
         observation {
             id of Id("$mockTenantId-2")
             identifier of listOf(testTenantIdentifier)
+        }
+    private val publishedObservation =
+        observation {
+            id of Id("$mockTenantId-2")
+            identifier of listOf(testTenantIdentifier)
+            meta of Meta(versionId = Id("200"))
         }
 
     @Test
@@ -176,7 +189,7 @@ class ResourcesWriteControllerTest {
 
         every { validationService.validate(testPatient, mockTenantId) } returns PassedValidation
 
-        every { publishService.publish(listOf(testPatient)) } returns false
+        every { publishService.publish(listOf(testPatient)) } returns listOf()
 
         val response = resourcesWriteController.addNewResources(mockTenantId, listOf(testPatient))
         assertEquals(HttpStatus.OK, response.statusCode)
@@ -188,7 +201,7 @@ class ResourcesWriteControllerTest {
         val failure1 = resourceResponse.failed[0]
         assertEquals("Patient", failure1.resourceType)
         assertEquals("tenant-1", failure1.resourceId)
-        assertEquals("Error publishing to data store.", failure1.error)
+        assertEquals("Error publishing to data store", failure1.error)
 
         verify { kafkaPublisher wasNot Called }
     }
@@ -206,11 +219,12 @@ class ResourcesWriteControllerTest {
 
         every { validationService.validate(testPatient, mockTenantId) } returns PassedValidation
 
-        every { publishService.publish(listOf(testPatient)) } returns true
+        every { publishService.publish(listOf(testPatient)) } returns listOf(publishedPatient)
 
         every {
             kafkaPublisher.publishResource(
                 testPatient,
+                publishedPatient,
                 ChangeType.CHANGED,
             )
         } throws IllegalStateException("FAILURE")
@@ -227,7 +241,7 @@ class ResourcesWriteControllerTest {
         assertEquals("tenant-1", failure1.resourceId)
         assertEquals("Failed to publish to Kafka: FAILURE", failure1.error)
 
-        verify(exactly = 1) { kafkaPublisher.publishResource(testPatient, ChangeType.CHANGED) }
+        verify(exactly = 1) { kafkaPublisher.publishResource(testPatient, publishedPatient, ChangeType.CHANGED) }
     }
 
     @Test
@@ -243,9 +257,9 @@ class ResourcesWriteControllerTest {
 
         every { validationService.validate(testPatient, mockTenantId) } returns PassedValidation
 
-        every { publishService.publish(listOf(testPatient)) } returns true
+        every { publishService.publish(listOf(testPatient)) } returns listOf(publishedPatient)
 
-        every { kafkaPublisher.publishResource(testPatient, ChangeType.NEW) } just Runs
+        every { kafkaPublisher.publishResource(testPatient, publishedPatient, ChangeType.NEW) } just Runs
 
         val hashSlot = slot<ResourceHashesDO>()
         every { resourceHashesDAO.upsertHash(capture(hashSlot)) } returns mockk()
@@ -269,7 +283,7 @@ class ResourcesWriteControllerTest {
         assertEquals(mockTenantId, hashDO.tenantId)
         assertEquals(1234, hashDO.hash)
 
-        verify(exactly = 1) { kafkaPublisher.publishResource(testPatient, ChangeType.NEW) }
+        verify(exactly = 1) { kafkaPublisher.publishResource(testPatient, publishedPatient, ChangeType.NEW) }
     }
 
     @Test
@@ -285,9 +299,9 @@ class ResourcesWriteControllerTest {
 
         every { validationService.validate(testPatient, mockTenantId) } returns PassedValidation
 
-        every { publishService.publish(listOf(testPatient)) } returns true
+        every { publishService.publish(listOf(testPatient)) } returns listOf(publishedPatient)
 
-        every { kafkaPublisher.publishResource(testPatient, ChangeType.NEW) } just Runs
+        every { kafkaPublisher.publishResource(testPatient, publishedPatient, ChangeType.NEW) } just Runs
 
         every { resourceHashesDAO.upsertHash(any()) } throws IllegalStateException("Exception")
 
@@ -303,7 +317,7 @@ class ResourcesWriteControllerTest {
         assertEquals("tenant-1", failed1.resourceId)
         assertEquals("Error updating the hash store", failed1.error)
 
-        verify(exactly = 1) { kafkaPublisher.publishResource(testPatient, ChangeType.NEW) }
+        verify(exactly = 1) { kafkaPublisher.publishResource(testPatient, publishedPatient, ChangeType.NEW) }
     }
 
     @Test
@@ -320,9 +334,9 @@ class ResourcesWriteControllerTest {
 
         every { validationService.validate(testPatient, mockTenantId) } returns PassedValidation
 
-        every { publishService.publish(listOf(testPatient)) } returns true
+        every { publishService.publish(listOf(testPatient)) } returns listOf(publishedPatient)
 
-        every { kafkaPublisher.publishResource(testPatient, ChangeType.CHANGED) } just Runs
+        every { kafkaPublisher.publishResource(testPatient, publishedPatient, ChangeType.CHANGED) } just Runs
 
         val hashSlot = slot<ResourceHashesDO>()
         every { resourceHashesDAO.upsertHash(capture(hashSlot)) } returns mockk()
@@ -346,7 +360,7 @@ class ResourcesWriteControllerTest {
         assertEquals(mockTenantId, hashDO.tenantId)
         assertEquals(1234, hashDO.hash)
 
-        verify(exactly = 1) { kafkaPublisher.publishResource(testPatient, ChangeType.CHANGED) }
+        verify(exactly = 1) { kafkaPublisher.publishResource(testPatient, publishedPatient, ChangeType.CHANGED) }
     }
 
     @Test
@@ -363,9 +377,9 @@ class ResourcesWriteControllerTest {
 
         every { validationService.validate(testPatient, mockTenantId) } returns PassedValidation
 
-        every { publishService.publish(listOf(testPatient)) } returns true
+        every { publishService.publish(listOf(testPatient)) } returns listOf(publishedPatient)
 
-        every { kafkaPublisher.publishResource(testPatient, ChangeType.CHANGED) } just Runs
+        every { kafkaPublisher.publishResource(testPatient, publishedPatient, ChangeType.CHANGED) } just Runs
 
         every { resourceHashesDAO.upsertHash(any()) } throws IllegalStateException("Exception")
 
@@ -381,7 +395,7 @@ class ResourcesWriteControllerTest {
         assertEquals("tenant-1", failed1.resourceId)
         assertEquals("Error updating the hash store", failed1.error)
 
-        verify(exactly = 1) { kafkaPublisher.publishResource(testPatient, ChangeType.CHANGED) }
+        verify(exactly = 1) { kafkaPublisher.publishResource(testPatient, publishedPatient, ChangeType.CHANGED) }
     }
 
     @Test
@@ -399,8 +413,8 @@ class ResourcesWriteControllerTest {
         every { validationService.validate(testPatient, mockTenantId) } returns PassedValidation
         every { validationService.validate(testObservation, mockTenantId) } returns PassedValidation
 
-        every { publishService.publish(any()) } returns true
-        every { kafkaPublisher.publishResource(any(), any()) } just Runs
+        every { publishService.publish(any()) } answers { firstArg() }
+        every { kafkaPublisher.publishResource(any(), any(), any()) } just Runs
         every { resourceHashesDAO.upsertHash(any()) } returns mockk()
 
         val response = resourcesWriteController.addNewResources(mockTenantId, listOf(testPatient, testObservation))
@@ -415,7 +429,7 @@ class ResourcesWriteControllerTest {
         assertEquals("tenant-2", body.succeeded[1].resourceId)
         assertEquals(ModificationType.UPDATED, body.succeeded[1].modificationType)
 
-        verify(exactly = 2) { kafkaPublisher.publishResource(any(), any()) }
+        verify(exactly = 2) { kafkaPublisher.publishResource(any(), any(), any()) }
         verify(exactly = 2) { resourceHashesDAO.upsertHash(any()) }
     }
 
@@ -434,9 +448,9 @@ class ResourcesWriteControllerTest {
         every { validationService.validate(testPatient, mockTenantId) } returns PassedValidation
         every { validationService.validate(testObservation, mockTenantId) } returns PassedValidation
 
-        every { publishService.publish(any()) } returnsMany listOf(true, false)
+        every { publishService.publish(any()) } answers { listOf(testPatient) }
 
-        every { kafkaPublisher.publishResource(any(), any()) } just Runs
+        every { kafkaPublisher.publishResource(any(), any(), any()) } just Runs
 
         every { resourceHashesDAO.upsertHash(any()) } returns mockk()
 
@@ -450,9 +464,9 @@ class ResourcesWriteControllerTest {
         assertEquals(ModificationType.UPDATED, body.succeeded[0].modificationType)
         assertEquals("Observation", body.failed[0].resourceType)
         assertEquals("tenant-2", body.failed[0].resourceId)
-        assertEquals("Error publishing to data store.", body.failed[0].error)
+        assertEquals("Error publishing to data store", body.failed[0].error)
 
-        verify(exactly = 1) { kafkaPublisher.publishResource(any(), any()) }
+        verify(exactly = 1) { kafkaPublisher.publishResource(any(), any(), any()) }
         verify(exactly = 1) { resourceHashesDAO.upsertHash(any()) }
     }
 
@@ -549,7 +563,7 @@ class ResourcesWriteControllerTest {
                 mapOf("Patient:tenant-1" to testPatient),
             )
         } returns mapOf("Patient:tenant-1" to changeStatus1)
-        every { publishService.publish(any()) } returns true
+        every { publishService.publish(any()) } answers { firstArg() }
         every { localStorageHash.upsertHash(any()) } returns mockk()
 
         val response = localController.addNewResources(mockTenantId, listOf(testPatient))

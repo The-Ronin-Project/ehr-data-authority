@@ -3,7 +3,6 @@ package com.projectronin.ehr.dataauthority.publish
 import com.projectronin.ehr.dataauthority.change.data.services.DataStorageService
 import com.projectronin.interop.common.logmarkers.getLogMarker
 import com.projectronin.interop.fhir.r4.resource.Resource
-import io.ktor.http.isSuccess
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
@@ -26,23 +25,21 @@ class PublishService(
      * @param resourceCollection List of FHIR resources to publish. May be a mixed List with different resourceTypes.
      * @return true for success: an HTTP 2xx response, or publish was skipped for an empty list; otherwise false.
      */
-    fun publish(resourceCollection: List<Resource<*>>): Boolean {
+    fun publish(resourceCollection: List<Resource<*>>): List<Resource<*>> {
         logger.info { "Publishing Ronin clinical data" }
         if (resourceCollection.isEmpty()) {
-            return true
+            return emptyList()
         }
 
-        val processedResults =
-            runBlocking {
-                resourceCollection.chunked(batchSize).map {
-                    try {
-                        dataStorageService.batchUpsert(it).isSuccess()
-                    } catch (e: Exception) {
-                        logger.warn(e.getLogMarker(), e) { "Failed to publish Ronin clinical data" }
-                        false
-                    }
+        return runBlocking {
+            resourceCollection.chunked(batchSize).flatMap {
+                try {
+                    dataStorageService.batchUpsert(it)
+                } catch (e: Exception) {
+                    logger.warn(e.getLogMarker(), e) { "Failed to publish Ronin clinical data" }
+                    emptyList()
                 }
             }
-        return processedResults.all { it }
+        }
     }
 }

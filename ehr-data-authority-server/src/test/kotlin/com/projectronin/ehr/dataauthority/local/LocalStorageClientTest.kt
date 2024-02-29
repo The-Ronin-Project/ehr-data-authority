@@ -109,15 +109,31 @@ class LocalStorageClientTest {
 
     @Test
     fun `resource retrieve test`() {
-        val actual = localStorageClient.getResource("Practitioner", "cmjones")
+        val actual = localStorageClient.getResource("Practitioner", "cmjones")!!
         assertEquals("Practitioner", actual.resourceType)
         assertEquals("cmjones", actual.id?.value)
         assertEquals(practitioner1, actual)
 
-        val actual2 = localStorageClient.getResource("Practitioner", "rallyr")
+        val actual2 = localStorageClient.getResource("Practitioner", "rallyr")!!
         assertEquals("Practitioner", actual2.resourceType)
         assertEquals("rallyr", actual2.id?.value)
         assertEquals(practitioner2, actual2)
+    }
+
+    @Test
+    fun `getResources works`() {
+        val response = localStorageClient.getResources("Practitioner", listOf("cmjones", "rallyr"))
+        assertEquals(2, response.size)
+
+        val resource1 = response["cmjones"]!!
+        assertEquals("Practitioner", resource1.resourceType)
+        assertEquals("cmjones", resource1.id?.value)
+        assertEquals(practitioner1, resource1)
+
+        val resource2 = response["rallyr"]!!
+        assertEquals("Practitioner", resource2.resourceType)
+        assertEquals("rallyr", resource2.id?.value)
+        assertEquals(practitioner2, resource2)
     }
 
     @Test
@@ -131,7 +147,7 @@ class LocalStorageClientTest {
     @Test
     fun `delete all works for localStorage`() {
         // check that there is something to delete
-        val actual = localStorageClient.getResource("Practitioner", "cmjones")
+        val actual = localStorageClient.getResource("Practitioner", "cmjones")!!
         assertEquals("Practitioner", actual.resourceType)
         assertEquals("cmjones", actual.id?.value)
         assertEquals(practitioner1, actual)
@@ -143,23 +159,21 @@ class LocalStorageClientTest {
     @Test
     fun `localStorage batch upsert of 2 Practitioners returns response 200`() {
         runBlocking { localStorageClient.deleteAllResources() } // clear storage
-        val expectedResponseStatus = HttpStatusCode.OK
         val actualResponse =
             runBlocking {
                 localStorageClient.batchUpsert(practitioners)
             }
-        assertEquals(expectedResponseStatus, actualResponse)
+        assertEquals(practitioners, actualResponse)
     }
 
     @Test
     fun `localStorage batchupsert of PractitionerRoles with reference targets missing, returns 200 - no validation`() {
         runBlocking { localStorageClient.deleteAllResources() } // clear storage
-        val expectedResponseStatus = HttpStatusCode.OK
         val actualResponse =
             runBlocking {
                 localStorageClient.batchUpsert(practitionerRoles)
             }
-        assertEquals(actualResponse, expectedResponseStatus)
+        assertEquals(practitionerRoles, actualResponse)
     }
 
     @Test

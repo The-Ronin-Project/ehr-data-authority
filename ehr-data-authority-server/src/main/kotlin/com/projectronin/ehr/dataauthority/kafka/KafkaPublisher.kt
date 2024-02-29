@@ -1,7 +1,6 @@
 package com.projectronin.ehr.dataauthority.kafka
 
 import com.google.common.base.CaseFormat
-import com.projectronin.ehr.dataauthority.change.data.services.DataStorageService
 import com.projectronin.ehr.dataauthority.models.ChangeType
 import com.projectronin.ehr.dataauthority.models.kafka.EhrDAKafkaTopic
 import com.projectronin.interop.common.jackson.JacksonManager
@@ -21,7 +20,6 @@ import com.projectronin.fhir.r4.Resource as ResourceEvent
 class KafkaPublisher(
     private val kafkaClient: KafkaClient,
     topics: List<EhrDAKafkaTopic>,
-    private val dataStorageService: DataStorageService,
 ) {
     private val topicsByResource = topics.associateBy { it.resourceClass }
 
@@ -30,6 +28,7 @@ class KafkaPublisher(
      */
     fun publishResource(
         resource: Resource<*>,
+        aidboxResource: Resource<*>,
         changeType: ChangeType,
     ) {
         val resourceType = resource.resourceType
@@ -40,11 +39,10 @@ class KafkaPublisher(
                 ?: throw IllegalStateException("No Kafka topic is defined for the supplied resource of type $resourceType")
         val eventResource = convertResource(resource, topic)
 
-        val storedResource = dataStorageService.getResource(resourceType, resourceId)
-        val resourceVersion = storedResource.meta?.versionId?.value?.toInt()
+        val resourceVersion = aidboxResource.meta?.versionId?.value?.toInt()
 
-        val tenantId = storedResource.findTenantId()
-        val patientId = storedResource.findPatientId()
+        val tenantId = resource.findTenantId()
+        val patientId = resource.findPatientId()
 
         val kafkaEvent =
             KafkaEvent(
